@@ -150,6 +150,16 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
@@ -164,16 +174,6 @@ jobs:
       - name: Bundle repository
         run: git bundle create ${{ matrix.target }}.bundle --all
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
         with:
@@ -183,4 +183,4 @@ jobs:
 
       - name: Upload ${{ matrix.target }}.bundle to GHCR
         run: |
-          oras push ghcr.io/vulsio/vuls-data-db:${{ matrix.target }} ./${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:${{ matrix.target }} ${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle

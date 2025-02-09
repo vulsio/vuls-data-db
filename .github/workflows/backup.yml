@@ -1,5 +1,7 @@
 name: Backup
 on:
+  schedule:
+    - cron: "0 */12 * * *"
   workflow_dispatch:
 
 jobs:
@@ -150,7 +152,7 @@ jobs:
 
       - name: Pull ghcr.io/${{ github.repository }}:${{ matrix.target }}
         run: oras pull ghcr.io/${{ github.repository }}:${{ matrix.target }}
-      
+
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
         with:
@@ -160,4 +162,4 @@ jobs:
 
       - name: Upload vuls.db to GHCR
         run: |
-          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup ./${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup ${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
