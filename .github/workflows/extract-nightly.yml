@@ -561,8 +561,8 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
           tar -xf vuls-data-extracted-nvd-api-cve.tar.zst
           rm vuls-data-extracted-nvd-api-cve.tar.zst
-          git -C vuls-data-raw-nvd-api-cve switch nightly
-          git -C vuls-data-raw-nvd-api-cve restore .
+          git -C vuls-data-extracted-nvd-api-cve switch nightly
+          git -C vuls-data-extracted-nvd-api-cve restore .
 
       - name: Extract
         run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
