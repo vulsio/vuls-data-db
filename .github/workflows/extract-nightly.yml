@@ -270,7 +270,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}.tar.zst
-          git -C vuls-data-raw-${{ matrix.target }} switch nightly
+          git -C vuls-data-extracted-${{ matrix.target }} switch nightly
 
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }} vuls-data-raw-redhat-repository-to-cpe
