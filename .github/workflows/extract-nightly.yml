@@ -376,7 +376,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           tar -xf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
           rm vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
-          git -C vuls-data-raw-redhat-ovalv2-rhel switch nightly
+          git -C vuls-data-extracted-redhat-ovalv2-rhel switch nightly
 
       - name: Extract
         run: vuls-data-update extract redhat-ovalv2 --dir vuls-data-extracted-redhat-ovalv2-rhel vuls-data-raw-redhat-ovalv2 vuls-data-raw-redhat-repository-to-cpe
