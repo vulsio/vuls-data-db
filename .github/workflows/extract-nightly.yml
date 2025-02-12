@@ -155,7 +155,7 @@ jobs:
       - name: go install
         run: go install ./cmd/vuls-data-update
 
-      - name: Check out raw repository
+      - name: Check out vulsio/vuls-data-raw-${{ matrix.target }} repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
           tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
@@ -163,7 +163,7 @@ jobs:
           git -C vuls-data-raw-${{ matrix.target }} switch main
           git -C vuls-data-raw-${{ matrix.target }} restore .
 
-      - name: Check out extracted repository
+      - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }} repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
@@ -265,7 +265,7 @@ jobs:
           git -C vuls-data-raw-redhat-repository-to-cpe switch main
           git -C vuls-data-raw-redhat-repository-to-cpe restore .
 
-      - name: Check out extracted repository
+      - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }} repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
@@ -371,7 +371,7 @@ jobs:
         run: |
           echo "{}" > vuls-data-raw-redhat-repository-to-cpe/repository-to-cpe.json
 
-      - name: Check out extracted repository
+      - name: Check out vulsio/vuls-data-extracted-redhat-ovalv2-rhel repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           tar -xf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
@@ -556,7 +556,7 @@ jobs:
           git -C vuls-data-raw-nvd-api-cpematch switch main
           git -C vuls-data-raw-nvd-api-cpematch restore .
 
-      - name: Check out extracted repository
+      - name: Check out vulsio/vuls-data-extracted-nvd-api-cve repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
           tar -xf vuls-data-extracted-nvd-api-cve.tar.zst
@@ -635,7 +635,7 @@ jobs:
       - name: go install
         run: go install ./cmd/vuls-data-update
 
-      - name: Check out extracted repository
+      - name: Check out vulsio/vuls-data-extracted-eol repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
           tar -xf vuls-data-extracted-eol.tar.zst
