@@ -733,7 +733,7 @@ jobs:
 
       - name: Upload vuls-data-raw-fortinet-cvrf dotgit tarball to GHCR
         run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-vulncheck:
     name: Fetch vuls-data-raw-${{ matrix.target }}
