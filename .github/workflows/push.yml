@@ -4,7 +4,7 @@ on:
 
 jobs:
   push:
-    name: push vulsio/${{ matrix.target }}/.git to ghcr.io/vulsio/vuls-data-db:${{ matrix.target }}
+    name: Push vulsio/${{ matrix.target }}/.git to ghcr.io/vulsio/vuls-data-db:${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -167,12 +167,15 @@ jobs:
           ref: main
           fetch-depth: "0"
 
-      - name: create nightly branch
+      - name: Create nightly branch
         continue-on-error: true
         run: git branch nightly origin/nightly
 
-      - name: Bundle repository
-        run: git bundle create ${{ matrix.target }}.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mkdir ${{ matrix.target }}
+          mv .git ${{ matrix.target }}
+          tar -acf ${{ matrix.target }}.tar.zst ${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -181,6 +184,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload ${{ matrix.target }}.bundle to GHCR
+      - name: Upload ${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          oras push ghcr.io/vulsio/vuls-data-db:${{ matrix.target }} ${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:${{ matrix.target }} ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd

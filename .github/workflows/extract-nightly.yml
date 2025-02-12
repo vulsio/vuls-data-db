@@ -8,7 +8,7 @@ on:
 
 jobs:
   extract-main:
-    name: extract vuls-data-extracted-${{ matrix.target }}
+    name: Extract vuls-data-extracted-${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -158,15 +158,17 @@ jobs:
       - name: Check out raw repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
-          rm vuls-data-raw-${{ matrix.target }}.bundle
+          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+          rm vuls-data-raw-${{ matrix.target }}.tar.zst
+          git -C vuls-data-raw-${{ matrix.target }} switch main
+          git -C vuls-data-raw-${{ matrix.target }} restore
 
       - name: Check out extracted repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
-          git clone -b nightly vuls-data-extracted-${{ matrix.target }}.bundle vuls-data-extracted-${{ matrix.target }}
-          git -C vuls-data-extracted-${{ matrix.target }} branch main origin/main
-          rm vuls-data-extracted-${{ matrix.target }}.bundle
+          tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
+          rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-raw-${{ matrix.target }} switch nightly
 
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}
@@ -183,8 +185,12 @@ jobs:
             git -C vuls-data-extracted-${{ matrix.target }} commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-extracted-${{ matrix.target }} bundle create vuls-data-extracted-${{ matrix.target }}.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.back
+          mkdir vuls-data-extracted-${{ matrix.target }}
+          mv vuls-data-extracted-${{ matrix.target }}.back/.git vuls-data-extracted-${{ matrix.target }}
+          tar --remove-files -acf vuls-data-extracted-${{ matrix.target }}.tar.zst vuls-data-extracted-${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -193,13 +199,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-extracted-${{ matrix.target }}.bundle to GHCR
+      - name: Upload vuls-data-extracted-${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          cd vuls-data-extracted-${{ matrix.target }}
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-redhat:
-    name: extract vuls-data-extracted-${{ matrix.target }}
+    name: Extract vuls-data-extracted-${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -247,26 +252,30 @@ jobs:
       - name: Check out vulsio/vuls-data-raw-${{ matrix.target }} repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
-          rm vuls-data-raw-${{ matrix.target }}.bundle
+          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+          rm vuls-data-raw-${{ matrix.target }}.tar.zst
+          git -C vuls-data-raw-${{ matrix.target }} switch main
+          git -C vuls-data-raw-${{ matrix.target }} restore
 
       - name: Check out vulsio/vuls-data-raw-redhat-repository-to-cpe repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
-          git clone -b main vuls-data-raw-redhat-repository-to-cpe.bundle vuls-data-raw-redhat-repository-to-cpe
-          rm vuls-data-raw-redhat-repository-to-cpe.bundle
+          tar -xf vuls-data-raw-redhat-repository-to-cpe.tar.zst
+          rm vuls-data-raw-redhat-repository-to-cpe.tar.zst
+          git -C vuls-data-raw-redhat-repository-to-cpe switch main
+          git -C vuls-data-raw-redhat-repository-to-cpe restore
 
       - name: Check out extracted repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
-          git clone -b nightly vuls-data-extracted-${{ matrix.target }}.bundle vuls-data-extracted-${{ matrix.target }}
-          git -C vuls-data-extracted-${{ matrix.target }} branch main origin/main
-          rm vuls-data-extracted-${{ matrix.target }}.bundle
+          tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
+          rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-raw-${{ matrix.target }} switch nightly
 
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }} vuls-data-raw-redhat-repository-to-cpe
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-extracted-${{ matrix.target }} config user.email "action@github.com"
           git -C vuls-data-extracted-${{ matrix.target }} config user.name "GitHub Action"
@@ -278,8 +287,12 @@ jobs:
             git -C vuls-data-extracted-${{ matrix.target }} commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-extracted-${{ matrix.target }} bundle create vuls-data-extracted-${{ matrix.target }}.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.back
+          mkdir vuls-data-extracted-${{ matrix.target }}
+          mv vuls-data-extracted-${{ matrix.target }}.back/.git vuls-data-extracted-${{ matrix.target }}
+          tar --remove-files -acf vuls-data-extracted-${{ matrix.target }}.tar.zst vuls-data-extracted-${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -288,10 +301,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-extracted-${{ matrix.target }}.bundle to GHCR
+      - name: Upload vuls-data-extracted-${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          cd vuls-data-extracted-${{ matrix.target }}
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-redhat-ovalv2-rhel:
     name: extract vuls-data-extracted-redhat-ovalv2-rhel
@@ -334,10 +346,12 @@ jobs:
       - name: Check out vulsio/vuls-data-raw-redhat-ovalv2 repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv2
-          git clone -b main vuls-data-raw-redhat-ovalv2.bundle vuls-data-raw-redhat-ovalv2
-          rm vuls-data-raw-redhat-ovalv2.bundle
+          tar -xf vuls-data-raw-redhat-ovalv2.tar.zst
+          rm vuls-data-raw-redhat-ovalv2.tar.zst
+          git -C vuls-data-raw-redhat-ovalv2 switch main
+          git -C vuls-data-raw-redhat-ovalv2 restore
 
-      - name: remove unnecessary streams
+      - name: Remove unnecessary streams
         run: |
           rm -rf vuls-data-raw-redhat-ovalv2/5
           find vuls-data-raw-redhat-ovalv2/6 -mindepth 1 -maxdepth 1 ! -name 'rhel-6-including-unpatched' ! -name 'rhel-6-extras-including-unpatched' ! -name 'rhel-6-supplementary' ! -name 'rhel-6-els' | xargs rm -rf
@@ -348,19 +362,21 @@ jobs:
       - name: Check out vulsio/vuls-data-raw-redhat-repository-to-cpe repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
-          git clone -b main vuls-data-raw-redhat-repository-to-cpe.bundle vuls-data-raw-redhat-repository-to-cpe
-          rm vuls-data-raw-redhat-repository-to-cpe.bundle
+          tar -xf vuls-data-raw-redhat-repository-to-cpe.tar.zst
+          rm vuls-data-raw-redhat-repository-to-cpe.tar.zst
+          git -C vuls-data-raw-redhat-repository-to-cpe switch main
+          git -C vuls-data-raw-redhat-repository-to-cpe restore
 
-      - name: replace empty repository-to-cpe data
+      - name: Replace empty repository-to-cpe data
         run: |
           echo "{}" > vuls-data-raw-redhat-repository-to-cpe/repository-to-cpe.json
 
       - name: Check out extracted repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
-          git clone -b nightly vuls-data-extracted-redhat-ovalv2-rhel.bundle vuls-data-extracted-redhat-ovalv2-rhel
-          git -C vuls-data-extracted-redhat-ovalv2-rhel branch main origin/main
-          rm vuls-data-extracted-redhat-ovalv2-rhel.bundle
+          tar -xf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
+          rm vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
+          git -C vuls-data-raw-redhat-ovalv2-rhel switch nightly
 
       - name: Extract
         run: vuls-data-update extract redhat-ovalv2 --dir vuls-data-extracted-redhat-ovalv2-rhel vuls-data-raw-redhat-ovalv2 vuls-data-raw-redhat-repository-to-cpe
@@ -377,8 +393,12 @@ jobs:
             git -C vuls-data-extracted-redhat-ovalv2-rhel commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-extracted-redhat-ovalv2-rhel bundle create vuls-data-extracted-redhat-ovalv2-rhel.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.back
+          mkdir vuls-data-extracted-redhat-ovalv2-rhel
+          mv vuls-data-extracted-redhat-ovalv2-rhel.back/.git vuls-data-extracted-redhat-ovalv2-rhel
+          tar --remove-files -acf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst vuls-data-extracted-redhat-ovalv2-rhel
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -389,8 +409,7 @@ jobs:
 
       - name: Upload vuls-data-extracted-redhat-ovalv2-rhel.bundle to GHCR
         run: |
-          cd vuls-data-extracted-redhat-ovalv2-rhel
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-redhat-csaf-or-vex-rhel:
     name: extract vuls-data-extracted-${{ matrix.target }}-rhel
@@ -438,15 +457,17 @@ jobs:
       - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }} repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
-          git clone -b nightly vuls-data-extracted-${{ matrix.target }}.bundle vuls-data-extracted-${{ matrix.target }}
-          rm vuls-data-extracted-${{ matrix.target }}.bundle
+          tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
+          rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-raw-${{ matrix.target }} switch nightly
+          git -C vuls-data-raw-${{ matrix.target }} restore
 
       - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }}-rhel repository
         run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}-rhel
-          git clone -b nightly vuls-data-extracted-${{ matrix.target }}-rhel.bundle vuls-data-extracted-${{ matrix.target }}-rhel
-          git -C vuls-data-extracted-${{ matrix.target }}-rhel branch main origin/main
-          rm vuls-data-extracted-${{ matrix.target }}-rhel.bundle
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
+          tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
+          rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-raw-${{ matrix.target }} switch nightly
 
       - name: Filter
         run: go run main.go vuls-data-extracted-${{ matrix.target }} affected_repository_list.json vuls-data-extracted-${{ matrix.target }}-rhel
@@ -463,8 +484,12 @@ jobs:
             git -C vuls-data-extracted-${{ matrix.target }}-rhel commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-extracted-${{ matrix.target }}-rhel bundle create vuls-data-extracted-${{ matrix.target }}-rhel.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.back
+          mkdir vuls-data-extracted-${{ matrix.target }}-rhel
+          mv vuls-data-extracted-${{ matrix.target }}-rhel.back/.git vuls-data-extracted-${{ matrix.target }}-rhel
+          tar --remove-files -acf vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst vuls-data-extracted-${{ matrix.target }}-rhel
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -475,11 +500,10 @@ jobs:
 
       - name: Upload vuls-data-extracted-${{ matrix.target }}-rhel.bundle to GHCR
         run: |
-          cd vuls-data-extracted-${{ matrix.target }}-rhel
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-nvd-api-cve:
-    name: extract vuls-data-extracted-nvd-api-cve
+    name: Extract vuls-data-extracted-nvd-api-cve
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -519,21 +543,26 @@ jobs:
       - name: Check out vulsio/vuls-data-raw-nvd-api-cve repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
-          git clone -b main vuls-data-raw-nvd-api-cve.bundle vuls-data-raw-nvd-api-cve
-          rm vuls-data-raw-nvd-api-cve.bundle
+          tar -xf vuls-data-raw-nvd-api-cve.tar.zst
+          rm vuls-data-raw-nvd-api-cve.tar.zst
+          git -C vuls-data-raw-nvd-api-cve switch main
+          git -C vuls-data-raw-nvd-api-cve restore
 
       - name: Check out vulsio/vuls-data-raw-nvd-api-cpematch repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
-          git clone -b main vuls-data-raw-nvd-api-cpematch.bundle vuls-data-raw-nvd-api-cpematch
-          rm vuls-data-raw-nvd-api-cpematch.bundle
+          tar -xf vuls-data-raw-nvd-api-cpematch.tar.zst
+          rm vuls-data-raw-nvd-api-cpematch.tar.zst
+          git -C vuls-data-raw-nvd-api-cpematch switch main
+          git -C vuls-data-raw-nvd-api-cpematch restore
 
       - name: Check out extracted repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
-          git clone -b nightly vuls-data-extracted-nvd-api-cve.bundle vuls-data-extracted-nvd-api-cve
-          git -C vuls-data-extracted-nvd-api-cve branch main origin/main
-          rm vuls-data-extracted-nvd-api-cve.bundle
+          tar -xf vuls-data-extracted-nvd-api-cve.tar.zst
+          rm vuls-data-extracted-nvd-api-cve.tar.zst
+          git -C vuls-data-raw-nvd-api-cve switch nightly
+          git -C vuls-data-raw-nvd-api-cve restore
 
       - name: Extract
         run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
@@ -550,8 +579,12 @@ jobs:
             git -C vuls-data-extracted-nvd-api-cve commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-extracted-nvd-api-cve bundle create vuls-data-extracted-nvd-api-cve.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.back
+          mkdir vuls-data-extracted-nvd-api-cve
+          mv vuls-data-extracted-nvd-api-cve.back/.git vuls-data-extracted-nvd-api-cve
+          tar --remove-files -acf vuls-data-extracted-nvd-api-cve.tar.zst vuls-data-extracted-nvd-api-cve
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -562,11 +595,10 @@ jobs:
 
       - name: Upload vuls-data-extracted-nvd-api-cve.bundle to GHCR
         run: |
-          cd vuls-data-extracted-nvd-api-cve
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-eol:
-    name: extract vuls-data-extracted-eol
+    name: Extract vuls-data-extracted-eol
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -606,14 +638,15 @@ jobs:
       - name: Check out extracted repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
-          git clone -b nightly vuls-data-extracted-eol.bundle vuls-data-extracted-eol
-          git -C vuls-data-extracted-eol branch main origin/main
-          rm vuls-data-extracted-eol.bundle
+          tar -xf vuls-data-extracted-eol.tar.zst
+          rm vuls-data-extracted-eol.tar.zst
+          git -C vuls-data-extracted-eol switch nightly
+          git -C vuls-data-extracted-eol restore
 
       - name: Extract
         run: vuls-data-update extract eol --dir vuls-data-extracted-eol
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-extracted-eol config user.email "action@github.com"
           git -C vuls-data-extracted-eol config user.name "GitHub Action"
@@ -625,8 +658,12 @@ jobs:
             git -C vuls-data-extracted-eol commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-extracted-eol bundle create vuls-data-extracted-eol.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-eol vuls-data-extracted-eol.back
+          mkdir vuls-data-extracted-eol
+          mv vuls-data-extracted-eol.back/.git vuls-data-extracted-eol
+          tar --remove-files -acf vuls-data-extracted-eol.tar.zst vuls-data-extracted-eol
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -635,7 +672,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-extracted-eol.bundle to GHCR
+      - name: Upload vuls-data-extracted-eol dotgit tarball to GHCR
         run: |
-          cd vuls-data-extracted-eol
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-eol vuls-data-extracted-eol.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-eol vuls-data-extracted-eol.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd

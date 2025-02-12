@@ -8,7 +8,7 @@ on:
 
 jobs:
   fetch-main:
-    name: fetch vuls-data-raw-${{ matrix.target }}
+    name: Fetch vuls-data-raw-${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -156,8 +156,8 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
-          rm vuls-data-raw-${{ matrix.target }}.bundle
+          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+          rm vuls-data-raw-${{ matrix.target }}.tar.zst
 
       - name: install cabextract for windows-wsusscn2
         if: ${{ matrix.target == 'windows-wsusscn2' }}
@@ -166,7 +166,7 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }}
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
           git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
@@ -178,9 +178,13 @@ jobs:
             git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-${{ matrix.target }} bundle create vuls-data-raw-${{ matrix.target }}.bundle --all
-
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.back
+          mkdir vuls-data-raw-${{ matrix.target }}
+          mv vuls-data-raw-${{ matrix.target }}.back/.git vuls-data-raw-${{ matrix.target }}
+          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
+ 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
         with:
@@ -188,13 +192,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-${{ matrix.target }}.bundle to GHCR
+      - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          cd vuls-data-raw-${{ matrix.target }}
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-nvd-api:
-    name: fetch vuls-data-raw-${{ matrix.target }}
+    name: Fetch vuls-data-raw-${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -241,8 +244,8 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
-          rm vuls-data-raw-${{ matrix.target }}.bundle
+          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+          rm vuls-data-raw-${{ matrix.target }}.tar.zst
 
       - name: Fetch all
         run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 5 --wait 0
@@ -250,7 +253,7 @@ jobs:
       # - name: Fetch modified for last 3 days
       #   run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 5 --wait 0 --last-mod-start-date $(git -C vuls-data-raw-${{ matrix.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
           git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
@@ -269,9 +272,13 @@ jobs:
             git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-${{ matrix.target }} bundle create vuls-data-raw-${{ matrix.target }}.bundle --all
-
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.back
+          mkdir vuls-data-raw-${{ matrix.target }}
+          mv vuls-data-raw-${{ matrix.target }}.back/.git vuls-data-raw-${{ matrix.target }}
+          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
+ 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
         with:
@@ -279,13 +286,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-${{ matrix.target }}.bundle to GHCR
+      - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          cd vuls-data-raw-${{ matrix.target }}
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-msuc:
-    name: fetch vuls-data-raw-windows-msuc
+    name: Fetch vuls-data-raw-windows-msuc
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -355,14 +361,14 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch windows-msuc --dir vuls-data-raw-windows-msuc.${{ strategy.job-index }} ${{ matrix.target }}
 
-      - name: save cache
+      - name: Save cache
         uses: actions/cache/save@v4
         with:
           path: vuls-data-raw-windows-msuc.${{ strategy.job-index }}
           key: vuls-data-raw-windows-msuc-${{ strategy.job-index }}-${{ github.sha }}-${{ github.run_id }}
 
   generate-msuc-cache-id:
-    name: generate vuls-data-raw-windows-msuc cache id
+    name: Generate vuls-data-raw-windows-msuc cache id
     runs-on: ubuntu-latest
     needs: fetch-msuc
     outputs:
@@ -405,8 +411,8 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
-          git clone -b main vuls-data-raw-windows-msuc.bundle vuls-data-raw-windows-msuc
-          rm vuls-data-raw-windows-msuc.bundle
+          tar -xf vuls-data-raw-windows-msuc.tar.zst
+          rm vuls-data-raw-windows-msuc.tar.zst
 
       - name: restore cache
         uses: actions/cache/restore@v4
@@ -431,8 +437,12 @@ jobs:
             git -C vuls-data-raw-windows-msuc commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-windows-msuc bundle create vuls-data-raw-windows-msuc.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.back
+          mkdir vuls-data-raw-windows-msuc
+          mv vuls-data-raw-windows-msuc.back/.git vuls-data-raw-windows-msuc
+          tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -441,13 +451,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-windows-msuc.bundle to GHCR
+      - name: Upload vuls-data-raw-windows-msuc dotgit barball to GHCR
         run: |
-          cd vuls-data-raw-windows-msuc
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-fedora-release:
-    name: fetch fedora release
+    name: Fetch fedora release
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.fetch.outputs.release }}
@@ -459,7 +468,7 @@ jobs:
           echo "release=$(cat *.json | jq -r '.releases[].name' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
   fetch-fedora:
-    name: fetch vuls-data-raw-fedora ${{ matrix.release }}
+    name: Fetch vuls-data-raw-fedora ${{ matrix.release }}
     runs-on: ubuntu-latest
     needs: fetch-fedora-release
     strategy:
@@ -505,13 +514,13 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
-          git clone -b main vuls-data-raw-fedora.bundle vuls-data-raw-fedora
-          rm vuls-data-raw-fedora.bundle
+          tar -xf vuls-data-raw-fedora.tar.zst
+          rm vuls-data-raw-fedora.tar.zst
 
       - name: Fetch
         run: vuls-data-update fetch fedora --dir vuls-data-raw-fedora ${{ matrix.release }} --retry 10
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-raw-fedora config user.email "action@github.com"
           git -C vuls-data-raw-fedora config user.name "GitHub Action"
@@ -530,8 +539,12 @@ jobs:
             git -C vuls-data-raw-fedora commit -m "update ${{ matrix.release }}"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-fedora bundle create vuls-data-raw-fedora.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-fedora vuls-data-raw-fedora.back
+          mkdir vuls-data-raw-fedora
+          mv vuls-data-raw-fedora.back/.git vuls-data-raw-fedora
+          tar --remove-files -acf vuls-data-raw-fedora.tar.zst vuls-data-raw-fedora
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -540,13 +553,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-fedora.bundle to GHCR
+      - name: Upload vuls-data-raw-fedora dotgit tarball to GHCR
         run: |
-          cd vuls-data-raw-fedora
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fedora vuls-data-raw-fedora.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fedora vuls-data-raw-fedora.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-epss:
-    name: fetch vuls-data-raw-epss
+    name: Fetch vuls-data-raw-epss
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -586,8 +598,8 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-          git clone -b main vuls-data-raw-epss.bundle vuls-data-raw-epss
-          rm vuls-data-raw-epss.bundle
+          tar -xf vuls-data-raw-epss.tar.zst
+          rm vuls-data-raw-epss.tar.zst
 
       - name: Fetch
         run: vuls-data-update fetch epss --dir vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
@@ -611,8 +623,12 @@ jobs:
             git -C vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-epss bundle create vuls-data-raw-epss.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-epss vuls-data-raw-epss.back
+          mkdir vuls-data-raw-epss
+          mv vuls-data-raw-epss.back/.git vuls-data-raw-epss
+          tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -621,13 +637,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-epss.bundle to GHCR
+      - name: Upload vuls-data-raw-epss dotgit tarball to GHCR
         run: |
-          cd vuls-data-raw-epss
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-fortinet-cvrf:
-    name: fetch vuls-data-raw-fortinet-cvrf
+    name: Fetch vuls-data-raw-fortinet-cvrf
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -667,8 +682,8 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
-          git clone -b main vuls-data-raw-fortinet-cvrf.bundle vuls-data-raw-fortinet-cvrf
-          rm vuls-data-raw-fortinet-cvrf.bundle
+          tar -xf vuls-data-raw-fortinet-cvrf.tar.zst
+          rm vuls-data-raw-fortinet-cvrf.tar.zst
 
       - name: List advisory in ir.xml
         id: list
@@ -680,7 +695,7 @@ jobs:
         if: ${{ steps.list.outputs.advisory != '' }}
         run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf ${{ steps.list.outputs.advisory }}
 
-      - name: set Git config
+      - name: Set Git config
         if: ${{ steps.list.outputs.advisory != '' }}
         run: |
           git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
@@ -702,8 +717,12 @@ jobs:
             git -C vuls-data-raw-fortinet-cvrf commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-fortinet-cvrf bundle create vuls-data-raw-fortinet-cvrf.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.back
+          mkdir vuls-data-raw-fortinet-cvrf
+          mv vuls-data-raw-fortinet-cvrf.back/.git vuls-data-raw-fortinet-cvrf
+          tar --remove-files -acf vuls-data-raw-fortinet-cvrf.tar.zst vuls-data-raw-fortinet-cvrf
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -712,13 +731,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-fortinet-cvrf.bundle to GHCR
+      - name: Upload vuls-data-raw-epss dotgit tarball to GHCR
         run: |
-          cd vuls-data-raw-fortinet-cvrf
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-vulncheck:
-    name: fetch vuls-data-raw-${{ matrix.target }}
+    name: Fetch vuls-data-raw-${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -763,8 +781,8 @@ jobs:
       - name: Check out fetch data repository
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
-          rm vuls-data-raw-${{ matrix.target }}.bundle
+          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+          rm vuls-data-raw-${{ matrix.target }}.tar.zst
 
       - name: Fetch
         run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} ${{ secrets.VULNCHECK_API_KEY }}
@@ -781,8 +799,12 @@ jobs:
             git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
           fi
 
-      - name: Bundle repository
-        run: git -C vuls-data-raw-${{ matrix.target }} bundle create vuls-data-raw-${{ matrix.target }}.bundle --all
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.back
+          mkdir vuls-data-raw-${{ matrix.target }}
+          mv vuls-data-raw-${{ matrix.target }}.back/.git vuls-data-raw-${{ matrix.target }}
+          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -791,7 +813,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-${{ matrix.target }}.bundle to GHCR
+      - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          cd vuls-data-raw-${{ matrix.target }}
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
