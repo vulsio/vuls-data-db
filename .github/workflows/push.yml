@@ -175,7 +175,7 @@ jobs:
         run: |
           mkdir ${{ matrix.target }}
           mv .git ${{ matrix.target }}
-          tar -acf ${{ matrix.target }}.tar.zst ${{ matrix.target }}
+          tar --remove-files -acf ${{ matrix.target }}.tar.zst ${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
