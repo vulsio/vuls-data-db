@@ -464,8 +464,8 @@ jobs:
 
       - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }}-rhel repository
         run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
-          tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}-rhel
+          tar -xf vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}.tar.zst
           git -C vuls-data-extracted-${{ matrix.target }}-rhel switch nightly
 
