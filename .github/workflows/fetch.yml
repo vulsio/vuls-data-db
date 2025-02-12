@@ -180,9 +180,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.back
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
           mkdir vuls-data-raw-${{ matrix.target }}
-          mv vuls-data-raw-${{ matrix.target }}.back/.git vuls-data-raw-${{ matrix.target }}
+          mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
           tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
  
       - name: Login to GitHub Packages Container registry
@@ -274,9 +274,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.back
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
           mkdir vuls-data-raw-${{ matrix.target }}
-          mv vuls-data-raw-${{ matrix.target }}.back/.git vuls-data-raw-${{ matrix.target }}
+          mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
           tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
  
       - name: Login to GitHub Packages Container registry
@@ -439,9 +439,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.back
+          mv vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tmp
           mkdir vuls-data-raw-windows-msuc
-          mv vuls-data-raw-windows-msuc.back/.git vuls-data-raw-windows-msuc
+          mv vuls-data-raw-windows-msuc.tmp/.git vuls-data-raw-windows-msuc
           tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
 
       - name: Login to GitHub Packages Container registry
@@ -541,9 +541,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-fedora vuls-data-raw-fedora.back
+          mv vuls-data-raw-fedora vuls-data-raw-fedora.tmp
           mkdir vuls-data-raw-fedora
-          mv vuls-data-raw-fedora.back/.git vuls-data-raw-fedora
+          mv vuls-data-raw-fedora.tmp/.git vuls-data-raw-fedora
           tar --remove-files -acf vuls-data-raw-fedora.tar.zst vuls-data-raw-fedora
 
       - name: Login to GitHub Packages Container registry
@@ -625,9 +625,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-epss vuls-data-raw-epss.back
+          mv vuls-data-raw-epss vuls-data-raw-epss.tmp
           mkdir vuls-data-raw-epss
-          mv vuls-data-raw-epss.back/.git vuls-data-raw-epss
+          mv vuls-data-raw-epss.tmp/.git vuls-data-raw-epss
           tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss
 
       - name: Login to GitHub Packages Container registry
@@ -719,9 +719,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.back
+          mv vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.tmp
           mkdir vuls-data-raw-fortinet-cvrf
-          mv vuls-data-raw-fortinet-cvrf.back/.git vuls-data-raw-fortinet-cvrf
+          mv vuls-data-raw-fortinet-cvrf.tmp/.git vuls-data-raw-fortinet-cvrf
           tar --remove-files -acf vuls-data-raw-fortinet-cvrf.tar.zst vuls-data-raw-fortinet-cvrf
 
       - name: Login to GitHub Packages Container registry
@@ -801,9 +801,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.back
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
           mkdir vuls-data-raw-${{ matrix.target }}
-          mv vuls-data-raw-${{ matrix.target }}.back/.git vuls-data-raw-${{ matrix.target }}
+          mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
           tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry

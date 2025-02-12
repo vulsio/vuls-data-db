@@ -168,7 +168,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}.tar.zst
-          git -C vuls-data-raw-${{ matrix.target }} switch nightly
+          git -C vuls-data-extracted-${{ matrix.target }} switch nightly
 
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}
@@ -187,9 +187,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.back
+          mv vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.tmp
           mkdir vuls-data-extracted-${{ matrix.target }}
-          mv vuls-data-extracted-${{ matrix.target }}.back/.git vuls-data-extracted-${{ matrix.target }}
+          mv vuls-data-extracted-${{ matrix.target }}.tmp/.git vuls-data-extracted-${{ matrix.target }}
           tar --remove-files -acf vuls-data-extracted-${{ matrix.target }}.tar.zst vuls-data-extracted-${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
@@ -289,9 +289,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.back
+          mv vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.tmp
           mkdir vuls-data-extracted-${{ matrix.target }}
-          mv vuls-data-extracted-${{ matrix.target }}.back/.git vuls-data-extracted-${{ matrix.target }}
+          mv vuls-data-extracted-${{ matrix.target }}.tmp/.git vuls-data-extracted-${{ matrix.target }}
           tar --remove-files -acf vuls-data-extracted-${{ matrix.target }}.tar.zst vuls-data-extracted-${{ matrix.target }}
 
       - name: Login to GitHub Packages Container registry
@@ -395,9 +395,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.back
+          mv vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.tmp
           mkdir vuls-data-extracted-redhat-ovalv2-rhel
-          mv vuls-data-extracted-redhat-ovalv2-rhel.back/.git vuls-data-extracted-redhat-ovalv2-rhel
+          mv vuls-data-extracted-redhat-ovalv2-rhel.tmp/.git vuls-data-extracted-redhat-ovalv2-rhel
           tar --remove-files -acf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst vuls-data-extracted-redhat-ovalv2-rhel
 
       - name: Login to GitHub Packages Container registry
@@ -486,9 +486,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.back
+          mv vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.tmp
           mkdir vuls-data-extracted-${{ matrix.target }}-rhel
-          mv vuls-data-extracted-${{ matrix.target }}-rhel.back/.git vuls-data-extracted-${{ matrix.target }}-rhel
+          mv vuls-data-extracted-${{ matrix.target }}-rhel.tmp/.git vuls-data-extracted-${{ matrix.target }}-rhel
           tar --remove-files -acf vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst vuls-data-extracted-${{ matrix.target }}-rhel
 
       - name: Login to GitHub Packages Container registry
@@ -581,9 +581,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.back
+          mv vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tmp
           mkdir vuls-data-extracted-nvd-api-cve
-          mv vuls-data-extracted-nvd-api-cve.back/.git vuls-data-extracted-nvd-api-cve
+          mv vuls-data-extracted-nvd-api-cve.tmp/.git vuls-data-extracted-nvd-api-cve
           tar --remove-files -acf vuls-data-extracted-nvd-api-cve.tar.zst vuls-data-extracted-nvd-api-cve
 
       - name: Login to GitHub Packages Container registry
@@ -660,9 +660,9 @@ jobs:
 
       - name: Create dotgit tarball
         run: |
-          mv vuls-data-extracted-eol vuls-data-extracted-eol.back
+          mv vuls-data-extracted-eol vuls-data-extracted-eol.tmp
           mkdir vuls-data-extracted-eol
-          mv vuls-data-extracted-eol.back/.git vuls-data-extracted-eol
+          mv vuls-data-extracted-eol.tmp/.git vuls-data-extracted-eol
           tar --remove-files -acf vuls-data-extracted-eol.tar.zst vuls-data-extracted-eol
 
       - name: Login to GitHub Packages Container registry
