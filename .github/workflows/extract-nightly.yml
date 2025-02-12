@@ -1,0 +1,641 @@
+name: Extract(Nightly)
+on:
+  workflow_run:
+    workflows: [Extract]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  extract-main:
+    name: extract vuls-data-extracted-${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "alma-errata"
+          - "alma-osv"
+          # - "alma-oval"
+          - "alpine-secdb"
+          - "alpine-osv"
+          - "amazon"
+          # - "android-osv"
+          - "arch"
+          # - "attack"
+          # - "bitnami-osv"
+          # - "capec"
+          # - "cargo-ghsa"
+          # - "cargo-osv"
+          # - "cargo-db"
+          # - "chainguard-osv"
+          # - "composer-ghsa"
+          # - "composer-glsa"
+          # - "composer-osv"
+          # - "composer-db"
+          # - "conan-glsa"
+          # - "cwe"
+          # - "debian-osv"
+          # - "debian-oval"
+          # - "debian-security-tracker-api"
+          # - "debian-security-tracker-salsa"
+          - "epss"
+          # - "erlang-ghsa"
+          # - "erlang-osv"
+          # - "exploit-exploitdb"
+          # - "exploit-github"
+          # - "exploit-inthewild"
+          # - "exploit-trickest"
+          # - "fedora"
+          # - "fortinet-handmade"
+          # - "fortinet-cvrf"
+          - "freebsd"
+          # - "gentoo"
+          # - "ghactions-osv"
+          # - "git-osv"
+          # - "golang-ghsa"
+          # - "golang-glsa"
+          # - "golang-osv"
+          # - "golang-db"
+          # - "golang-vulndb"
+          # - "haskell-osv"
+          # - "jvn-feed-detail"
+          # - "jvn-feed-product"
+          # - "jvn-feed-rss"
+          - "kev"
+          # - "linux-osv"
+          # - "maven-ghsa"
+          # - "maven-glsa"
+          # - "maven-osv"
+          # - "mitre-cvrf"
+          # - "mitre-v4"
+          - "mitre-v5"
+          # - "msf"
+          # - "netbsd"
+          # - "npm-ghsa"
+          # - "npm-glsa"
+          # - "npm-osv"
+          # - "npm-db"
+          # - "nuget-ghsa"
+          # - "nuget-glsa"
+          # - "nuget-osv"
+          # - "nvd-api-cpe"
+          # - "nvd-feed-cve"
+          # - "nvd-feed-cpe"
+          # - "nvd-feed-cpematch"
+          - "oracle"
+          # - "oss-fuzz-osv"
+          # - "perl-db"
+          # - "pip-ghsa"
+          # - "pip-glsa"
+          # - "pip-osv"
+          # - "pip-db"
+          # - "pub-ghsa"
+          # - "pub-osv"
+          # - "r-osv"
+          # - "redhat-cve"
+          # - "redhat-cvrf"
+          # - "redhat-osv"
+          - "rocky-errata"
+          # - "rocky-osv"
+          # - "rubygems-ghsa"
+          # - "rubygems-glsa"
+          # - "rubygems-osv"
+          # - "rubygems-db"
+          # - "snort"
+          # - "suse-oval"
+          # - "suse-cvrf"
+          # - "suse-cvrf-cve"
+          # - "suse-csaf"
+          # - "suse-csaf-vex"
+          # - "suse-osv"
+          # - "swift-ghsa"
+          # - "swift-osv"
+          # - "ubuntu-oval"
+          # - "ubuntu-cve-tracker"
+          # - "ubuntu-osv"
+          # - "vulncheck-kev"
+          # - "windows-bulletin"
+          # - "windows-cvrf"
+          # - "windows-msuc"
+          # - "windows-wsusscn2"
+          # - "wolfi-osv"
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: nightly
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Check out raw repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
+          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
+          rm vuls-data-raw-${{ matrix.target }}.bundle
+
+      - name: Check out extracted repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
+          git clone -b nightly vuls-data-extracted-${{ matrix.target }}.bundle vuls-data-extracted-${{ matrix.target }}
+          git -C vuls-data-extracted-${{ matrix.target }} branch main origin/main
+          rm vuls-data-extracted-${{ matrix.target }}.bundle
+
+      - name: Extract
+        run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}
+
+      - name: set Git config
+        run: |
+          git -C vuls-data-extracted-${{ matrix.target }} config user.email "action@github.com"
+          git -C vuls-data-extracted-${{ matrix.target }} config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-${{ matrix.target }} status --porcelain) ]]; then
+            git -C vuls-data-extracted-${{ matrix.target }} add .
+            git -C vuls-data-extracted-${{ matrix.target }} commit -m "update"
+          fi
+
+      - name: Bundle repository
+        run: git -C vuls-data-extracted-${{ matrix.target }} bundle create vuls-data-extracted-${{ matrix.target }}.bundle --all
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload vuls-data-extracted-${{ matrix.target }}.bundle to GHCR
+        run: |
+          cd vuls-data-extracted-${{ matrix.target }}
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+
+  extract-redhat:
+    name: extract vuls-data-extracted-${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "redhat-ovalv1"
+          - "redhat-ovalv2"
+          - "redhat-csaf"
+          - "redhat-vex"
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: nightly
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Check out vulsio/vuls-data-raw-${{ matrix.target }} repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
+          git clone -b main vuls-data-raw-${{ matrix.target }}.bundle vuls-data-raw-${{ matrix.target }}
+          rm vuls-data-raw-${{ matrix.target }}.bundle
+
+      - name: Check out vulsio/vuls-data-raw-redhat-repository-to-cpe repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
+          git clone -b main vuls-data-raw-redhat-repository-to-cpe.bundle vuls-data-raw-redhat-repository-to-cpe
+          rm vuls-data-raw-redhat-repository-to-cpe.bundle
+
+      - name: Check out extracted repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
+          git clone -b nightly vuls-data-extracted-${{ matrix.target }}.bundle vuls-data-extracted-${{ matrix.target }}
+          git -C vuls-data-extracted-${{ matrix.target }} branch main origin/main
+          rm vuls-data-extracted-${{ matrix.target }}.bundle
+
+      - name: Extract
+        run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }} vuls-data-raw-redhat-repository-to-cpe
+
+      - name: set Git config
+        run: |
+          git -C vuls-data-extracted-${{ matrix.target }} config user.email "action@github.com"
+          git -C vuls-data-extracted-${{ matrix.target }} config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-${{ matrix.target }} status --porcelain) ]]; then
+            git -C vuls-data-extracted-${{ matrix.target }} add .
+            git -C vuls-data-extracted-${{ matrix.target }} commit -m "update"
+          fi
+
+      - name: Bundle repository
+        run: git -C vuls-data-extracted-${{ matrix.target }} bundle create vuls-data-extracted-${{ matrix.target }}.bundle --all
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload vuls-data-extracted-${{ matrix.target }}.bundle to GHCR
+        run: |
+          cd vuls-data-extracted-${{ matrix.target }}
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+
+  extract-redhat-ovalv2-rhel:
+    name: extract vuls-data-extracted-redhat-ovalv2-rhel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: nightly
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Check out vulsio/vuls-data-raw-redhat-ovalv2 repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv2
+          git clone -b main vuls-data-raw-redhat-ovalv2.bundle vuls-data-raw-redhat-ovalv2
+          rm vuls-data-raw-redhat-ovalv2.bundle
+
+      - name: remove unnecessary streams
+        run: |
+          rm -rf vuls-data-raw-redhat-ovalv2/5
+          find vuls-data-raw-redhat-ovalv2/6 -mindepth 1 -maxdepth 1 ! -name 'rhel-6-including-unpatched' ! -name 'rhel-6-extras-including-unpatched' ! -name 'rhel-6-supplementary' ! -name 'rhel-6-els' | xargs rm -rf
+          find vuls-data-raw-redhat-ovalv2/7 -mindepth 1 -maxdepth 1 ! -name 'rhel-7-including-unpatched' ! -name 'rhel-7-extras-including-unpatched' ! -name 'rhel-7-supplementary' | xargs rm -rf
+          find vuls-data-raw-redhat-ovalv2/8 -mindepth 1 -maxdepth 1 ! -name 'rhel-8-including-unpatched' | xargs rm -rf
+          find vuls-data-raw-redhat-ovalv2/9 -mindepth 1 -maxdepth 1 ! -name 'rhel-9-including-unpatched' | xargs rm -rf
+
+      - name: Check out vulsio/vuls-data-raw-redhat-repository-to-cpe repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
+          git clone -b main vuls-data-raw-redhat-repository-to-cpe.bundle vuls-data-raw-redhat-repository-to-cpe
+          rm vuls-data-raw-redhat-repository-to-cpe.bundle
+
+      - name: replace empty repository-to-cpe data
+        run: |
+          echo "{}" > vuls-data-raw-redhat-repository-to-cpe/repository-to-cpe.json
+
+      - name: Check out extracted repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
+          git clone -b nightly vuls-data-extracted-redhat-ovalv2-rhel.bundle vuls-data-extracted-redhat-ovalv2-rhel
+          git -C vuls-data-extracted-redhat-ovalv2-rhel branch main origin/main
+          rm vuls-data-extracted-redhat-ovalv2-rhel.bundle
+
+      - name: Extract
+        run: vuls-data-update extract redhat-ovalv2 --dir vuls-data-extracted-redhat-ovalv2-rhel vuls-data-raw-redhat-ovalv2 vuls-data-raw-redhat-repository-to-cpe
+
+      - name: set Git config
+        run: |
+          git -C vuls-data-extracted-redhat-ovalv2-rhel config user.email "action@github.com"
+          git -C vuls-data-extracted-redhat-ovalv2-rhel config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-redhat-ovalv2-rhel status --porcelain) ]]; then
+            git -C vuls-data-extracted-redhat-ovalv2-rhel add .
+            git -C vuls-data-extracted-redhat-ovalv2-rhel commit -m "update"
+          fi
+
+      - name: Bundle repository
+        run: git -C vuls-data-extracted-redhat-ovalv2-rhel bundle create vuls-data-extracted-redhat-ovalv2-rhel.bundle --all
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload vuls-data-extracted-redhat-ovalv2-rhel.bundle to GHCR
+        run: |
+          cd vuls-data-extracted-redhat-ovalv2-rhel
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+
+  extract-redhat-csaf-or-vex-rhel:
+    name: extract vuls-data-extracted-${{ matrix.target }}-rhel
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: [extract-redhat]
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "redhat-csaf"
+          - "redhat-vex"
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: vulsio/filter-vuls-data-extracted-redhat
+          ref: nightly
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }} repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
+          git clone -b nightly vuls-data-extracted-${{ matrix.target }}.bundle vuls-data-extracted-${{ matrix.target }}
+          rm vuls-data-extracted-${{ matrix.target }}.bundle
+
+      - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }}-rhel repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}-rhel
+          git clone -b nightly vuls-data-extracted-${{ matrix.target }}-rhel.bundle vuls-data-extracted-${{ matrix.target }}-rhel
+          git -C vuls-data-extracted-${{ matrix.target }}-rhel branch main origin/main
+          rm vuls-data-extracted-${{ matrix.target }}-rhel.bundle
+
+      - name: Filter
+        run: go run main.go vuls-data-extracted-${{ matrix.target }} affected_repository_list.json vuls-data-extracted-${{ matrix.target }}-rhel
+
+      - name: set Git config
+        run: |
+          git -C vuls-data-extracted-${{ matrix.target }}-rhel config user.email "action@github.com"
+          git -C vuls-data-extracted-${{ matrix.target }}-rhel config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-${{ matrix.target }}-rhel status --porcelain) ]]; then
+            git -C vuls-data-extracted-${{ matrix.target }}-rhel add .
+            git -C vuls-data-extracted-${{ matrix.target }}-rhel commit -m "update"
+          fi
+
+      - name: Bundle repository
+        run: git -C vuls-data-extracted-${{ matrix.target }}-rhel bundle create vuls-data-extracted-${{ matrix.target }}-rhel.bundle --all
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload vuls-data-extracted-${{ matrix.target }}-rhel.bundle to GHCR
+        run: |
+          cd vuls-data-extracted-${{ matrix.target }}-rhel
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+
+  extract-nvd-api-cve:
+    name: extract vuls-data-extracted-nvd-api-cve
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: nightly
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Check out vulsio/vuls-data-raw-nvd-api-cve repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
+          git clone -b main vuls-data-raw-nvd-api-cve.bundle vuls-data-raw-nvd-api-cve
+          rm vuls-data-raw-nvd-api-cve.bundle
+
+      - name: Check out vulsio/vuls-data-raw-nvd-api-cpematch repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
+          git clone -b main vuls-data-raw-nvd-api-cpematch.bundle vuls-data-raw-nvd-api-cpematch
+          rm vuls-data-raw-nvd-api-cpematch.bundle
+
+      - name: Check out extracted repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
+          git clone -b nightly vuls-data-extracted-nvd-api-cve.bundle vuls-data-extracted-nvd-api-cve
+          git -C vuls-data-extracted-nvd-api-cve branch main origin/main
+          rm vuls-data-extracted-nvd-api-cve.bundle
+
+      - name: Extract
+        run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
+
+      - name: set Git config
+        run: |
+          git -C vuls-data-extracted-nvd-api-cve config user.email "action@github.com"
+          git -C vuls-data-extracted-nvd-api-cve config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-nvd-api-cve status --porcelain) ]]; then
+            git -C vuls-data-extracted-nvd-api-cve add .
+            git -C vuls-data-extracted-nvd-api-cve commit -m "update"
+          fi
+
+      - name: Bundle repository
+        run: git -C vuls-data-extracted-nvd-api-cve bundle create vuls-data-extracted-nvd-api-cve.bundle --all
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload vuls-data-extracted-nvd-api-cve.bundle to GHCR
+        run: |
+          cd vuls-data-extracted-nvd-api-cve
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+
+  extract-eol:
+    name: extract vuls-data-extracted-eol
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: nightly
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Check out extracted repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
+          git clone -b nightly vuls-data-extracted-eol.bundle vuls-data-extracted-eol
+          git -C vuls-data-extracted-eol branch main origin/main
+          rm vuls-data-extracted-eol.bundle
+
+      - name: Extract
+        run: vuls-data-update extract eol --dir vuls-data-extracted-eol
+
+      - name: set Git config
+        run: |
+          git -C vuls-data-extracted-eol config user.email "action@github.com"
+          git -C vuls-data-extracted-eol config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-eol status --porcelain) ]]; then
+            git -C vuls-data-extracted-eol add .
+            git -C vuls-data-extracted-eol commit -m "update"
+          fi
+
+      - name: Bundle repository
+        run: git -C vuls-data-extracted-eol bundle create vuls-data-extracted-eol.bundle --all
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload vuls-data-extracted-eol.bundle to GHCR
+        run: |
+          cd vuls-data-extracted-eol
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-eol vuls-data-extracted-eol.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle

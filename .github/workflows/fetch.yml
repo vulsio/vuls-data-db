@@ -592,9 +592,6 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch epss --dir vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
 
-      - name: Split Large Files
-        run: find vuls-data-raw-epss -name "*.json" -size +50M | xargs -I {} sh -c "split -a 3 -d -b 50m {} {}. && rm {}"
-
       - name: set Git config
         run: |
           git -C vuls-data-raw-epss config user.email "action@github.com"

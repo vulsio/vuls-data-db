@@ -1,7 +1,7 @@
 name: Cleanup
 on:
   workflow_run:
-    workflows: [Push, Fetch]
+    workflows: [Push, Fetch, Extract, Extract(Nightly)]
     types:
       - completed
   workflow_dispatch:
