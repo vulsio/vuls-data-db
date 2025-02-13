@@ -407,7 +407,7 @@ jobs:
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-redhat-csaf-or-vex-rhel:
-    name: extract vuls-data-extracted-${{ matrix.target }}-rhel
+    name: Extract vuls-data-extracted-${{ matrix.target }}-rhel
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs: [extract-redhat]
