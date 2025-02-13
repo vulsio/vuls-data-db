@@ -6,7 +6,7 @@ on:
 
 jobs:
   backup:
-    name: backup ghcr.io/${{ github.repository }}:${{ matrix.target }} to ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
+    name: Backup ghcr.io/${{ github.repository }}:${{ matrix.target }} to ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -160,6 +160,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls.db to GHCR
+      - name: Upload ${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup ${{ matrix.target }}.bundle:application/vnd.vulsio.vuls-data-db.git.layer.v1+bundle
+          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd

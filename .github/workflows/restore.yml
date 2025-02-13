@@ -1,10 +1,10 @@
-name: Push
+name: Restore
 on:
   workflow_dispatch:
 
 jobs:
-  push:
-    name: Push vulsio/${{ matrix.target }}/.git to ghcr.io/vulsio/vuls-data-db:${{ matrix.target }}
+  restore:
+    name: Restore ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup to ghcr.io/${{ github.repository }}:${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -19,7 +19,6 @@ jobs:
           - vuls-data-extracted-cargo-ghsa
           - vuls-data-extracted-eol
           - vuls-data-extracted-epss
-          - vuls-data-extracted-epss-archive-1
           - vuls-data-extracted-freebsd
           - vuls-data-extracted-kev
           - vuls-data-extracted-mitre-v5
@@ -27,7 +26,6 @@ jobs:
           - vuls-data-extracted-oracle
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
-          - vuls-data-extracted-redhat-csaf-rhel-archive-1
           - vuls-data-extracted-redhat-ovalv1
           - vuls-data-extracted-redhat-ovalv2
           - vuls-data-extracted-redhat-ovalv2-rhel
@@ -140,16 +138,6 @@ jobs:
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 32768
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
-          remove-codeql: "true"
-          remove-docker-images: "true"
-
       - name: Install Oras
         run: |
           # https://oras.land/docs/installation/#linux
@@ -160,22 +148,8 @@ jobs:
           sudo mv oras-install/oras /usr/local/bin/
           rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          repository: vulsio/${{ matrix.target }}
-          ref: main
-          fetch-depth: "0"
-
-      - name: Create nightly branch
-        continue-on-error: true
-        run: git branch nightly origin/nightly
-
-      - name: Create dotgit tarball
-        run: |
-          mkdir ${{ matrix.target }}
-          mv .git ${{ matrix.target }}
-          tar --remove-files -acf ${{ matrix.target }}.tar.zst ${{ matrix.target }}
+      - name: Pull ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
+        run: oras pull ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -186,4 +160,4 @@ jobs:
 
       - name: Upload ${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          oras push ghcr.io/vulsio/vuls-data-db:${{ matrix.target }} ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }} ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
