@@ -172,7 +172,7 @@ jobs:
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-extracted-${{ matrix.target }} config user.email "action@github.com"
           git -C vuls-data-extracted-${{ matrix.target }} config user.name "GitHub Action"
@@ -376,7 +376,7 @@ jobs:
       - name: Extract
         run: vuls-data-update extract redhat-ovalv2 --dir vuls-data-extracted-redhat-ovalv2-rhel vuls-data-raw-redhat-ovalv2 vuls-data-raw-redhat-repository-to-cpe
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-extracted-redhat-ovalv2-rhel config user.email "action@github.com"
           git -C vuls-data-extracted-redhat-ovalv2-rhel config user.name "GitHub Action"
@@ -467,7 +467,7 @@ jobs:
       - name: Filter
         run: go run main.go vuls-data-extracted-${{ matrix.target }} affected_repository_list.json vuls-data-extracted-${{ matrix.target }}-rhel
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-extracted-${{ matrix.target }}-rhel config user.email "action@github.com"
           git -C vuls-data-extracted-${{ matrix.target }}-rhel config user.name "GitHub Action"
@@ -559,7 +559,7 @@ jobs:
       - name: Extract
         run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-extracted-nvd-api-cve config user.email "action@github.com"
           git -C vuls-data-extracted-nvd-api-cve config user.name "GitHub Action"

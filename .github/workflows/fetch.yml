@@ -425,7 +425,7 @@ jobs:
       - name: Merge
         run: mv -f vuls-data-raw-windows-msuc.${{ matrix.cid }}/* vuls-data-raw-windows-msuc
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-raw-windows-msuc config user.email "action@github.com"
           git -C vuls-data-raw-windows-msuc config user.name "GitHub Action"
@@ -604,7 +604,7 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch epss --dir vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-raw-epss config user.email "action@github.com"
           git -C vuls-data-raw-epss config user.name "GitHub Action"
@@ -787,7 +787,7 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} ${{ secrets.VULNCHECK_API_KEY }}
 
-      - name: set Git config
+      - name: Set Git config
         run: |
           git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
           git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
