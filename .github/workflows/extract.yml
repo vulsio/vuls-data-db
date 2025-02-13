@@ -633,7 +633,6 @@ jobs:
           tar -xf vuls-data-extracted-eol.tar.zst
           rm vuls-data-extracted-eol.tar.zst
           git -C vuls-data-extracted-eol switch main
-          git -C vuls-data-extracted-eol restore .
 
       - name: Extract
         run: vuls-data-update extract eol --dir vuls-data-extracted-eol
