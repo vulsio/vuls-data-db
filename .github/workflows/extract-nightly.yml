@@ -498,7 +498,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-extracted-${{ matrix.target }}-rhel.bundle to GHCR
+      - name: Upload vuls-data-extracted-${{ matrix.target }}-rhel dotgit tarball to GHCR
         run: |
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }}-rhel vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
