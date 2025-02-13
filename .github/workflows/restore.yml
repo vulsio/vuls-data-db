@@ -1,12 +1,10 @@
-name: Backup
+name: Restore
 on:
-  schedule:
-    - cron: "0 */12 * * *"
   workflow_dispatch:
 
 jobs:
-  backup:
-    name: Backup ghcr.io/${{ github.repository }}:${{ matrix.target }} to ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
+  restore:
+    name: Restore ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup to ghcr.io/${{ github.repository }}:${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -150,8 +148,8 @@ jobs:
           sudo mv oras-install/oras /usr/local/bin/
           rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Pull ghcr.io/${{ github.repository }}:${{ matrix.target }}
-        run: oras pull ghcr.io/${{ github.repository }}:${{ matrix.target }}
+      - name: Pull ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
+        run: oras pull ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -162,4 +160,4 @@ jobs:
 
       - name: Upload ${{ matrix.target }} dotgit tarball to GHCR
         run: |
-          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }} ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
