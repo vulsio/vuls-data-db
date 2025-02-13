@@ -160,7 +160,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
           tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
           rm vuls-data-raw-${{ matrix.target }}.tar.zst
-          git -C vuls-data-raw-${{ matrix.target }} switch main
           git -C vuls-data-raw-${{ matrix.target }} restore .
 
       - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }} repository
@@ -254,7 +253,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
           tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
           rm vuls-data-raw-${{ matrix.target }}.tar.zst
-          git -C vuls-data-raw-${{ matrix.target }} switch main
           git -C vuls-data-raw-${{ matrix.target }} restore .
 
       - name: Check out vulsio/vuls-data-raw-redhat-repository-to-cpe repository
@@ -262,7 +260,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
           tar -xf vuls-data-raw-redhat-repository-to-cpe.tar.zst
           rm vuls-data-raw-redhat-repository-to-cpe.tar.zst
-          git -C vuls-data-raw-redhat-repository-to-cpe switch main
           git -C vuls-data-raw-redhat-repository-to-cpe restore .
 
       - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }} repository
@@ -348,7 +345,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv2
           tar -xf vuls-data-raw-redhat-ovalv2.tar.zst
           rm vuls-data-raw-redhat-ovalv2.tar.zst
-          git -C vuls-data-raw-redhat-ovalv2 switch main
           git -C vuls-data-raw-redhat-ovalv2 restore .
 
       - name: Remove unnecessary streams
@@ -364,7 +360,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
           tar -xf vuls-data-raw-redhat-repository-to-cpe.tar.zst
           rm vuls-data-raw-redhat-repository-to-cpe.tar.zst
-          git -C vuls-data-raw-redhat-repository-to-cpe switch main
           git -C vuls-data-raw-redhat-repository-to-cpe restore .
 
       - name: Replace empty repository-to-cpe data
@@ -545,7 +540,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
           tar -xf vuls-data-raw-nvd-api-cve.tar.zst
           rm vuls-data-raw-nvd-api-cve.tar.zst
-          git -C vuls-data-raw-nvd-api-cve switch main
           git -C vuls-data-raw-nvd-api-cve restore .
 
       - name: Check out vulsio/vuls-data-raw-nvd-api-cpematch repository
@@ -553,7 +547,6 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
           tar -xf vuls-data-raw-nvd-api-cpematch.tar.zst
           rm vuls-data-raw-nvd-api-cpematch.tar.zst
-          git -C vuls-data-raw-nvd-api-cpematch switch main
           git -C vuls-data-raw-nvd-api-cpematch restore .
 
       - name: Check out vulsio/vuls-data-extracted-nvd-api-cve repository
