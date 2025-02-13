@@ -167,6 +167,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-extracted-${{ matrix.target }} switch main
 
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}
@@ -266,6 +267,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-extracted-${{ matrix.target }} switch main
 
       - name: Extract
         run: vuls-data-update extract ${{ matrix.target }} --dir vuls-data-extracted-${{ matrix.target }} vuls-data-raw-${{ matrix.target }} vuls-data-raw-redhat-repository-to-cpe
@@ -369,6 +371,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           tar -xf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
           rm vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
+          git -C vuls-data-extracted-redhat-ovalv2-rhel switch main
 
       - name: Extract
         run: vuls-data-update extract redhat-ovalv2 --dir vuls-data-extracted-redhat-ovalv2-rhel vuls-data-raw-redhat-ovalv2 vuls-data-raw-redhat-repository-to-cpe
@@ -451,6 +454,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}
           tar -xf vuls-data-extracted-${{ matrix.target }}.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}.tar.zst
+          git -C vuls-data-extracted-${{ matrix.target }} switch main
           git -C vuls-data-extracted-${{ matrix.target }} restore .
 
       - name: Check out vulsio/vuls-data-extracted-${{ matrix.target }}-rhel repository
@@ -458,6 +462,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ matrix.target }}-rhel
           tar -xf vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst
           rm vuls-data-extracted-${{ matrix.target }}-rhel.tar.zst
+          git -C vuls-data-extracted-${{ matrix.target }}-rhel switch main
 
       - name: Filter
         run: go run main.go vuls-data-extracted-${{ matrix.target }} affected_repository_list.json vuls-data-extracted-${{ matrix.target }}-rhel
@@ -549,6 +554,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
           tar -xf vuls-data-extracted-nvd-api-cve.tar.zst
           rm vuls-data-extracted-nvd-api-cve.tar.zst
+          git -C vuls-data-extracted-nvd-api-cve switch main
 
       - name: Extract
         run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
@@ -626,6 +632,7 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
           tar -xf vuls-data-extracted-eol.tar.zst
           rm vuls-data-extracted-eol.tar.zst
+          git -C vuls-data-extracted-eol switch main
           git -C vuls-data-extracted-eol restore .
 
       - name: Extract
