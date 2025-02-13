@@ -579,7 +579,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-extracted-nvd-api-cve.bundle to GHCR
+      - name: Upload vuls-data-extracted-nvd-api-cve dotgit tarball to GHCR
         run: |
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
