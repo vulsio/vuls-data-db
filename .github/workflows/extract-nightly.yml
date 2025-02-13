@@ -303,7 +303,7 @@ jobs:
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-${{ matrix.target }} vuls-data-extracted-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   extract-redhat-ovalv2-rhel:
-    name: extract vuls-data-extracted-redhat-ovalv2-rhel
+    name: Extract vuls-data-extracted-redhat-ovalv2-rhel
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
