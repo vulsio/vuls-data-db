@@ -396,6 +396,7 @@ jobs:
             pack-windowMemory: 4g
     uses: ./.github/workflows/gc.yml
     with:
+      repository: ${{ github.repository }}
       tag: ${{ matrix.tag }}
       pack-threads: ${{ matrix.pack-threads }}
       pack-windowMemory: ${{ matrix.pack-windowMemory }}

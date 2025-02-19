@@ -2,7 +2,7 @@ name: Extract All
 
 on:
   workflow_run:
-    workflows: [Fetch All]
+    workflows: [Archive Raw]
     types:
       - completed
   workflow_dispatch:
