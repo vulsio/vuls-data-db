@@ -1,0 +1,225 @@
+name: Archive-Raw
+on:
+  # workflow_run:
+  #   workflows: [Fetch]
+  #   types:
+  #     - completed
+  workflow_dispatch:
+  # push:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  archive-raw:
+    runs-on: ubuntu-latest
+    env:
+      SPLIT_THRESHOLD_MB: 1000
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "sample"
+          # - "alma-errata"
+          # - "alma-osv"
+          # - "alma-oval"
+          # - "alpine-secdb"
+          # - "alpine-osv"
+          # - "amazon"
+          # - "android-osv"
+          # - "arch"
+          # - "attack"
+          # - "bitnami-osv"
+          # - "capec"
+          # - "cargo-ghsa"
+          # - "cargo-osv"
+          # # - "cargo-db"
+          # - "chainguard-osv"
+          # - "composer-ghsa"
+          # - "composer-glsa"
+          # - "composer-osv"
+          # # - "composer-db"
+          # - "conan-glsa"
+          # - "cwe"
+          # - "debian-osv"
+          # - "debian-oval"
+          # - "debian-security-tracker-api"
+          # - "debian-security-tracker-salsa"
+          # - "epss"
+          # - "erlang-ghsa"
+          # - "erlang-osv"
+          # - "exploit-exploitdb"
+          # - "exploit-github"
+          # - "exploit-inthewild"
+          # - "exploit-trickest"
+          # - "fedora"
+          # - "fortinet-cvrf"
+          # - "freebsd"
+          # - "gentoo"
+          # - "ghactions-osv"
+          # - "git-osv"
+          # - "golang-ghsa"
+          # - "golang-glsa"
+          # - "golang-osv"
+          # # - "golang-db"
+          # # - "golang-vulndb"
+          # - "haskell-osv"
+          # - "jvn-feed-detail"
+          # - "jvn-feed-product"
+          # - "jvn-feed-rss"
+          # - "kev"
+          # - "linux-osv"
+          # - "maven-ghsa"
+          # - "maven-glsa"
+          # - "maven-osv"
+          # # - "mitre-cvrf"
+          # # - "mitre-v4"
+          # - "mitre-v5"
+          # - "msf"
+          # - "netbsd"
+          # - "npm-ghsa"
+          # - "npm-glsa"
+          # - "npm-osv"
+          # # - "npm-db"
+          # - "nuget-ghsa"
+          # - "nuget-glsa"
+          # - "nuget-osv"
+          # - "nvd-api-cve"
+          # - "nvd-api-cpe"
+          # - "nvd-api-cpematch"
+          # - "nvd-feed-cve"
+          # - "nvd-feed-cpe"
+          # - "nvd-feed-cpematch"
+          # - "oracle"
+          # - "oss-fuzz-osv"
+          # # - "perl-db"
+          # - "pip-ghsa"
+          # - "pip-glsa"
+          # - "pip-osv"
+          # # - "pip-db"
+          # - "pub-ghsa"
+          # - "pub-osv"
+          # - "r-osv"
+          # - "redhat-cve"
+          # - "redhat-csaf"
+          # # - "redhat-cvrf"
+          # - "redhat-repository-to-cpe"
+          # # - "redhat-ovalv1"
+          # - "redhat-ovalv2"
+          # - "redhat-vex"
+          # - "redhat-osv"
+          # - "rocky-errata"
+          # - "rocky-osv"
+          # - "rubygems-ghsa"
+          # - "rubygems-glsa"
+          # - "rubygems-osv"
+          # # - "rubygems-db"
+          # - "snort"
+          # - "suse-oval"
+          # - "suse-cvrf"
+          # - "suse-cvrf-cve"
+          # - "suse-csaf"
+          # - "suse-csaf-vex"
+          # - "suse-osv"
+          # - "swift-ghsa"
+          # - "swift-osv"
+          # - "ubuntu-oval"
+          # - "ubuntu-cve-tracker"
+          # - "ubuntu-osv"
+          # - "vulncheck-kev"
+          # # - "windows-bulletin"
+          # - "windows-cvrf"
+          # - "windows-msuc"
+          # - "windows-wsusscn2"
+          # - "wolfi-osv"
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+ 
+      - name: Check out fetch data repository
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
+
+      - name: Decide whether to archive
+        id: archive_check
+        run: |
+          SIZE=$(ls -s --block-size=1 vuls-data-raw-${{ matrix.target }}.tar.zst | awk '{print $1;}')
+          echo "repository size [KB]:" $(( ${SIZE} / 1024 ))
+          echo "repository size [MB]:" $(( ${SIZE} / 1024 / 1024 ))
+          if [ ${SIZE} -gt $((${{ env.SPLIT_THRESHOLD_MB }} * 1024 * 1024)) ]; then
+             echo "do_archive=true" >> ${GITHUB_OUTPUT}
+          fi
+
+      - name: Set archive suffix
+        id: set_archive_suffix
+        if: steps.archive_check.outputs.do_archive == 'true'
+        run: |
+          ARCHIVE_MAX=$(
+              (
+                echo "vuls-data-raw-${{ matrix.target }}-archive-0" ;
+                gh api --paginate /orgs/vulsio/packages/container/vuls-data-db/versions |
+                  jq -r '.[] | .metadata.container.tags[0] | select(. // "" | startswith("vuls-data-raw-${{ matrix.target }}-archive-"))'
+              ) |
+              grep -v -- '-backup' |
+              sed -e 's/vuls-data-raw-${{ matrix.target }}-archive-//' |
+              sort -rn |
+              head -1
+          )
+          ARCHIVE_SUFFIX=archive-$(( ${ARCHIVE_MAX} + 1 ))
+          echo "archive_suffix=${ARCHIVE_SUFFIX}" | tee ${GITHUB_OUTPUT}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Split archive
+        id: split_archive
+        if: steps.archive_check.outputs.do_archive == 'true'
+        run: |
+          mkdir latest/
+          cd latest/
+          tar -xf ../vuls-data-raw-${{ matrix.target }}.tar.zst
+          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
+
+          echo "Create the latest repository..."
+          git clone --depth 1 --no-single-branch  --no-checkout --branch main file://${PWD}/vuls-data-raw-${{ matrix.target }}.tmp vuls-data-raw-${{ matrix.target }}
+          rm -rf vuls-data-raw-${{ matrix.target }}.tmp
+          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
+
+      - name: Login to GitHub Packages Container registry
+        if: steps.archive_check.outputs.do_archive == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push archive dotgit
+        if: steps.archive_check.outputs.do_archive == 'true'
+        run: |
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }}-${{ steps.set_archive_suffix.outputs.archive_suffix }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+      - name: Push latest dotgit
+        if: steps.archive_check.outputs.do_archive == 'true'
+        run: |
+          cd latest/
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+  
