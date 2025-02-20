@@ -43,38 +43,29 @@ jobs:
       - name: go install
         run: go install ./cmd/vuls-data-update
 
+      - name: go install github.com/sibprogrammer/xq@latest
+        run: go install github.com/sibprogrammer/xq@latest
+
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
         run: |
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
           tar -xf vuls-data-raw-fortinet-cvrf.tar.zst
           rm vuls-data-raw-fortinet-cvrf.tar.zst
-
-      - name: List advisory in ir.xml
-        id: list
-        run: |
-          go install github.com/sibprogrammer/xq@latest
-          echo "advisory=$(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq -u | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          git -C vuls-data-raw-fortinet-cvrf restore .
 
       - name: Fetch
-        if: ${{ steps.list.outputs.advisory != '' }}
-        run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf ${{ steps.list.outputs.advisory }}
+        run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf --concurrency 2 $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
 
       - name: Set Git config
-        if: ${{ steps.list.outputs.advisory != '' }}
         run: |
           git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
           git -C vuls-data-raw-fortinet-cvrf config user.name "GitHub Action"
 
       - name: Restore
-        if: ${{ steps.list.outputs.advisory != '' }}
         run: |
-          deleted=$(sort <(git -C vuls-data-raw-fortinet-cvrf ls-files --deleted) <(echo ${{ steps.list.outputs.advisory }} | xargs -n 1 | sed -e 's/\(FG-IR-\([0-9]\{2\}\)-[0-9]\{3\}\)/20\2\/\1.json/g') <(echo ${{ steps.list.outputs.advisory }} | xargs -n 1 | sed -e 's/\(FG-IR-\([0-9]\{2\}\)-[0-9]\{3\}\)/20\2\/\1.json/g') | uniq -u)
-          if [[ -n ${deleted} ]]; then
-            git -C vuls-data-raw-fortinet-cvrf restore ${deleted}
-          fi
+          git -C vuls-data-raw-fortinet-cvrf restore 2012/FG-IR-012-001.json 2012/FG-IR-012-002.json 2012/FG-IR-012-003.json 2012/FG-IR-012-004.json 2012/FG-IR-012-005.json 2012/FG-IR-012-006.json 2012/FG-IR-012-007.json 2012/FG-IR-012-008.json 2013/FG-IR-013-001.json
 
       - name: Commit
-        if: ${{ steps.list.outputs.advisory != '' }}
         run: |
           if [[ -n $(git -C vuls-data-raw-fortinet-cvrf status --porcelain) ]]; then
             git -C vuls-data-raw-fortinet-cvrf add .
