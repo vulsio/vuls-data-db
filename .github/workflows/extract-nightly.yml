@@ -409,7 +409,7 @@ jobs:
   extract-redhat-csaf-or-vex-rhel:
     name: Extract vuls-data-extracted-${{ matrix.target }}-rhel
     runs-on: ubuntu-latest
-    if: ${{ always() }}
+    if: ${{ success() || failure() }}
     needs: [extract-redhat]
     strategy:
       fail-fast: false
