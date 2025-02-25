@@ -7,288 +7,288 @@ on:
   workflow_dispatch:
 
 jobs:
-  fetch-main:
-    name: Fetch vuls-data-raw-${{ matrix.target }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - "alma-errata"
-          - "alma-osv"
-          - "alma-oval"
-          - "alpine-secdb"
-          - "alpine-osv"
-          - "amazon"
-          - "android-osv"
-          - "arch"
-          - "attack"
-          - "bitnami-osv"
-          - "capec"
-          - "cargo-ghsa"
-          - "cargo-osv"
-          # - "cargo-db"
-          - "chainguard-osv"
-          - "composer-ghsa"
-          - "composer-glsa"
-          - "composer-osv"
-          # - "composer-db"
-          - "conan-glsa"
-          - "cwe"
-          - "debian-osv"
-          - "debian-oval"
-          - "debian-security-tracker-api"
-          - "debian-security-tracker-salsa"
-          - "erlang-ghsa"
-          - "erlang-osv"
-          - "exploit-exploitdb"
-          - "exploit-github"
-          - "exploit-inthewild"
-          - "exploit-trickest"
-          - "freebsd"
-          - "gentoo"
-          - "ghactions-osv"
-          - "git-osv"
-          - "golang-ghsa"
-          - "golang-glsa"
-          - "golang-osv"
-          # - "golang-db"
-          # - "golang-vulndb"
-          - "haskell-osv"
-          - "jvn-feed-detail"
-          - "jvn-feed-product"
-          - "jvn-feed-rss"
-          - "kev"
-          - "linux-osv"
-          - "maven-ghsa"
-          - "maven-glsa"
-          - "maven-osv"
-          # - "mitre-cvrf"
-          # - "mitre-v4"
-          - "mitre-v5"
-          - "msf"
-          - "netbsd"
-          - "npm-ghsa"
-          - "npm-glsa"
-          - "npm-osv"
-          # - "npm-db"
-          - "nuget-ghsa"
-          - "nuget-glsa"
-          - "nuget-osv"
-          - "nvd-feed-cve"
-          - "nvd-feed-cpe"
-          - "nvd-feed-cpematch"
-          - "oracle"
-          - "oss-fuzz-osv"
-          # - "perl-db"
-          - "pip-ghsa"
-          - "pip-glsa"
-          - "pip-osv"
-          # - "pip-db"
-          - "pub-ghsa"
-          - "pub-osv"
-          - "r-osv"
-          - "redhat-cve"
-          - "redhat-csaf"
-          # - "redhat-cvrf"
-          - "redhat-repository-to-cpe"
-          # - "redhat-ovalv1"
-          - "redhat-ovalv2"
-          - "redhat-vex"
-          - "redhat-osv"
-          - "rocky-errata"
-          - "rocky-osv"
-          - "rubygems-ghsa"
-          - "rubygems-glsa"
-          - "rubygems-osv"
-          # - "rubygems-db"
-          - "snort"
-          - "suse-oval"
-          - "suse-cvrf"
-          - "suse-cvrf-cve"
-          - "suse-csaf"
-          - "suse-csaf-vex"
-          - "suse-osv"
-          - "swift-ghsa"
-          - "swift-osv"
-          - "ubuntu-oval"
-          - "ubuntu-cve-tracker"
-          - "ubuntu-osv"
-          # - "windows-bulletin"
-          - "windows-cvrf"
-          - "windows-wsusscn2"
-          - "wolfi-osv"
-    steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 32768
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
-          remove-codeql: "true"
-          remove-docker-images: "true"
+  # fetch-main:
+  #   name: Fetch vuls-data-raw-${{ matrix.target }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       target:
+  #         - "alma-errata"
+  #         - "alma-osv"
+  #         - "alma-oval"
+  #         - "alpine-secdb"
+  #         - "alpine-osv"
+  #         - "amazon"
+  #         - "android-osv"
+  #         - "arch"
+  #         - "attack"
+  #         - "bitnami-osv"
+  #         - "capec"
+  #         - "cargo-ghsa"
+  #         - "cargo-osv"
+  #         # - "cargo-db"
+  #         - "chainguard-osv"
+  #         - "composer-ghsa"
+  #         - "composer-glsa"
+  #         - "composer-osv"
+  #         # - "composer-db"
+  #         - "conan-glsa"
+  #         - "cwe"
+  #         - "debian-osv"
+  #         - "debian-oval"
+  #         - "debian-security-tracker-api"
+  #         - "debian-security-tracker-salsa"
+  #         - "erlang-ghsa"
+  #         - "erlang-osv"
+  #         - "exploit-exploitdb"
+  #         - "exploit-github"
+  #         - "exploit-inthewild"
+  #         - "exploit-trickest"
+  #         - "freebsd"
+  #         - "gentoo"
+  #         - "ghactions-osv"
+  #         - "git-osv"
+  #         - "golang-ghsa"
+  #         - "golang-glsa"
+  #         - "golang-osv"
+  #         # - "golang-db"
+  #         # - "golang-vulndb"
+  #         - "haskell-osv"
+  #         - "jvn-feed-detail"
+  #         - "jvn-feed-product"
+  #         - "jvn-feed-rss"
+  #         - "kev"
+  #         - "linux-osv"
+  #         - "maven-ghsa"
+  #         - "maven-glsa"
+  #         - "maven-osv"
+  #         # - "mitre-cvrf"
+  #         # - "mitre-v4"
+  #         - "mitre-v5"
+  #         - "msf"
+  #         - "netbsd"
+  #         - "npm-ghsa"
+  #         - "npm-glsa"
+  #         - "npm-osv"
+  #         # - "npm-db"
+  #         - "nuget-ghsa"
+  #         - "nuget-glsa"
+  #         - "nuget-osv"
+  #         - "nvd-feed-cve"
+  #         - "nvd-feed-cpe"
+  #         - "nvd-feed-cpematch"
+  #         - "oracle"
+  #         - "oss-fuzz-osv"
+  #         # - "perl-db"
+  #         - "pip-ghsa"
+  #         - "pip-glsa"
+  #         - "pip-osv"
+  #         # - "pip-db"
+  #         - "pub-ghsa"
+  #         - "pub-osv"
+  #         - "r-osv"
+  #         - "redhat-cve"
+  #         - "redhat-csaf"
+  #         # - "redhat-cvrf"
+  #         - "redhat-repository-to-cpe"
+  #         # - "redhat-ovalv1"
+  #         - "redhat-ovalv2"
+  #         - "redhat-vex"
+  #         - "redhat-osv"
+  #         - "rocky-errata"
+  #         - "rocky-osv"
+  #         - "rubygems-ghsa"
+  #         - "rubygems-glsa"
+  #         - "rubygems-osv"
+  #         # - "rubygems-db"
+  #         - "snort"
+  #         - "suse-oval"
+  #         - "suse-cvrf"
+  #         - "suse-cvrf-cve"
+  #         - "suse-csaf"
+  #         - "suse-csaf-vex"
+  #         - "suse-osv"
+  #         - "swift-ghsa"
+  #         - "swift-osv"
+  #         - "ubuntu-oval"
+  #         - "ubuntu-cve-tracker"
+  #         - "ubuntu-osv"
+  #         # - "windows-bulletin"
+  #         - "windows-cvrf"
+  #         - "windows-wsusscn2"
+  #         - "wolfi-osv"
+  #   steps:
+  #     - name: Maximize build space
+  #       uses: easimon/maximize-build-space@v10
+  #       with:
+  #         root-reserve-mb: 32768
+  #         remove-dotnet: "true"
+  #         remove-android: "true"
+  #         remove-haskell: "true"
+  #         remove-codeql: "true"
+  #         remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+  #     - name: Install Oras
+  #       run: |
+  #         # https://oras.land/docs/installation/#linux
+  #         VERSION="1.2.2"
+  #         curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+  #         mkdir -p oras-install/
+  #         tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+  #         sudo mv oras-install/oras /usr/local/bin/
+  #         rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          repository: MaineK00n/vuls-data-update
-          ref: main
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: MaineK00n/vuls-data-update
+  #         ref: main
 
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
+  #     - name: Set up Go 1.x
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: "go.mod"
 
-      - name: go install
-        run: go install ./cmd/vuls-data-update
+  #     - name: go install
+  #       run: go install ./cmd/vuls-data-update
 
-      - name: Check out fetch data repository
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
-          rm vuls-data-raw-${{ matrix.target }}.tar.zst
+  #     - name: Check out fetch data repository
+  #       run: |
+  #         oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
+  #         tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+  #         rm vuls-data-raw-${{ matrix.target }}.tar.zst
 
-      - name: install cabextract for windows-wsusscn2
-        if: ${{ matrix.target == 'windows-wsusscn2' }}
-        run: sudo apt-get update && sudo apt-get install -y cabextract
+  #     - name: install cabextract for windows-wsusscn2
+  #       if: ${{ matrix.target == 'windows-wsusscn2' }}
+  #       run: sudo apt-get update && sudo apt-get install -y cabextract
 
-      - name: Fetch
-        run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }}
+  #     - name: Fetch
+  #       run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }}
 
-      - name: Set Git config
-        run: |
-          git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
-          git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
+  #     - name: Set Git config
+  #       run: |
+  #         git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
+  #         git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
 
-      - name: Commit
-        run: |
-          if [[ -n $(git -C vuls-data-raw-${{ matrix.target }} status --porcelain) ]]; then
-            git -C vuls-data-raw-${{ matrix.target }} add .
-            git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
-          fi
+  #     - name: Commit
+  #       run: |
+  #         if [[ -n $(git -C vuls-data-raw-${{ matrix.target }} status --porcelain) ]]; then
+  #           git -C vuls-data-raw-${{ matrix.target }} add .
+  #           git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
+  #         fi
 
-      - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
-          mkdir vuls-data-raw-${{ matrix.target }}
-          mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
-          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
+  #     - name: Create dotgit tarball
+  #       run: |
+  #         mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
+  #         mkdir vuls-data-raw-${{ matrix.target }}
+  #         mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
+  #         tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
  
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Packages Container registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+  #     - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
+  #       run: |
+  #         oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
-  fetch-nvd-api:
-    name: Fetch vuls-data-raw-${{ matrix.target }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - "nvd-api-cve"
-          - "nvd-api-cpe"
-          - "nvd-api-cpematch"
-    steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 32768
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
-          remove-codeql: "true"
-          remove-docker-images: "true"
+  # fetch-nvd-api:
+  #   name: Fetch vuls-data-raw-${{ matrix.target }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       target:
+  #         - "nvd-api-cve"
+  #         - "nvd-api-cpe"
+  #         - "nvd-api-cpematch"
+  #   steps:
+  #     - name: Maximize build space
+  #       uses: easimon/maximize-build-space@v10
+  #       with:
+  #         root-reserve-mb: 32768
+  #         remove-dotnet: "true"
+  #         remove-android: "true"
+  #         remove-haskell: "true"
+  #         remove-codeql: "true"
+  #         remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+  #     - name: Install Oras
+  #       run: |
+  #         # https://oras.land/docs/installation/#linux
+  #         VERSION="1.2.2"
+  #         curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+  #         mkdir -p oras-install/
+  #         tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+  #         sudo mv oras-install/oras /usr/local/bin/
+  #         rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          repository: MaineK00n/vuls-data-update
-          ref: main
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: MaineK00n/vuls-data-update
+  #         ref: main
 
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
+  #     - name: Set up Go 1.x
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: "go.mod"
 
-      - name: go install
-        run: go install ./cmd/vuls-data-update
+  #     - name: go install
+  #       run: go install ./cmd/vuls-data-update
 
-      - name: Check out fetch data repository
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
-          rm vuls-data-raw-${{ matrix.target }}.tar.zst
+  #     - name: Check out fetch data repository
+  #       run: |
+  #         oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
+  #         tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+  #         rm vuls-data-raw-${{ matrix.target }}.tar.zst
 
-      - name: Fetch all
-        run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 5 --wait 0
+  #     - name: Fetch all
+  #       run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 5 --wait 0
 
-      # - name: Fetch modified for last 3 days
-      #   run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 5 --wait 0 --last-mod-start-date $(git -C vuls-data-raw-${{ matrix.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
+  #     # - name: Fetch modified for last 3 days
+  #     #   run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 5 --wait 0 --last-mod-start-date $(git -C vuls-data-raw-${{ matrix.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
 
-      - name: Set Git config
-        run: |
-          git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
-          git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
+  #     - name: Set Git config
+  #       run: |
+  #         git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
+  #         git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
 
-      # - name: Restore
-      #   run: |
-      #     deleted=$(git -C vuls-data-raw-${{ matrix.target }} ls-files --deleted)
-      #     if [[ -n ${deleted} ]]; then
-      #       git -C vuls-data-raw-${{ matrix.target }} restore ${deleted}
-      #     fi
+  #     # - name: Restore
+  #     #   run: |
+  #     #     deleted=$(git -C vuls-data-raw-${{ matrix.target }} ls-files --deleted)
+  #     #     if [[ -n ${deleted} ]]; then
+  #     #       git -C vuls-data-raw-${{ matrix.target }} restore ${deleted}
+  #     #     fi
 
-      - name: Commit
-        run: |
-          if [[ -n $(git -C vuls-data-raw-${{ matrix.target }} status --porcelain) ]]; then
-            git -C vuls-data-raw-${{ matrix.target }} add .
-            git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
-          fi
+  #     - name: Commit
+  #       run: |
+  #         if [[ -n $(git -C vuls-data-raw-${{ matrix.target }} status --porcelain) ]]; then
+  #           git -C vuls-data-raw-${{ matrix.target }} add .
+  #           git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
+  #         fi
 
-      - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
-          mkdir vuls-data-raw-${{ matrix.target }}
-          mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
-          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
+  #     - name: Create dotgit tarball
+  #       run: |
+  #         mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
+  #         mkdir vuls-data-raw-${{ matrix.target }}
+  #         mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
+  #         tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
  
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Packages Container registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+  #     - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
+  #       run: |
+  #         oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   fetch-msuc:
     name: Fetch vuls-data-raw-windows-msuc
@@ -451,9 +451,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-windows-msuc dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      # - name: Upload vuls-data-raw-windows-msuc dotgit tarball to GHCR
+      #   run: |
+      #     oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   cleanup-vuls-data-raw-windows-msuc-data:
     name: Cleanup windows-msuc-data-*
@@ -609,9 +609,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-fedora dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fedora vuls-data-raw-fedora.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      # - name: Upload vuls-data-raw-fedora dotgit tarball to GHCR
+      #   run: |
+      #     oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fedora vuls-data-raw-fedora.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   cleanup-vuls-data-raw-fedora-data:
     name: Cleanup fedora-data-*
@@ -625,262 +625,262 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  fetch-epss:
-    name: Fetch vuls-data-raw-epss
-    runs-on: ubuntu-latest
-    steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 32768
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
-          remove-codeql: "true"
-          remove-docker-images: "true"
+  # fetch-epss:
+  #   name: Fetch vuls-data-raw-epss
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Maximize build space
+  #       uses: easimon/maximize-build-space@v10
+  #       with:
+  #         root-reserve-mb: 32768
+  #         remove-dotnet: "true"
+  #         remove-android: "true"
+  #         remove-haskell: "true"
+  #         remove-codeql: "true"
+  #         remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+  #     - name: Install Oras
+  #       run: |
+  #         # https://oras.land/docs/installation/#linux
+  #         VERSION="1.2.2"
+  #         curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+  #         mkdir -p oras-install/
+  #         tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+  #         sudo mv oras-install/oras /usr/local/bin/
+  #         rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          repository: MaineK00n/vuls-data-update
-          ref: main
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: MaineK00n/vuls-data-update
+  #         ref: main
 
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
+  #     - name: Set up Go 1.x
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: "go.mod"
 
-      - name: go install
-        run: go install ./cmd/vuls-data-update
+  #     - name: go install
+  #       run: go install ./cmd/vuls-data-update
 
-      - name: Check out fetch data repository
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-          tar -xf vuls-data-raw-epss.tar.zst
-          rm vuls-data-raw-epss.tar.zst
+  #     - name: Check out fetch data repository
+  #       run: |
+  #         oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+  #         tar -xf vuls-data-raw-epss.tar.zst
+  #         rm vuls-data-raw-epss.tar.zst
 
-      - name: Fetch
-        run: vuls-data-update fetch epss --dir vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
+  #     - name: Fetch
+  #       run: vuls-data-update fetch epss --dir vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
 
-      - name: Set Git config
-        run: |
-          git -C vuls-data-raw-epss config user.email "action@github.com"
-          git -C vuls-data-raw-epss config user.name "GitHub Action"
+  #     - name: Set Git config
+  #       run: |
+  #         git -C vuls-data-raw-epss config user.email "action@github.com"
+  #         git -C vuls-data-raw-epss config user.name "GitHub Action"
 
-      - name: Restore
-        run: |
-          deleted=$(git -C vuls-data-raw-epss ls-files --deleted | grep -v $(date --utc -d "-1 days" "+%Y-%m-%d").json || [[ $? == 1 ]])
-          if [[ -n ${deleted} ]]; then
-            git -C vuls-data-raw-epss restore ${deleted}
-          fi
+  #     - name: Restore
+  #       run: |
+  #         deleted=$(git -C vuls-data-raw-epss ls-files --deleted | grep -v $(date --utc -d "-1 days" "+%Y-%m-%d").json || [[ $? == 1 ]])
+  #         if [[ -n ${deleted} ]]; then
+  #           git -C vuls-data-raw-epss restore ${deleted}
+  #         fi
 
-      - name: Commit
-        run: |
-          if [[ -n $(git -C vuls-data-raw-epss status --porcelain) ]]; then
-            git -C vuls-data-raw-epss add .
-            git -C vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")"
-          fi
+  #     - name: Commit
+  #       run: |
+  #         if [[ -n $(git -C vuls-data-raw-epss status --porcelain) ]]; then
+  #           git -C vuls-data-raw-epss add .
+  #           git -C vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")"
+  #         fi
 
-      - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-epss vuls-data-raw-epss.tmp
-          mkdir vuls-data-raw-epss
-          mv vuls-data-raw-epss.tmp/.git vuls-data-raw-epss
-          tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss
+  #     - name: Create dotgit tarball
+  #       run: |
+  #         mv vuls-data-raw-epss vuls-data-raw-epss.tmp
+  #         mkdir vuls-data-raw-epss
+  #         mv vuls-data-raw-epss.tmp/.git vuls-data-raw-epss
+  #         tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Packages Container registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-epss dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+  #     - name: Upload vuls-data-raw-epss dotgit tarball to GHCR
+  #       run: |
+  #         oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
-  fetch-fortinet-cvrf:
-    name: Fetch vuls-data-raw-fortinet-cvrf
-    runs-on: ubuntu-latest
-    steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 32768
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
-          remove-codeql: "true"
-          remove-docker-images: "true"
+  # fetch-fortinet-cvrf:
+  #   name: Fetch vuls-data-raw-fortinet-cvrf
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Maximize build space
+  #       uses: easimon/maximize-build-space@v10
+  #       with:
+  #         root-reserve-mb: 32768
+  #         remove-dotnet: "true"
+  #         remove-android: "true"
+  #         remove-haskell: "true"
+  #         remove-codeql: "true"
+  #         remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+  #     - name: Install Oras
+  #       run: |
+  #         # https://oras.land/docs/installation/#linux
+  #         VERSION="1.2.2"
+  #         curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+  #         mkdir -p oras-install/
+  #         tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+  #         sudo mv oras-install/oras /usr/local/bin/
+  #         rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          repository: MaineK00n/vuls-data-update
-          ref: main
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: MaineK00n/vuls-data-update
+  #         ref: main
 
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
+  #     - name: Set up Go 1.x
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: "go.mod"
 
-      - name: go install
-        run: go install ./cmd/vuls-data-update
+  #     - name: go install
+  #       run: go install ./cmd/vuls-data-update
 
-      - name: Check out fetch data repository
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
-          tar -xf vuls-data-raw-fortinet-cvrf.tar.zst
-          rm vuls-data-raw-fortinet-cvrf.tar.zst
+  #     - name: Check out fetch data repository
+  #       run: |
+  #         oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+  #         tar -xf vuls-data-raw-fortinet-cvrf.tar.zst
+  #         rm vuls-data-raw-fortinet-cvrf.tar.zst
 
-      - name: List advisory in ir.xml
-        id: list
-        run: |
-          go install github.com/sibprogrammer/xq@latest
-          echo "advisory=$(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq -u | tr '\n' ' ')" >> $GITHUB_OUTPUT
+  #     - name: List advisory in ir.xml
+  #       id: list
+  #       run: |
+  #         go install github.com/sibprogrammer/xq@latest
+  #         echo "advisory=$(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq -u | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - name: Fetch
-        if: ${{ steps.list.outputs.advisory != '' }}
-        run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf ${{ steps.list.outputs.advisory }}
+  #     - name: Fetch
+  #       if: ${{ steps.list.outputs.advisory != '' }}
+  #       run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf ${{ steps.list.outputs.advisory }}
 
-      - name: Set Git config
-        if: ${{ steps.list.outputs.advisory != '' }}
-        run: |
-          git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
-          git -C vuls-data-raw-fortinet-cvrf config user.name "GitHub Action"
+  #     - name: Set Git config
+  #       if: ${{ steps.list.outputs.advisory != '' }}
+  #       run: |
+  #         git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
+  #         git -C vuls-data-raw-fortinet-cvrf config user.name "GitHub Action"
 
-      - name: Restore
-        if: ${{ steps.list.outputs.advisory != '' }}
-        run: |
-          deleted=$(sort <(git -C vuls-data-raw-fortinet-cvrf ls-files --deleted) <(echo ${{ steps.list.outputs.advisory }} | xargs -n 1 | sed -e 's/\(FG-IR-\([0-9]\{2\}\)-[0-9]\{3\}\)/20\2\/\1.json/g') <(echo ${{ steps.list.outputs.advisory }} | xargs -n 1 | sed -e 's/\(FG-IR-\([0-9]\{2\}\)-[0-9]\{3\}\)/20\2\/\1.json/g') | uniq -u)
-          if [[ -n ${deleted} ]]; then
-            git -C vuls-data-raw-fortinet-cvrf restore ${deleted}
-          fi
+  #     - name: Restore
+  #       if: ${{ steps.list.outputs.advisory != '' }}
+  #       run: |
+  #         deleted=$(sort <(git -C vuls-data-raw-fortinet-cvrf ls-files --deleted) <(echo ${{ steps.list.outputs.advisory }} | xargs -n 1 | sed -e 's/\(FG-IR-\([0-9]\{2\}\)-[0-9]\{3\}\)/20\2\/\1.json/g') <(echo ${{ steps.list.outputs.advisory }} | xargs -n 1 | sed -e 's/\(FG-IR-\([0-9]\{2\}\)-[0-9]\{3\}\)/20\2\/\1.json/g') | uniq -u)
+  #         if [[ -n ${deleted} ]]; then
+  #           git -C vuls-data-raw-fortinet-cvrf restore ${deleted}
+  #         fi
 
-      - name: Commit
-        if: ${{ steps.list.outputs.advisory != '' }}
-        run: |
-          if [[ -n $(git -C vuls-data-raw-fortinet-cvrf status --porcelain) ]]; then
-            git -C vuls-data-raw-fortinet-cvrf add .
-            git -C vuls-data-raw-fortinet-cvrf commit -m "update"
-          fi
+  #     - name: Commit
+  #       if: ${{ steps.list.outputs.advisory != '' }}
+  #       run: |
+  #         if [[ -n $(git -C vuls-data-raw-fortinet-cvrf status --porcelain) ]]; then
+  #           git -C vuls-data-raw-fortinet-cvrf add .
+  #           git -C vuls-data-raw-fortinet-cvrf commit -m "update"
+  #         fi
 
-      - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.tmp
-          mkdir vuls-data-raw-fortinet-cvrf
-          mv vuls-data-raw-fortinet-cvrf.tmp/.git vuls-data-raw-fortinet-cvrf
-          tar --remove-files -acf vuls-data-raw-fortinet-cvrf.tar.zst vuls-data-raw-fortinet-cvrf
+  #     - name: Create dotgit tarball
+  #       run: |
+  #         mv vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.tmp
+  #         mkdir vuls-data-raw-fortinet-cvrf
+  #         mv vuls-data-raw-fortinet-cvrf.tmp/.git vuls-data-raw-fortinet-cvrf
+  #         tar --remove-files -acf vuls-data-raw-fortinet-cvrf.tar.zst vuls-data-raw-fortinet-cvrf
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Packages Container registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-fortinet-cvrf dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+  #     - name: Upload vuls-data-raw-fortinet-cvrf dotgit tarball to GHCR
+  #       run: |
+  #         oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-fortinet-cvrf vuls-data-raw-fortinet-cvrf.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
-  fetch-vulncheck:
-    name: Fetch vuls-data-raw-${{ matrix.target }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - "vulncheck-kev"
-    steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 32768
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
-          remove-codeql: "true"
-          remove-docker-images: "true"
+  # fetch-vulncheck:
+  #   name: Fetch vuls-data-raw-${{ matrix.target }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       target:
+  #         - "vulncheck-kev"
+  #   steps:
+  #     - name: Maximize build space
+  #       uses: easimon/maximize-build-space@v10
+  #       with:
+  #         root-reserve-mb: 32768
+  #         remove-dotnet: "true"
+  #         remove-android: "true"
+  #         remove-haskell: "true"
+  #         remove-codeql: "true"
+  #         remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+  #     - name: Install Oras
+  #       run: |
+  #         # https://oras.land/docs/installation/#linux
+  #         VERSION="1.2.2"
+  #         curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+  #         mkdir -p oras-install/
+  #         tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+  #         sudo mv oras-install/oras /usr/local/bin/
+  #         rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-        with:
-          repository: MaineK00n/vuls-data-update
-          ref: main
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: MaineK00n/vuls-data-update
+  #         ref: main
 
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
+  #     - name: Set up Go 1.x
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: "go.mod"
 
-      - name: go install
-        run: go install ./cmd/vuls-data-update
+  #     - name: go install
+  #       run: go install ./cmd/vuls-data-update
 
-      - name: Check out fetch data repository
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
-          tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
-          rm vuls-data-raw-${{ matrix.target }}.tar.zst
+  #     - name: Check out fetch data repository
+  #       run: |
+  #         oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.target }}
+  #         tar -xf vuls-data-raw-${{ matrix.target }}.tar.zst
+  #         rm vuls-data-raw-${{ matrix.target }}.tar.zst
 
-      - name: Fetch
-        run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} ${{ secrets.VULNCHECK_API_KEY }}
+  #     - name: Fetch
+  #       run: vuls-data-update fetch ${{ matrix.target }} --dir vuls-data-raw-${{ matrix.target }} ${{ secrets.VULNCHECK_API_KEY }}
 
-      - name: Set Git config
-        run: |
-          git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
-          git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
+  #     - name: Set Git config
+  #       run: |
+  #         git -C vuls-data-raw-${{ matrix.target }} config user.email "action@github.com"
+  #         git -C vuls-data-raw-${{ matrix.target }} config user.name "GitHub Action"
 
-      - name: Commit
-        run: |
-          if [[ -n $(git -C vuls-data-raw-${{ matrix.target }} status --porcelain) ]]; then
-            git -C vuls-data-raw-${{ matrix.target }} add .
-            git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
-          fi
+  #     - name: Commit
+  #       run: |
+  #         if [[ -n $(git -C vuls-data-raw-${{ matrix.target }} status --porcelain) ]]; then
+  #           git -C vuls-data-raw-${{ matrix.target }} add .
+  #           git -C vuls-data-raw-${{ matrix.target }} commit -m "update"
+  #         fi
 
-      - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
-          mkdir vuls-data-raw-${{ matrix.target }}
-          mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
-          tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
+  #     - name: Create dotgit tarball
+  #       run: |
+  #         mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
+  #         mkdir vuls-data-raw-${{ matrix.target }}
+  #         mv vuls-data-raw-${{ matrix.target }}.tmp/.git vuls-data-raw-${{ matrix.target }}
+  #         tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Packages Container registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+  #     - name: Upload vuls-data-raw-${{ matrix.target }} dotgit tarball to GHCR
+  #       run: |
+  #         oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
