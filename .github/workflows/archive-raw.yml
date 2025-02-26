@@ -1,11 +1,10 @@
 name: Archive-Raw
 on:
-  # workflow_run:
-  #   workflows: [Fetch]
-  #   types:
-  #     - completed
+  workflow_run:
+    workflows: [Fetch]
+    types:
+      - completed
   workflow_dispatch:
-  # push:
 
 defaults:
   run:
@@ -220,4 +219,3 @@ jobs:
         run: |
           cd latest/
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-  
