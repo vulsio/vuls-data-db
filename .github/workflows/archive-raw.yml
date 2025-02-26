@@ -198,7 +198,7 @@ jobs:
           mv vuls-data-raw-${{ matrix.target }} vuls-data-raw-${{ matrix.target }}.tmp
 
           echo "Create the latest repository..."
-          git clone --depth 1 --no-single-branch  --no-checkout --branch main file://${PWD}/vuls-data-raw-${{ matrix.target }}.tmp vuls-data-raw-${{ matrix.target }}
+          git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/vuls-data-raw-${{ matrix.target }}.tmp vuls-data-raw-${{ matrix.target }}
           rm -rf vuls-data-raw-${{ matrix.target }}.tmp
           tar --remove-files -acf vuls-data-raw-${{ matrix.target }}.tar.zst vuls-data-raw-${{ matrix.target }}
 
