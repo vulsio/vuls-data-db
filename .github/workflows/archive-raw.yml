@@ -214,8 +214,6 @@ jobs:
         if: steps.archive_check.outputs.do_archive == 'true'
         run: |
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-${{ matrix.target }}-${{ steps.set_archive_suffix.outputs.archive_suffix }} vuls-data-raw-${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
       - name: Push latest dotgit
         if: steps.archive_check.outputs.do_archive == 'true'
