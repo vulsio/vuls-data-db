@@ -1,0 +1,200 @@
+name: Fetch Main
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      target:
+        required: true
+        type: choice
+        options:
+          - alma-errata
+          - alma-osv
+          - alma-oval
+          - alpine-secdb
+          - alpine-osv
+          - amazon
+          - android-osv
+          - arch
+          - attack
+          - bitnami-osv
+          - capec
+          - cargo-ghsa
+          - cargo-osv
+          # - cargo-db
+          - chainguard-osv
+          - composer-ghsa
+          - composer-glsa
+          - composer-osv
+          # - composer-db
+          - conan-glsa
+          - cwe
+          - debian-osv
+          - debian-oval
+          - debian-security-tracker-api
+          - debian-security-tracker-salsa
+          - erlang-ghsa
+          - erlang-osv
+          - exploit-exploitdb
+          - exploit-github
+          - exploit-inthewild
+          - exploit-trickest
+          - freebsd
+          - gentoo
+          - ghactions-osv
+          - git-osv
+          - golang-ghsa
+          - golang-glsa
+          - golang-osv
+          # - golang-db
+          # - golang-vulndb
+          - haskell-osv
+          - jvn-feed-detail
+          - jvn-feed-product
+          - jvn-feed-rss
+          - kev
+          - linux-osv
+          - maven-ghsa
+          - maven-glsa
+          - maven-osv
+          - mitre-cvrf
+          - mitre-v4
+          - mitre-v5
+          - msf
+          - netbsd
+          - npm-ghsa
+          - npm-glsa
+          - npm-osv
+          # - npm-db
+          - nuget-ghsa
+          - nuget-glsa
+          - nuget-osv
+          - nvd-feed-cve
+          - nvd-feed-cpe
+          - nvd-feed-cpematch
+          - oracle
+          - oss-fuzz-osv
+          # - perl-db
+          - pip-ghsa
+          - pip-glsa
+          - pip-osv
+          # - pip-db
+          - pub-ghsa
+          - pub-osv
+          - r-osv
+          - redhat-cve
+          - redhat-csaf
+          - redhat-cvrf
+          - redhat-repository-to-cpe
+          - redhat-ovalv1
+          - redhat-ovalv2
+          - redhat-vex
+          - redhat-osv
+          - rocky-errata
+          - rocky-osv
+          - rubygems-ghsa
+          - rubygems-glsa
+          - rubygems-osv
+          # - rubygems-db
+          - snort
+          - suse-oval
+          - suse-cvrf
+          - suse-cvrf-cve
+          - suse-csaf
+          - suse-csaf-vex
+          - suse-osv
+          - swift-ghsa
+          - swift-osv
+          - ubuntu-oval
+          - ubuntu-cve-tracker
+          - ubuntu-osv
+          - windows-bulletin
+          - windows-cvrf
+          - windows-wsusscn2
+          - wolfi-osv
+
+jobs:
+  fetch:
+    name: Fetch vuls-data-raw-${{ inputs.target }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+          tar -xf vuls-data-raw-${{ inputs.target }}.tar.zst
+          rm vuls-data-raw-${{ inputs.target }}.tar.zst
+
+      - name: install cabextract for windows-wsusscn2
+        if: ${{ inputs.target == 'windows-wsusscn2' }}
+        run: sudo apt-get update && sudo apt-get install -y cabextract
+
+      - name: Fetch
+        run: vuls-data-update fetch ${{ inputs.target }} --dir vuls-data-raw-${{ inputs.target }}
+
+      - name: Set Git config
+        run: |
+          git -C vuls-data-raw-${{ inputs.target }} config user.email "action@github.com"
+          git -C vuls-data-raw-${{ inputs.target }} config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-raw-${{ inputs.target }} status --porcelain) ]]; then
+            git -C vuls-data-raw-${{ inputs.target }} add .
+            git -C vuls-data-raw-${{ inputs.target }} commit -m "update"
+          fi
+
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tmp
+          mkdir vuls-data-raw-${{ inputs.target }}
+          mv vuls-data-raw-${{ inputs.target }}.tmp/.git vuls-data-raw-${{ inputs.target }}
+          tar --remove-files -acf vuls-data-raw-${{ inputs.target }}.tar.zst vuls-data-raw-${{ inputs.target }}
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+        run: |
+          oras push ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd

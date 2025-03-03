@@ -1,0 +1,109 @@
+name: Extract NVD API CVE
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
+        type: choice
+        options:
+          - main
+          - nightly
+
+jobs:
+  extract:
+    name: Extract vuls-data-extracted-nvd-api-cve@${{ inputs.branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: go install
+        run: go install ./cmd/vuls-data-update
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
+          tar -xf vuls-data-raw-nvd-api-cve.tar.zst
+          rm vuls-data-raw-nvd-api-cve.tar.zst
+          git -C vuls-data-raw-nvd-api-cve restore .
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
+          tar -xf vuls-data-raw-nvd-api-cpematch.tar.zst
+          rm vuls-data-raw-nvd-api-cpematch.tar.zst
+          git -C vuls-data-raw-nvd-api-cpematch restore .
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
+          tar -xf vuls-data-extracted-nvd-api-cve.tar.zst
+          rm vuls-data-extracted-nvd-api-cve.tar.zst
+          git -C vuls-data-extracted-nvd-api-cve switch ${{ inputs.branch }}
+
+      - name: Extract
+        run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
+
+      - name: Set Git config
+        run: |
+          git -C vuls-data-extracted-nvd-api-cve config user.email "action@github.com"
+          git -C vuls-data-extracted-nvd-api-cve config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-nvd-api-cve status --porcelain) ]]; then
+            git -C vuls-data-extracted-nvd-api-cve add .
+            git -C vuls-data-extracted-nvd-api-cve commit -m "update"
+          fi
+
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tmp
+          mkdir vuls-data-extracted-nvd-api-cve
+          mv vuls-data-extracted-nvd-api-cve.tmp/.git vuls-data-extracted-nvd-api-cve
+          tar --remove-files -acf vuls-data-extracted-nvd-api-cve.tar.zst vuls-data-extracted-nvd-api-cve
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
+        run: |
+          oras push ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
