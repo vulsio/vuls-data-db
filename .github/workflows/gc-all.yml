@@ -1,0 +1,401 @@
+name: Git GC All
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gc-all:
+    name: Git GC ${{ matrix.tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: vuls-data-extracted-alma-errata
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-alma-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-alpine-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-alpine-secdb
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-amazon
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-arch
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-cargo-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-eol
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-epss
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-freebsd
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-mitre-v5
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-nvd-api-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-oracle
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-csaf-rhel
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-ovalv1
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-ovalv1-rhel
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-ovalv2
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-ovalv2-rhel
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-vex
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-vex-rhel
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-rocky-errata
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-alma-errata
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-alma-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-alma-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-alpine-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-alpine-secdb
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-amazon
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-android-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-arch
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-attack
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-bitnami-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-capec
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cargo-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cargo-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-chainguard-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-composer-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-composer-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-composer-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-conan-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cwe
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-debian-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-debian-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-debian-security-tracker-api
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-debian-security-tracker-salsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-epss
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-erlang-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-erlang-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-exploit-exploitdb
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-exploit-github
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-exploit-inthewild
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-exploit-trickest
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-fedora
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-fortinet
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-fortinet-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-freebsd
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-gentoo
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-ghactions-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-git-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-golang-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-golang-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-golang-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-haskell-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-jvn-feed-detail
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-jvn-feed-product
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-jvn-feed-rss
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-linux-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-maven-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-maven-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-maven-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-v4
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-v5
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-msf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-netbsd
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-npm-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-npm-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-npm-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nuget-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nuget-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nuget-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nvd-api-cpe
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nvd-api-cpematch
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nvd-api-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nvd-feed-cpe
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nvd-feed-cpematch
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nvd-feed-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-oracle
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-oss-fuzz-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-pip-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-pip-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-pip-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-pub-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-pub-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-ovalv1
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-ovalv2
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-repository-to-cpe
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-vex
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-rocky-errata
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-rocky-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-r-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-rubygems-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-rubygems-glsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-rubygems-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-snort
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-suse-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-suse-csaf-vex
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-suse-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-suse-cvrf-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-suse-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-suse-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-swift-ghsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-swift-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-cve-tracker
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-vulncheck-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-bulletin
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-msuc
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-wsusscn2
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-wolfi-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+    uses: ./.github/workflows/gc.yml
+    with:
+      tag: ${{ matrix.tag }}
+      pack-threads: ${{ matrix.pack-threads }}
+      pack-windowMemory: ${{ matrix.pack-windowMemory }}
