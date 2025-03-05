@@ -1,0 +1,109 @@
+name: Extract RedHat RHEL Only (CSAF, VEX)
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      target:
+        required: true
+        type: choice
+        options:
+          - redhat-csaf
+          - redhat-vex
+      branch:
+        required: true
+        type: choice
+        options:
+          - main
+          - nightly
+
+jobs:
+  extract:
+    name: Extract vuls-data-extracted-${{ inputs.target }}-rhel@${{ inputs.branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: vulsio/filter-vuls-data-extracted-redhat
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+          tar -xf vuls-data-extracted-${{ inputs.target }}.tar.zst
+          rm vuls-data-extracted-${{ inputs.target }}.tar.zst
+          git -C vuls-data-extracted-${{ inputs.target }} switch ${{ inputs.branch }}
+          git -C vuls-data-extracted-${{ inputs.target }} restore .
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
+          tar -xf vuls-data-extracted-${{ inputs.target }}-rhel.tar.zst
+          rm vuls-data-extracted-${{ inputs.target }}-rhel.tar.zst
+          git -C vuls-data-extracted-${{ inputs.target }}-rhel switch ${{ inputs.branch }}
+
+      - name: Filter
+        run: go run main.go vuls-data-extracted-${{ inputs.target }} affected_repository_list.json vuls-data-extracted-${{ inputs.target }}-rhel
+
+      - name: Set Git config
+        run: |
+          git -C vuls-data-extracted-${{ inputs.target }}-rhel config user.email "action@github.com"
+          git -C vuls-data-extracted-${{ inputs.target }}-rhel config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-extracted-${{ inputs.target }}-rhel status --porcelain) ]]; then
+            git -C vuls-data-extracted-${{ inputs.target }}-rhel add .
+            git -C vuls-data-extracted-${{ inputs.target }}-rhel commit -m "update"
+          fi
+
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-extracted-${{ inputs.target }}-rhel vuls-data-extracted-${{ inputs.target }}-rhel.tmp
+          mkdir vuls-data-extracted-${{ inputs.target }}-rhel
+          mv vuls-data-extracted-${{ inputs.target }}-rhel.tmp/.git vuls-data-extracted-${{ inputs.target }}-rhel
+          tar --remove-files -acf vuls-data-extracted-${{ inputs.target }}-rhel.tar.zst vuls-data-extracted-${{ inputs.target }}-rhel
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
+        run: |
+          oras push ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel vuls-data-extracted-${{ inputs.target }}-rhel.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd

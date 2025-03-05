@@ -1,17 +1,15 @@
-name: Backup
+name: Restore All
+
 on:
-  schedule:
-    - cron: "0 */12 * * *"
   workflow_dispatch:
 
 jobs:
-  backup:
-    name: Backup ghcr.io/${{ github.repository }}:${{ matrix.target }} to ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup
-    runs-on: ubuntu-latest
+  restore-all:
+    name: Restore ${{ matrix.tag }}
     strategy:
       fail-fast: false
       matrix:
-        target:
+        tag:
           - vuls-data-extracted-alma-errata
           - vuls-data-extracted-alma-osv
           - vuls-data-extracted-alpine-osv
@@ -29,6 +27,7 @@ jobs:
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
           - vuls-data-extracted-redhat-ovalv1
+          - vuls-data-extracted-redhat-ovalv1-rhel
           - vuls-data-extracted-redhat-ovalv2
           - vuls-data-extracted-redhat-ovalv2-rhel
           - vuls-data-extracted-redhat-vex
@@ -139,27 +138,7 @@ jobs:
           - vuls-data-raw-windows-msuc
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
-    steps:
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
-      - name: Pull ghcr.io/${{ github.repository }}:${{ matrix.target }}
-        run: oras pull ghcr.io/${{ github.repository }}:${{ matrix.target }}
-
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload ${{ matrix.target }} dotgit tarball to GHCR
-        run: |
-          oras push ghcr.io/${{ github.repository }}:${{ matrix.target }}-backup ${{ matrix.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+    uses: ./.github/workflows/restore.yml
+    with:
+      repository: vulsio/vuls-data-db-backup
+      tag: ${{ matrix.tag }}
