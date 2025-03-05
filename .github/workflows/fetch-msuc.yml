@@ -59,6 +59,16 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
         with:
@@ -74,34 +84,29 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Fetch
-        run: vuls-data-update fetch windows-msuc --dir vuls-data-raw-windows-msuc.${{ strategy.job-index }} ${{ matrix.target }}
+        run: |
+          mkdir vuls-data-raw-windows-msuc
+          vuls-data-update fetch windows-msuc --dir vuls-data-raw-windows-msuc ${{ matrix.target }}
 
-      - name: Save cache
-        uses: actions/cache/save@v4
+      - name: Create tarball
+        run: tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
         with:
-          path: vuls-data-raw-windows-msuc.${{ strategy.job-index }}
-          key: vuls-data-raw-windows-msuc-${{ strategy.job-index }}-${{ github.sha }}-${{ github.run_id }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  generate-msuc-cache-id:
-    name: Generate vuls-data-raw-windows-msuc cache id
-    runs-on: ubuntu-latest
-    needs: fetch
-    outputs:
-      cid: ${{ steps.generate.outputs.cid }}
-    steps:
-      - name: Generate cache id
-        id: generate
-        run: echo "cid=$(seq 0 ${{ needs.fetch.outputs.total }} | jq -R -s -c 'split("\n")[:-2]')" >> $GITHUB_OUTPUT
+      - name: Push ghcr.io/vulsio/vuls-data-db:windows-msuc-data-${{ strategy.job-index }}
+        run: |
+          oras push ghcr.io/vulsio/vuls-data-db:windows-msuc-data-${{ strategy.job-index }} vuls-data-raw-windows-msuc.tar.zst:application/vnd.vulsio.vuls-data-db.data.layer.v1.tar+zstd
 
-  push:
+  commit:
     name: Commit vuls-data-raw-windows-msuc
     runs-on: ubuntu-latest
-    needs: generate-msuc-cache-id
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        cid: ${{ fromJson(needs.generate-msuc-cache-id.outputs.cid) }}
+    if: ${{ success() || failure() }}
+    needs: [fetch]
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -129,16 +134,15 @@ jobs:
           tar -xf vuls-data-raw-windows-msuc.tar.zst
           rm vuls-data-raw-windows-msuc.tar.zst
 
-      - name: restore cache
-        uses: actions/cache/restore@v4
-        with:
-          key: vuls-data-raw-windows-msuc-${{ matrix.cid }}-${{ github.sha }}-${{ github.run_id }}
-          path: vuls-data-raw-windows-msuc.${{ matrix.cid }}
-          restore-keys: |
-            vuls-data-raw-windows-msuc-${{ matrix.cid }}-
-
-      - name: Merge
-        run: mv -f vuls-data-raw-windows-msuc.${{ matrix.cid }}/* vuls-data-raw-windows-msuc
+      - name: Aggregate windows-msuc-data-*
+        run: |
+          for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
+            oras pull ghcr.io/${{ github.repository }}:windows-msuc-data-${index}
+            tar -xf vuls-data-raw-windows-msuc.tar.zst
+            rm vuls-data-raw-windows-msuc.tar.zst
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Git config
         run: |
@@ -169,3 +173,15 @@ jobs:
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
         run: |
           oras push ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+
+  cleanup:
+    name: Cleanup windows-msuc-data-*
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: [commit]
+    steps:
+      - name: Cleanup windows-msuc-data-* images
+        run: |
+          gh api --paginate /orgs/vulsio/packages/container/vuls-data-db/versions --jq '.[] | select(.metadata.container.tags[] | startswith("windows-msuc-data-")) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/vuls-data-db/versions/{}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
