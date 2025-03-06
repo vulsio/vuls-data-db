@@ -1,0 +1,16 @@
+name: Organize Tags in vulsio/vuls-data-db
+
+on:
+  workflow_run:
+    workflows:
+      [Fetch All, Extract All, Truncate Extracted, Restore All, Git GC All]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Organize Tags in vulsio/vuls-data-db
+    uses: ./.github/workflows/organize-tags.yml
+    with:
+      package: vuls-data-db
