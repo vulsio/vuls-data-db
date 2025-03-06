@@ -59,13 +59,20 @@ jobs:
         with:
           go-version-file: "go.mod"
 
-      - name: go install
+      - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
+      - name: Mkdir vuls-data-raw-fedora
+        run: mkdir vuls-data-raw-fedora
+
       - name: Fetch
+        continue-on-error: true
         run: |
-          mkdir vuls-data-raw-fedora
           vuls-data-update fetch fedora --dir vuls-data-raw-fedora ${{ matrix.release }} --retry 10
+
+      - name: Fetch Error Handling
+        if: failure()
+        run: rm -rf vuls-data-raw-fedora/*
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-fedora.tar.zst vuls-data-raw-fedora
@@ -112,14 +119,18 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
           tar -xf vuls-data-raw-fedora.tar.zst
           rm vuls-data-raw-fedora.tar.zst
+          git -C vuls-data-raw-fedora restore .
 
       - name: Aggregate fedora-data-*
         run: |
+          DIR=$(mktemp -d)
           for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
-            oras pull ghcr.io/${{ github.repository }}:fedora-data-${index}
-            tar -xf vuls-data-raw-fedora.tar.zst
-            rm vuls-data-raw-fedora.tar.zst
+            oras pull -o ${DIR} ghcr.io/${{ github.repository }}:fedora-data-${index}
+            tar -xf ${DIR}/vuls-data-raw-fedora.tar.zst -C ${DIR}
+            rm ${DIR}/vuls-data-raw-fedora.tar.zst
+            mv -f ${DIR}/vuls-data-raw-fedora/* vuls-data-raw-fedora
           done
+          rm -rf ${DIR}
 
       - name: Set Git config
         run: |

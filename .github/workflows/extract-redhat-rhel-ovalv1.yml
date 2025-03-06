@@ -51,7 +51,7 @@ jobs:
         with:
           go-version-file: "go.mod"
 
-      - name: go install
+      - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv1
