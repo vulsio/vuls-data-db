@@ -1,19 +1,29 @@
 name: Cleanup
 
 on:
-  workflow_run:
-    workflows: [Fetch All, Extract All]
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      package:
+        required: true
+        default: "vuls-data-db"
+        type: choice
+        options:
+          - vuls-data-db
+          - vuls-data-db-archive
+          - vuls-data-db-backup
 
 jobs:
   cleanup:
-    name: Cleanup untagged images
+    name: Cleanup untagged images in ${{ inputs.package }}
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup untagged images
         run: |
-          gh api --paginate /orgs/vulsio/packages/container/vuls-data-db/versions --jq '.[] | select(.metadata.container.tags | length == 0) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/vuls-data-db/versions/{}
+          gh api --paginate /orgs/vulsio/packages/container/${{ inputs.package }}/versions --jq '.[] | select(.metadata.container.tags | length == 0) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/${{ inputs.package }}/versions/{}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
