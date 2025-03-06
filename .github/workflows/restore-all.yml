@@ -2,6 +2,16 @@ name: Restore All
 
 on:
   workflow_dispatch:
+    inputs:
+      tag-suffix:
+        required: true
+        default: "backup-manual"
+        type: choice
+        options:
+          - backup-manual
+          - backup-daily
+          - backup-weekly
+          - backup-monthly
 
 jobs:
   restore-all:
@@ -142,3 +152,4 @@ jobs:
     with:
       repository: vulsio/vuls-data-db-backup
       tag: ${{ matrix.tag }}
+      tag-suffix: ${{ inputs.tag-suffix }}
