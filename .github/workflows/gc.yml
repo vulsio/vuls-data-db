@@ -208,11 +208,9 @@ jobs:
         run: |
           (
             echo ### git gc --aggressize ${{ inputs.tag }}
-            echo "\`\`\`md"
             echo "|      | before | after | "
             echo "| :--: | :----: | :---: | "
             echo "| size | ${{ steps.before.outputs.size }} | ${{ steps.after.outputs.size }} | "
-            echo "\`\`\`"
           ) >> $GITHUB_STEP_SUMMARY
 
       - name: Create dotgit tarball
