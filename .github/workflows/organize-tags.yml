@@ -1,0 +1,43 @@
+name: Organize Tags
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      image:
+        required: true
+        default: "vuls-data-db"
+        type: choice
+        options:
+          - vuls-data-db
+          - vuls-data-db-archive
+          - vuls-data-db-backup
+
+jobs:
+  organize:
+    name: Organize tags in vulsio/${{ inputs.image }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+
+      - name: Organize tags in vulsio/${{ inputs.image }}
+        run: |
+          tmpfile=$(mktemp) && jq --arg key "vulsio/${{ inputs.image }}" --argjson value "$(gh api --paginate /orgs/vulsio/packages/container/${{ inputs.image }}/versions | jq '[ .[] | .metadata.container.tags[] as $tag | {tag: $tag, id, name, created_at, updated_at} ]')" '.[$key] = $value' images.json > "$tmpfile" && mv "$tmpfile" images.json
+
+      - name: Set Git config
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+      - name: Push
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            git add images.json
+            git commit -m "update"
+            git push
+          fi

@@ -1,0 +1,3611 @@
+{
+  "vulsio/vuls-data-db": [
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-rhel",
+      "id": 369106729,
+      "name": "sha256:07995b59e36cb738ef3da34a517166bad80f678f249347802ebaeba212dc5ce3",
+      "created_at": "2025-03-06T17:11:08Z",
+      "updated_at": "2025-03-06T17:11:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-oval",
+      "id": 369104271,
+      "name": "sha256:e0adf7d12b2b757172005fdf860bb7c96bda4e399debb3fe27d9f05e14fbeb35",
+      "created_at": "2025-03-06T17:08:28Z",
+      "updated_at": "2025-03-06T17:08:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-vex",
+      "id": 369104127,
+      "name": "sha256:4b79bba0d419f087e30c2356ddf6163bad0b7f1c4e1fc91c6f3d6d0d810a9068",
+      "created_at": "2025-03-06T17:08:16Z",
+      "updated_at": "2025-03-06T17:08:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-oval",
+      "id": 369104106,
+      "name": "sha256:47cfa8f48d61c3a1aac983c2d2ec2117d2ad9c384415dd133416d888f42f6c7d",
+      "created_at": "2025-03-06T17:08:13Z",
+      "updated_at": "2025-03-06T17:08:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-cvrf",
+      "id": 369104088,
+      "name": "sha256:83ac899a4d346b0eb28125d03e0d24d70a5aa3bebe66dcb670c445017e6b14de",
+      "created_at": "2025-03-06T17:08:11Z",
+      "updated_at": "2025-03-06T17:08:11Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-msuc",
+      "id": 369104028,
+      "name": "sha256:5c0d980906d861a5e7bed6b5ab7414361c5941c86a8c4267283e4ffb7adb1a21",
+      "created_at": "2025-03-06T17:08:05Z",
+      "updated_at": "2025-03-06T17:08:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-vex",
+      "id": 369103999,
+      "name": "sha256:14073cd09d67e4dd2e944cc03c8cc9843b09a9a5d0f2300a6b04baa21ef4e029",
+      "created_at": "2025-03-06T17:08:02Z",
+      "updated_at": "2025-03-06T17:08:02Z"
+    },
+    {
+      "tag": "vuls-data-raw-wolfi-osv",
+      "id": 369103986,
+      "name": "sha256:f7deb56b2efa732a48da8414f18c7dc2b56172ba2650b07c68a8e292d289c684",
+      "created_at": "2025-03-06T17:08:01Z",
+      "updated_at": "2025-03-06T17:08:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-ghsa",
+      "id": 369103956,
+      "name": "sha256:e861fb2bc09172eaf197e860dddaa7e59e78ccde1f6ccb8746ffa4cf469a16a5",
+      "created_at": "2025-03-06T17:07:58Z",
+      "updated_at": "2025-03-06T17:07:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-cve-tracker",
+      "id": 369103936,
+      "name": "sha256:08f148a5647dab7f9928b5ff087a61054bc1297159f3c393c30e6c897197bf31",
+      "created_at": "2025-03-06T17:07:56Z",
+      "updated_at": "2025-03-06T17:07:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-csaf",
+      "id": 369103931,
+      "name": "sha256:42806ff3c410f7dfbf7a1133a0b7e11dda4c9f3f50e71c3aedf8926878b5dbac",
+      "created_at": "2025-03-06T17:07:56Z",
+      "updated_at": "2025-03-06T17:07:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-bulletin",
+      "id": 369103840,
+      "name": "sha256:8dffbfb51e2324ad41eda04ca8b1a9e79fa686eea745f01bb79795bd83fc98b0",
+      "created_at": "2025-03-06T17:07:50Z",
+      "updated_at": "2025-03-06T17:07:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-osv",
+      "id": 369103726,
+      "name": "sha256:4452df1b7ad1705c8679bc58c1bc39e81ccabc1480fcdf4322b9529f73f57ea6",
+      "created_at": "2025-03-06T17:07:41Z",
+      "updated_at": "2025-03-06T17:07:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf",
+      "id": 369103680,
+      "name": "sha256:9067cbc92e082e75aa02054d6bd43f7527a6f8229a82a44259b67a568a20a972",
+      "created_at": "2025-03-06T17:07:37Z",
+      "updated_at": "2025-03-06T17:07:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-osv",
+      "id": 369103665,
+      "name": "sha256:020cc410df976640872810364b00bb0d20fa3293b95b240edbefa02dc4c60cd8",
+      "created_at": "2025-03-06T17:07:35Z",
+      "updated_at": "2025-03-06T17:07:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-cve",
+      "id": 369103638,
+      "name": "sha256:14ad53a5f692ba04d44a1d7422133541882afd0e319005a21337612214bf0039",
+      "created_at": "2025-03-06T17:07:33Z",
+      "updated_at": "2025-03-06T17:07:33Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-wsusscn2",
+      "id": 369103615,
+      "name": "sha256:9d682b963db3aea886a04ec4976a1f8b8cc718a2b69913c2c930abfda634b806",
+      "created_at": "2025-03-06T17:07:32Z",
+      "updated_at": "2025-03-06T17:07:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-osv",
+      "id": 369103518,
+      "name": "sha256:001909a86ececea06f70a4b07a15ddd508185ba16fe813324eb8a065f1d86a33",
+      "created_at": "2025-03-06T17:07:22Z",
+      "updated_at": "2025-03-06T17:07:22Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv2",
+      "id": 369103505,
+      "name": "sha256:16aba312d070079bf0e96ae950bf88c45eaf1fb9ea6814de8cd6c84c945ce78c",
+      "created_at": "2025-03-06T17:07:20Z",
+      "updated_at": "2025-03-06T17:07:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-vulncheck-kev",
+      "id": 369103453,
+      "name": "sha256:0a8f1cc1eede9a25fcd0ebacc9a6729c991d8f2e79b141e4bdcc3b10514d7c2c",
+      "created_at": "2025-03-06T17:07:16Z",
+      "updated_at": "2025-03-06T17:07:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf",
+      "id": 369103440,
+      "name": "sha256:4f703c1325689702057708a2f146cff39251b787b492c206f4a627044af18f8d",
+      "created_at": "2025-03-06T17:07:15Z",
+      "updated_at": "2025-03-06T17:07:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-ghsa",
+      "id": 369103411,
+      "name": "sha256:020c3c57ebbb8f5f5aef79dd641a504386d18f60703e73dd76abcbf1d698418d",
+      "created_at": "2025-03-06T17:07:13Z",
+      "updated_at": "2025-03-06T17:07:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-osv",
+      "id": 369103392,
+      "name": "sha256:0fee169ab5df678afc7e61eb08cb8746c468439b53574a53a75f530d2a8ff603",
+      "created_at": "2025-03-06T17:07:12Z",
+      "updated_at": "2025-03-06T17:07:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-osv",
+      "id": 369103301,
+      "name": "sha256:7e52355c25eac3eb6d4bf8f4025afdb054923dcde0d83c831fefeff2fa34fa73",
+      "created_at": "2025-03-06T17:07:05Z",
+      "updated_at": "2025-03-06T17:07:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-osv",
+      "id": 369103178,
+      "name": "sha256:b4931c9dd62f1e26498cd63f57a8fbe442c6343de5b6764fbf9a1adff9c91192",
+      "created_at": "2025-03-06T17:06:56Z",
+      "updated_at": "2025-03-06T17:06:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-rss",
+      "id": 369103105,
+      "name": "sha256:0b0588e499a1bcdefe9f702fe97b7517aa97830a15bbbce6968a1df7e4fc841a",
+      "created_at": "2025-03-06T17:06:51Z",
+      "updated_at": "2025-03-06T17:06:51Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-ghsa",
+      "id": 369103049,
+      "name": "sha256:25413afcf403a101965dd6a3560ddfc922931c1fbb64d70a94e4b3505e40b15b",
+      "created_at": "2025-03-06T17:06:47Z",
+      "updated_at": "2025-03-06T17:06:47Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-osv",
+      "id": 369103031,
+      "name": "sha256:f157d88e225b7cb3886cd33ba8b6677b5711a381258842af9661836380c9410e",
+      "created_at": "2025-03-06T17:06:46Z",
+      "updated_at": "2025-03-06T17:06:46Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-errata",
+      "id": 369103016,
+      "name": "sha256:3ad6b3b4341673b01446fe8dd27e75830ffde4efd4f7b10b888159e5e5544c2d",
+      "created_at": "2025-03-06T17:06:45Z",
+      "updated_at": "2025-03-06T17:06:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-snort",
+      "id": 369103015,
+      "name": "sha256:df669ea15d9a146d3b01387891b0a15faf9e618571a1182ea577e1142001da2e",
+      "created_at": "2025-03-06T17:06:45Z",
+      "updated_at": "2025-03-06T17:06:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-glsa",
+      "id": 369102997,
+      "name": "sha256:2a83c7768125323c61d007d8dd03b830255b8a70253914e37d829933aa1a35fa",
+      "created_at": "2025-03-06T17:06:43Z",
+      "updated_at": "2025-03-06T17:06:43Z"
+    },
+    {
+      "tag": "vuls-data-raw-r-osv",
+      "id": 369102976,
+      "name": "sha256:a9bb1617b890f97d85c51d643b9245b4af20727cd048e1334261dd19928f9849",
+      "created_at": "2025-03-06T17:06:42Z",
+      "updated_at": "2025-03-06T17:06:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpematch",
+      "id": 369102946,
+      "name": "sha256:62ba3343163dbb3e675675c2d49c9ec56becb6b6dc29f607f1372f672c61cab2",
+      "created_at": "2025-03-06T17:06:39Z",
+      "updated_at": "2025-03-06T17:06:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-repository-to-cpe",
+      "id": 369102937,
+      "name": "sha256:1b05bc5009854cfb5d13528ecf485c74e04daa355c71f1c7969aa40b0a8c7ee5",
+      "created_at": "2025-03-06T17:06:38Z",
+      "updated_at": "2025-03-06T17:06:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cvrf",
+      "id": 369102929,
+      "name": "sha256:03665579cb770ac1a1bbc1e9f44acbb062c4c82d919bfdceccee9c952a0703f6",
+      "created_at": "2025-03-06T17:06:37Z",
+      "updated_at": "2025-03-06T17:06:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v5",
+      "id": 369102911,
+      "name": "sha256:2995e5cf1b5853c27e94ee30974b3d6b82f20a7170646d6c9fa69d40f6a4f0d5",
+      "created_at": "2025-03-06T17:06:35Z",
+      "updated_at": "2025-03-06T17:06:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv1",
+      "id": 369102903,
+      "name": "sha256:3a73ea0769701e5d9de719191a429aff7b2df7484925acddbec9cd8431baaa39",
+      "created_at": "2025-03-06T17:06:34Z",
+      "updated_at": "2025-03-06T17:06:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cve",
+      "id": 369102819,
+      "name": "sha256:8f7612d733771fdb059e06c28333946462e5865638114ffc5a4b77c3ec2d177c",
+      "created_at": "2025-03-06T17:06:27Z",
+      "updated_at": "2025-03-06T17:06:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpematch",
+      "id": 369102792,
+      "name": "sha256:be8f7537fc52ce47946c2913f0803e35f951fd2fa4e9778c934804b43183ef46",
+      "created_at": "2025-03-06T17:06:24Z",
+      "updated_at": "2025-03-06T17:06:24Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-glsa",
+      "id": 369102778,
+      "name": "sha256:5921c80ba3b555200142257c9a3af3ae4d58c6ca1f0a6e77d06f8f75ef5f4471",
+      "created_at": "2025-03-06T17:06:23Z",
+      "updated_at": "2025-03-06T17:06:23Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cve",
+      "id": 369102765,
+      "name": "sha256:f63fa8110892060446c9f73f1d759024cc484487cb68fb0cd88c6609f0b1dbcd",
+      "created_at": "2025-03-06T17:06:21Z",
+      "updated_at": "2025-03-06T17:06:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-msf",
+      "id": 369102763,
+      "name": "sha256:b5367cfbd9ff8e0b4fba3eb70d9f3e03633b8b94bdbc5eff2fcb889e2958e076",
+      "created_at": "2025-03-06T17:06:21Z",
+      "updated_at": "2025-03-06T17:06:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-osv",
+      "id": 369102758,
+      "name": "sha256:defbbdc43335da107cd19a21f191cda18646ffa9c9e6c26afda250329dd58cfb",
+      "created_at": "2025-03-06T17:06:21Z",
+      "updated_at": "2025-03-06T17:06:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-osv",
+      "id": 369102745,
+      "name": "sha256:6e2365aea02fd578f595d36633e5aed2c026c5f8674bc85f952a12139113082d",
+      "created_at": "2025-03-06T17:06:20Z",
+      "updated_at": "2025-03-06T17:06:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-netbsd",
+      "id": 369102726,
+      "name": "sha256:c0c17af03d9c5ddd0be83ed6ed23414771b043325eee287dc7e43768a26b5fd5",
+      "created_at": "2025-03-06T17:06:19Z",
+      "updated_at": "2025-03-06T17:06:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-ghsa",
+      "id": 369102697,
+      "name": "sha256:895068f860a2a3fdadc407801afe88ea05fa4f921ea117e17a280c748aff6843",
+      "created_at": "2025-03-06T17:06:16Z",
+      "updated_at": "2025-03-06T17:06:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-glsa",
+      "id": 369102679,
+      "name": "sha256:6f87763d7e5d8484a4693baa359eee26901b4221b24cd3561fda4ee4035dab2e",
+      "created_at": "2025-03-06T17:06:15Z",
+      "updated_at": "2025-03-06T17:06:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-ghsa",
+      "id": 369102677,
+      "name": "sha256:e61727382a98c084291a9966b677e5d1ded6f17e8e8c3b5031b984483e719480",
+      "created_at": "2025-03-06T17:06:15Z",
+      "updated_at": "2025-03-06T17:06:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-oss-fuzz-osv",
+      "id": 369102669,
+      "name": "sha256:a29824f3a1d8321a39d7e3078f4a6f870c264ce2efe62c6fbc59739f7420d5b0",
+      "created_at": "2025-03-06T17:06:14Z",
+      "updated_at": "2025-03-06T17:06:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cve",
+      "id": 369102588,
+      "name": "sha256:6cc1c3ea3bfac34d8c2c0a9cbbb7c476aa7376700cc2b865397cc01b360e18fc",
+      "created_at": "2025-03-06T17:06:08Z",
+      "updated_at": "2025-03-06T17:06:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpe",
+      "id": 369102582,
+      "name": "sha256:5ac979e620887f746f581c932e6a021e53dd1ba5bed92bcac0ccf04c0b11affa",
+      "created_at": "2025-03-06T17:06:07Z",
+      "updated_at": "2025-03-06T17:06:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpe",
+      "id": 369102542,
+      "name": "sha256:5688d71731e09657f5dcea986b495e24b1bfdf360bcc37b39da65165553fbb28",
+      "created_at": "2025-03-06T17:06:05Z",
+      "updated_at": "2025-03-06T17:06:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-oracle",
+      "id": 369102541,
+      "name": "sha256:2c37d8bc8bf27abbc603988ccf5830db8db2832c4fa324e4e535edc615e308ee",
+      "created_at": "2025-03-06T17:06:05Z",
+      "updated_at": "2025-03-06T17:06:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-ghsa",
+      "id": 369102480,
+      "name": "sha256:b2f8248493b34102f3cda8808ec8f09c09a02121aef2c87b8051f91388a9d87b",
+      "created_at": "2025-03-06T17:06:00Z",
+      "updated_at": "2025-03-06T17:06:00Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-osv",
+      "id": 369102422,
+      "name": "sha256:f13cdc1e23adc7ed91abf9d51a3b540e2e9e94f01f081abc8c80088d80d43233",
+      "created_at": "2025-03-06T17:05:55Z",
+      "updated_at": "2025-03-06T17:05:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-osv",
+      "id": 369102421,
+      "name": "sha256:6cf8795d387dbaeb8c764806aed4e406fb037f1666d5ed84ead6210b1410f466",
+      "created_at": "2025-03-06T17:05:55Z",
+      "updated_at": "2025-03-06T17:05:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-glsa",
+      "id": 369102408,
+      "name": "sha256:907654897f8ba5c11cfd02bf22dd6d2ff1a9b4ff95a0488318379b98b825661b",
+      "created_at": "2025-03-06T17:05:54Z",
+      "updated_at": "2025-03-06T17:05:54Z"
+    },
+    {
+      "tag": "vuls-data-raw-git-osv",
+      "id": 369102387,
+      "name": "sha256:474fef2477c628fe7249ac221826a0a9353a75729b5218ce01137203b9a5afee",
+      "created_at": "2025-03-06T17:05:53Z",
+      "updated_at": "2025-03-06T17:05:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-product",
+      "id": 369102244,
+      "name": "sha256:86e863afe9b33c51846d8fcf34fdeb3b4c3a1181e634cdc834f878b7eafd8dd0",
+      "created_at": "2025-03-06T17:05:42Z",
+      "updated_at": "2025-03-06T17:05:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-cvrf",
+      "id": 369102243,
+      "name": "sha256:5e19673b92d219a2b9dd0b38d762695926ee7b26aa1f6d9cd87119dbe8c0701c",
+      "created_at": "2025-03-06T17:05:42Z",
+      "updated_at": "2025-03-06T17:05:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-osv",
+      "id": 369102241,
+      "name": "sha256:44c5992e1001efe2bfe386a5f7d4df0643b7d2761f964d8c8a953d95a74eb0a6",
+      "created_at": "2025-03-06T17:05:42Z",
+      "updated_at": "2025-03-06T17:05:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-glsa",
+      "id": 369102233,
+      "name": "sha256:7d482d8505e4acbafb48d70f718dcd1ad1d603e90d6db6f5f076c81a3138c823",
+      "created_at": "2025-03-06T17:05:40Z",
+      "updated_at": "2025-03-06T17:05:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-haskell-osv",
+      "id": 369102181,
+      "name": "sha256:216df61829fece2c7222e444d6cdfe65ee0894d1f93f74cf027c2a5a0cd42e77",
+      "created_at": "2025-03-06T17:05:36Z",
+      "updated_at": "2025-03-06T17:05:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-gentoo",
+      "id": 369102166,
+      "name": "sha256:e644de9ec597f2854618c1d67ca6f293dbe6131da0f95a81aad66f0d21c5a705",
+      "created_at": "2025-03-06T17:05:36Z",
+      "updated_at": "2025-03-06T17:05:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-ghsa",
+      "id": 369102164,
+      "name": "sha256:2818eda29757b29dee92aa84b881ca4eb14c706cc8c016b7a310370a86ac3f21",
+      "created_at": "2025-03-06T17:05:35Z",
+      "updated_at": "2025-03-06T17:05:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v4",
+      "id": 369102162,
+      "name": "sha256:1ff42675f1a6591117fffe215f0b8a0a170384591759eb2aeda8726f749b04ae",
+      "created_at": "2025-03-06T17:05:35Z",
+      "updated_at": "2025-03-06T17:05:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-epss",
+      "id": 369102150,
+      "name": "sha256:cb425337e7d1a5f4c7455985c78bdd27d6f7a5e9ecde69181b80ae9fa5c27d0d",
+      "created_at": "2025-03-06T17:05:34Z",
+      "updated_at": "2025-03-06T17:05:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-glsa",
+      "id": 369102145,
+      "name": "sha256:7f69cf8214799ab8c198c690e9a8cc2d21c1435fe398d7d8e5ac149acc2967bc",
+      "created_at": "2025-03-06T17:05:34Z",
+      "updated_at": "2025-03-06T17:05:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-inthewild",
+      "id": 369102132,
+      "name": "sha256:19b700730ecbf6597d3b28c5fa4b48404852c3477f71a63c512278d14a6c2bbb",
+      "created_at": "2025-03-06T17:05:32Z",
+      "updated_at": "2025-03-06T17:05:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-linux-osv",
+      "id": 369102130,
+      "name": "sha256:844a90a172277ddce63965ed1bb00d04d0756a696983ae26c218967739a0141a",
+      "created_at": "2025-03-06T17:05:32Z",
+      "updated_at": "2025-03-06T17:05:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-ghsa",
+      "id": 369102091,
+      "name": "sha256:1f9ac94288739784cc11dad5faa7d38d1f39f01a33db976f7198e353ccb2b7aa",
+      "created_at": "2025-03-06T17:05:29Z",
+      "updated_at": "2025-03-06T17:05:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-cvrf",
+      "id": 369102036,
+      "name": "sha256:09c8bf4767a523a1880cfcec51877c5e829186f4e240aca3120221daa1559d96",
+      "created_at": "2025-03-06T17:05:24Z",
+      "updated_at": "2025-03-06T17:05:24Z"
+    },
+    {
+      "tag": "vuls-data-raw-kev",
+      "id": 369102014,
+      "name": "sha256:8a8f8244492bcf381eb402c4743445394732125713a7dbb455731db4798dc3f8",
+      "created_at": "2025-03-06T17:05:22Z",
+      "updated_at": "2025-03-06T17:05:22Z"
+    },
+    {
+      "tag": "vuls-data-raw-fedora",
+      "id": 369101960,
+      "name": "sha256:f1780b5849df05aba6e2d8e064cdabb085c964c0dd142c44259098c35b56f134",
+      "created_at": "2025-03-06T17:05:16Z",
+      "updated_at": "2025-03-06T17:05:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-detail",
+      "id": 369101949,
+      "name": "sha256:3d7b6e1765fbb1ee0272ada81ad13242c8fa2d85992f5cca5ba3b56163c8a99c",
+      "created_at": "2025-03-06T17:05:15Z",
+      "updated_at": "2025-03-06T17:05:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-osv",
+      "id": 369101943,
+      "name": "sha256:e4ab72c08c486f6a49d8e0aea87505bb0aada5038b202187494e0cc330da0fbc",
+      "created_at": "2025-03-06T17:05:14Z",
+      "updated_at": "2025-03-06T17:05:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-conan-glsa",
+      "id": 369101921,
+      "name": "sha256:60d5b3cc92787ffe31f659db8c222a296b60595c729980418e3adf60331cb32d",
+      "created_at": "2025-03-06T17:05:12Z",
+      "updated_at": "2025-03-06T17:05:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-exploitdb",
+      "id": 369101853,
+      "name": "sha256:c13d547d5da91ad774f8fc6411485773b0266451d95677d5cec61a310b5b460a",
+      "created_at": "2025-03-06T17:05:09Z",
+      "updated_at": "2025-03-06T17:05:09Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-ghsa",
+      "id": 369101814,
+      "name": "sha256:44f255906bd96bd3e2b49a8812cfd1de51de41c7c1980a99b7bb2fa8e3d024fb",
+      "created_at": "2025-03-06T17:05:07Z",
+      "updated_at": "2025-03-06T17:05:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-ghactions-osv",
+      "id": 369101771,
+      "name": "sha256:656de504b495d0754d7e07a2fd9d81463007118a3926691d1f0973a50b7ea1f2",
+      "created_at": "2025-03-06T17:05:04Z",
+      "updated_at": "2025-03-06T17:05:04Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-oval",
+      "id": 369101755,
+      "name": "sha256:eb3f5fcab2ac58dc74488041b464d01e5a475e5b4bb96700e835000b08de4e64",
+      "created_at": "2025-03-06T17:05:03Z",
+      "updated_at": "2025-03-06T17:05:03Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf",
+      "id": 369101720,
+      "name": "sha256:e3ba4c72a5c5b292d19caeb51843a8e63fd26e369b3a20a0519f40e64b858af0",
+      "created_at": "2025-03-06T17:05:00Z",
+      "updated_at": "2025-03-06T17:05:00Z"
+    },
+    {
+      "tag": "vuls-data-extracted-epss",
+      "id": 369101629,
+      "name": "sha256:a88e52b05e944485bac6532796a6dd950df6cc663ab74710b83b8e07f3526a94",
+      "created_at": "2025-03-06T17:04:53Z",
+      "updated_at": "2025-03-06T17:04:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-freebsd",
+      "id": 369101578,
+      "name": "sha256:cd3b2fe0c19a18c583c8e9ed5277f2024a8ccb002b30768158e920757f319b65",
+      "created_at": "2025-03-06T17:04:49Z",
+      "updated_at": "2025-03-06T17:04:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-trickest",
+      "id": 369101576,
+      "name": "sha256:3950a1a8935fcad9d0b53ddf47fe657cdab10ecd9fa07654322bc4791711a101",
+      "created_at": "2025-03-06T17:04:49Z",
+      "updated_at": "2025-03-06T17:04:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-api",
+      "id": 369101567,
+      "name": "sha256:9173b8568c1f9677ab132b689cb6f5bb50561caac61e522daa94e9b80040ef98",
+      "created_at": "2025-03-06T17:04:49Z",
+      "updated_at": "2025-03-06T17:04:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-salsa",
+      "id": 369101510,
+      "name": "sha256:fbc50443ebe0f1d514ffec9a3e38bafa10393bd9b3ae58463470ce68e94205af",
+      "created_at": "2025-03-06T17:04:45Z",
+      "updated_at": "2025-03-06T17:04:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet",
+      "id": 369101505,
+      "name": "sha256:5348f35f5899ef2711eb402218c7b81fd3157bf43ab342e1a60b032337928c04",
+      "created_at": "2025-03-06T17:04:44Z",
+      "updated_at": "2025-03-06T17:04:44Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-github",
+      "id": 369101481,
+      "name": "sha256:24731d82e52e57b5ad814e9ece565c508a4dc59ca4b1719d5fc9234c907b5dd6",
+      "created_at": "2025-03-06T17:04:41Z",
+      "updated_at": "2025-03-06T17:04:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-arch",
+      "id": 369101382,
+      "name": "sha256:db945d42c6409a3fc3a87ede866eb77577fabe330d67a0a94be799523963e055",
+      "created_at": "2025-03-06T17:04:34Z",
+      "updated_at": "2025-03-06T17:04:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-oval",
+      "id": 369101313,
+      "name": "sha256:4ea01083f373763f3db755df694c2f12974cc8fca5b93a3e582aa6978cb576af",
+      "created_at": "2025-03-06T17:04:27Z",
+      "updated_at": "2025-03-06T17:04:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-cwe",
+      "id": 369101304,
+      "name": "sha256:305317d795c4624d2c93395d367d07b40cb01742e333519a67d9798c991e213b",
+      "created_at": "2025-03-06T17:04:26Z",
+      "updated_at": "2025-03-06T17:04:26Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-osv",
+      "id": 369101289,
+      "name": "sha256:99205d1c36ca4ccf9a610448b75c327031d3a0a851dca4acf48b964dd979e575",
+      "created_at": "2025-03-06T17:04:25Z",
+      "updated_at": "2025-03-06T17:04:25Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex",
+      "id": 369101250,
+      "name": "sha256:48d734e4646540c4743e2d23355fe7dc02f4c7dc69d16d3a8a65a18eb100b966",
+      "created_at": "2025-03-06T17:04:22Z",
+      "updated_at": "2025-03-06T17:04:22Z"
+    },
+    {
+      "tag": "vuls-data-raw-android-osv",
+      "id": 369101240,
+      "name": "sha256:d362396c9f5ef27a686e8d0e3aad6deddeb7fb1453112de3c447532478ba5e0a",
+      "created_at": "2025-03-06T17:04:21Z",
+      "updated_at": "2025-03-06T17:04:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-ghsa",
+      "id": 369101235,
+      "name": "sha256:c8ff7b01296d73515f964297ca7597207be8f4b2edb61c420e3e8a08951c4b96",
+      "created_at": "2025-03-06T17:04:21Z",
+      "updated_at": "2025-03-06T17:04:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-glsa",
+      "id": 369101227,
+      "name": "sha256:d9cd1b0380176eb5cf46c21a7cc101d3e99e6499723a16a8a0e0a1a30eaa92f7",
+      "created_at": "2025-03-06T17:04:20Z",
+      "updated_at": "2025-03-06T17:04:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-osv",
+      "id": 369101224,
+      "name": "sha256:651af4b08e9d6bc74cfd7ef0525b320f3dfd64412d39a6dcb625a602c7bdac5c",
+      "created_at": "2025-03-06T17:04:20Z",
+      "updated_at": "2025-03-06T17:04:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-osv",
+      "id": 369101208,
+      "name": "sha256:0f6b127a36e12ce7f23acdbc156c07b51534bd43cffab5dbb86acb7e24158d4b",
+      "created_at": "2025-03-06T17:04:19Z",
+      "updated_at": "2025-03-06T17:04:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-osv",
+      "id": 369101162,
+      "name": "sha256:dc89a5d47437f816e942d13bf9c6e12c8f89fa3dabf95bffcdb7e071cd00f793",
+      "created_at": "2025-03-06T17:04:16Z",
+      "updated_at": "2025-03-06T17:04:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-chainguard-osv",
+      "id": 369101155,
+      "name": "sha256:f05ddf706226010b956065ae5335dfdfce93492d9df85d3ba94f974766381c0f",
+      "created_at": "2025-03-06T17:04:16Z",
+      "updated_at": "2025-03-06T17:04:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-capec",
+      "id": 369101135,
+      "name": "sha256:ce492418faaede2a77da9923b2322fcee792e24240280aaae6224e10f749298f",
+      "created_at": "2025-03-06T17:04:14Z",
+      "updated_at": "2025-03-06T17:04:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-ghsa",
+      "id": 369101105,
+      "name": "sha256:67a35963f2d4009a3353fc1aac865bfb6b85e447534a152ddef1f0ef006ec1fd",
+      "created_at": "2025-03-06T17:04:13Z",
+      "updated_at": "2025-03-06T17:04:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-bitnami-osv",
+      "id": 369101059,
+      "name": "sha256:ccb5a91934103f5bb0b1c760d773282bb85d5d7f996d46ac4890126cd874779d",
+      "created_at": "2025-03-06T17:04:10Z",
+      "updated_at": "2025-03-06T17:04:10Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2",
+      "id": 369100988,
+      "name": "sha256:cada1f2d3abccd90de63efedd8ac861c9ae383e6ed4132c603ad2a34f77a7486",
+      "created_at": "2025-03-06T17:04:06Z",
+      "updated_at": "2025-03-06T17:04:06Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-osv",
+      "id": 369100928,
+      "name": "sha256:1fa1ecc30a8b7f827713e8b6ba5e7e1ad718bf5424da8c089ad0566ed6e02fc3",
+      "created_at": "2025-03-06T17:04:03Z",
+      "updated_at": "2025-03-06T17:04:03Z"
+    },
+    {
+      "tag": "vuls-data-extracted-freebsd",
+      "id": 369100909,
+      "name": "sha256:bfb1ac6e337c598d4fa18b1396cba4be8c362553204ee78264ef49b6789818cc",
+      "created_at": "2025-03-06T17:04:01Z",
+      "updated_at": "2025-03-06T17:04:01Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-rhel",
+      "id": 369100881,
+      "name": "sha256:fb6fc70c59f147d1039223c8b4e264addee1722d9f2ace8cb7020a8fbf9c9904",
+      "created_at": "2025-03-06T17:03:59Z",
+      "updated_at": "2025-03-06T17:03:59Z"
+    },
+    {
+      "tag": "vuls-data-raw-attack",
+      "id": 369100878,
+      "name": "sha256:6ca4a8a6d67738df8060e4e9753b9694fbdfbe40db8565600488a8df3510cc1f",
+      "created_at": "2025-03-06T17:03:58Z",
+      "updated_at": "2025-03-06T17:03:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-secdb",
+      "id": 369100829,
+      "name": "sha256:b5f575846e4bd1b78a80521b2a1e57cc25cc7ed4468cea76ad29b59bc2866967",
+      "created_at": "2025-03-06T17:03:55Z",
+      "updated_at": "2025-03-06T17:03:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-amazon",
+      "id": 369100806,
+      "name": "sha256:c6d34645d20a89ea0a0ea91d0a25e175b179c53553db8b4749a76b70466b980d",
+      "created_at": "2025-03-06T17:03:54Z",
+      "updated_at": "2025-03-06T17:03:54Z"
+    },
+    {
+      "tag": "vuls-data-extracted-kev",
+      "id": 369100775,
+      "name": "sha256:7a195e704b8934aced7f0dd918be7f6413fc2f8e58c1f2ae3dc9118976aba814",
+      "created_at": "2025-03-06T17:03:52Z",
+      "updated_at": "2025-03-06T17:03:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-osv",
+      "id": 369100757,
+      "name": "sha256:ab75d1e39950bc7ad88ebaad0ee8eb9265fa5df289fb1d7f482d77564a85513c",
+      "created_at": "2025-03-06T17:03:51Z",
+      "updated_at": "2025-03-06T17:03:51Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-errata",
+      "id": 369100731,
+      "name": "sha256:c96e4040efb2a357796e9c08cd6a9b4d975bbc91a8642d3eda54d7ef8a92a382",
+      "created_at": "2025-03-06T17:03:50Z",
+      "updated_at": "2025-03-06T17:03:50Z"
+    },
+    {
+      "tag": "vuls-data-extracted-rocky-errata",
+      "id": 369100713,
+      "name": "sha256:e37ae4d7fc783bd3043247a4af8a1df7c524552f5478695f9f01bb8fbbbb2f33",
+      "created_at": "2025-03-06T17:03:48Z",
+      "updated_at": "2025-03-06T17:03:48Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-rhel",
+      "id": 369100699,
+      "name": "sha256:cf727465de507075e4d12295c04be4b7f1b0494d1a120eb4f816f7de648ca0c6",
+      "created_at": "2025-03-06T17:03:47Z",
+      "updated_at": "2025-03-06T17:03:47Z"
+    },
+    {
+      "tag": "vuls-data-extracted-nvd-api-cve",
+      "id": 369100558,
+      "name": "sha256:cd94ea0fd62750b61d9fe14e5eff331e63bd27b46a0f43ba905c777cb7d96739",
+      "created_at": "2025-03-06T17:03:36Z",
+      "updated_at": "2025-03-06T17:03:36Z"
+    },
+    {
+      "tag": "vuls-data-extracted-amazon",
+      "id": 369100495,
+      "name": "sha256:e2dcdeed21896775192f159c581e3d82fe1dedf6934bcd1f391854569ca27498",
+      "created_at": "2025-03-06T17:03:31Z",
+      "updated_at": "2025-03-06T17:03:31Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1",
+      "id": 369100466,
+      "name": "sha256:582d65bf9c4bde0f9cd22fdea5377f63734c6ab4ee973a24a023a97312276f60",
+      "created_at": "2025-03-06T17:03:28Z",
+      "updated_at": "2025-03-06T17:03:28Z"
+    },
+    {
+      "tag": "vuls-data-extracted-cargo-ghsa",
+      "id": 369100454,
+      "name": "sha256:51f55ea50ba517542f3780e94fc7813a3e9888ce03cb369fa26bb431cf69e384",
+      "created_at": "2025-03-06T17:03:27Z",
+      "updated_at": "2025-03-06T17:03:27Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-rhel",
+      "id": 369100451,
+      "name": "sha256:039ff3b3d29aca002c2001bb5b85c216894ec50b8617c3217aa3a2384ab3e216",
+      "created_at": "2025-03-06T17:03:27Z",
+      "updated_at": "2025-03-06T17:03:27Z"
+    },
+    {
+      "tag": "vuls-data-extracted-arch",
+      "id": 369100446,
+      "name": "sha256:5618a495f9d03a7d6bdb8a5639c4e90fd31e866b8bceb71d634a6ebbaf34f36c",
+      "created_at": "2025-03-06T17:03:27Z",
+      "updated_at": "2025-03-06T17:03:27Z"
+    },
+    {
+      "tag": "vuls-data-extracted-mitre-v5",
+      "id": 369100434,
+      "name": "sha256:7d745b8fd390c596bb8e7f745c5f0cbd0250c814beb4745a03f8aa041909e574",
+      "created_at": "2025-03-06T17:03:26Z",
+      "updated_at": "2025-03-06T17:03:26Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-errata",
+      "id": 369100425,
+      "name": "sha256:b2b924404770b8dcd02f83085a67fcaa9ab253bcbbc630c0419a81cd4f0e31f7",
+      "created_at": "2025-03-06T17:03:25Z",
+      "updated_at": "2025-03-06T17:03:25Z"
+    },
+    {
+      "tag": "vuls-data-extracted-eol",
+      "id": 369100421,
+      "name": "sha256:7db98351129d012f6494f2bf96123c54a6886f4d58bd4d14599bb0f8d7b1b2f5",
+      "created_at": "2025-03-06T17:03:24Z",
+      "updated_at": "2025-03-06T17:03:24Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-secdb",
+      "id": 369100400,
+      "name": "sha256:2eebf9e6d0d42aa0cc833b61ed1cfcfcd76b15b0b95cd1dc373d84a0aa935252",
+      "created_at": "2025-03-06T17:03:22Z",
+      "updated_at": "2025-03-06T17:03:22Z"
+    },
+    {
+      "tag": "vuls-data-extracted-oracle",
+      "id": 369100397,
+      "name": "sha256:657f335113440171c2becda4da4650f30e904020839a6615fa103c00351c2000",
+      "created_at": "2025-03-06T17:03:22Z",
+      "updated_at": "2025-03-06T17:03:22Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-osv",
+      "id": 369100369,
+      "name": "sha256:61e520b01393f78b28d1752a1fab219ab7782dcd398893d814f58ef9514f6a32",
+      "created_at": "2025-03-06T17:03:19Z",
+      "updated_at": "2025-03-06T17:03:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-sample",
+      "id": 368605511,
+      "name": "sha256:7691cae0e2397105701e959e42aa27ed7e250da4723044ad1d3710b85aecabb2",
+      "created_at": "2025-03-06T08:03:17Z",
+      "updated_at": "2025-03-06T08:03:17Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-rhel-archive-1",
+      "id": 359174951,
+      "name": "sha256:a9e1053d0f5a673f785436ad2f9d8f4a8fa3049c924113a8b8ca3ee2f4ef0592",
+      "created_at": "2025-02-20T04:09:24Z",
+      "updated_at": "2025-02-20T04:09:24Z"
+    },
+    {
+      "tag": "vuls-data-extracted-epss-archive-1",
+      "id": 359174883,
+      "name": "sha256:8c4f6da8a86e1e8d3fcd4559de882c663d9d4579ed10ebabcd2ed1664aa14864",
+      "created_at": "2025-02-20T04:09:04Z",
+      "updated_at": "2025-02-20T04:09:04Z"
+    }
+  ],
+  "vulsio/vuls-data-db-backup": [
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-rhel-backup-weekly",
+      "id": 369082123,
+      "name": "sha256:6e35a8822645929390e7dcf526c890dd00fc6de85c3df0a6e506515e55499d81",
+      "created_at": "2025-03-06T16:41:29Z",
+      "updated_at": "2025-03-06T16:41:29Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-osv-backup-weekly",
+      "id": 369077371,
+      "name": "sha256:2071cd05c5c69b95e05d1e510728884c4e647f770b61c9407d33937973bdd841",
+      "created_at": "2025-03-06T16:36:12Z",
+      "updated_at": "2025-03-06T16:36:12Z"
+    },
+    {
+      "tag": "vuls-data-extracted-epss-backup-weekly",
+      "id": 369077337,
+      "name": "sha256:dedd5f3bf76f08608e6a1f8c5ea7760d957cf310a0bab9471755be592c7e49e9",
+      "created_at": "2025-03-06T16:36:10Z",
+      "updated_at": "2025-03-06T16:36:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-csaf-backup-weekly",
+      "id": 369077205,
+      "name": "sha256:347fb6946b46d330025c414c8a4d147863e7e3252aed3e66c3fb854fe19f46f4",
+      "created_at": "2025-03-06T16:36:01Z",
+      "updated_at": "2025-03-06T16:36:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpematch-backup-weekly",
+      "id": 369076834,
+      "name": "sha256:32a977ef358819553699d2490cee577f4c794ed2516a9a2b6ee60758c95fa049",
+      "created_at": "2025-03-06T16:35:38Z",
+      "updated_at": "2025-03-06T16:35:38Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-rhel-backup-monthly",
+      "id": 369076717,
+      "name": "sha256:e11757a8addaaae4842417029e773b0c4a2d5cb6d855bff10a49b3ad7a2d0bad",
+      "created_at": "2025-03-06T16:35:33Z",
+      "updated_at": "2025-03-06T16:35:33Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-errata-backup-weekly",
+      "id": 369076703,
+      "name": "sha256:7ed03712ea1ed351902dfbd5b0178e69600e0d32fd1bf2df589d5a88d6abdc85",
+      "created_at": "2025-03-06T16:35:32Z",
+      "updated_at": "2025-03-06T16:35:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-vex-backup-weekly",
+      "id": 369076682,
+      "name": "sha256:1edf24e81cf4969d56f2892aea9bff9ae4c000527cdf2ef44d0c5711a3609dff",
+      "created_at": "2025-03-06T16:35:31Z",
+      "updated_at": "2025-03-06T16:35:31Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-rhel-backup-weekly",
+      "id": 369076676,
+      "name": "sha256:9017c8a7dd40ab4e40094ecca9a8b3ae33745c7eb15bdc87ab039f96d4b6efe5",
+      "created_at": "2025-03-06T16:35:30Z",
+      "updated_at": "2025-03-06T16:35:30Z"
+    },
+    {
+      "tag": "vuls-data-extracted-arch-backup-weekly",
+      "id": 369076636,
+      "name": "sha256:7fdd90646c87d41845a077deb5d289939ee0768fcf2392055a948d0b42511bf4",
+      "created_at": "2025-03-06T16:35:29Z",
+      "updated_at": "2025-03-06T16:35:29Z"
+    },
+    {
+      "tag": "vuls-data-extracted-amazon-backup-weekly",
+      "id": 369076632,
+      "name": "sha256:f252ca39aca092566584459bb20c257ef111c9f8bbd7f47b68ef44ba0830deeb",
+      "created_at": "2025-03-06T16:35:28Z",
+      "updated_at": "2025-03-06T16:35:28Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-rhel-backup-daily",
+      "id": 369076613,
+      "name": "sha256:5b2b20cd53381558d290390dffeda8b61e3049f8a8061264c4db39c8881813bd",
+      "created_at": "2025-03-06T16:35:27Z",
+      "updated_at": "2025-03-06T16:35:27Z"
+    },
+    {
+      "tag": "vuls-data-extracted-cargo-ghsa-backup-weekly",
+      "id": 369076598,
+      "name": "sha256:7737f3779f5efa4cc7933a8cc9998c0f6f0add959f96b5214c21f1a2b79414f0",
+      "created_at": "2025-03-06T16:35:26Z",
+      "updated_at": "2025-03-06T16:35:26Z"
+    },
+    {
+      "tag": "vuls-data-extracted-epss-backup-monthly",
+      "id": 369076588,
+      "name": "sha256:94f60220c410f260b858b13f9137ff9475c5ee89d473b51fab9ec9b57a424277",
+      "created_at": "2025-03-06T16:35:26Z",
+      "updated_at": "2025-03-06T16:35:26Z"
+    },
+    {
+      "tag": "vuls-data-extracted-eol-backup-weekly",
+      "id": 369076573,
+      "name": "sha256:c3a67015461f1458f901f78358911689e7c853b741d343659aef925d200767d4",
+      "created_at": "2025-03-06T16:35:25Z",
+      "updated_at": "2025-03-06T16:35:25Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-secdb-backup-weekly",
+      "id": 369076567,
+      "name": "sha256:0adcec5afdb59570e3f94d49ee9c6e6941b0cc271a386599618cd49084f83d72",
+      "created_at": "2025-03-06T16:35:24Z",
+      "updated_at": "2025-03-06T16:35:24Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cve-backup-weekly",
+      "id": 369076518,
+      "name": "sha256:5d4e97f8ccbc789edc4af346372d6aca2befef3fb19978ac4dfbe984f2bc73b6",
+      "created_at": "2025-03-06T16:35:22Z",
+      "updated_at": "2025-03-06T16:35:22Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-osv-backup-weekly",
+      "id": 369076494,
+      "name": "sha256:0480bba8a33ca0fa0c9e81598e3f621cefd00c9e2bd1d18144475b950abd10fd",
+      "created_at": "2025-03-06T16:35:21Z",
+      "updated_at": "2025-03-06T16:35:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-osv-backup-weekly",
+      "id": 369076481,
+      "name": "sha256:8066cddb793dfc7eaa7f75122028a8797cb1023bea1dc17969751d37ac4ae24e",
+      "created_at": "2025-03-06T16:35:20Z",
+      "updated_at": "2025-03-06T16:35:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpe-backup-weekly",
+      "id": 369076470,
+      "name": "sha256:450e49905f01efc0ff858e14b29bbe2e263d755c8adf125039bd3d663b0106a9",
+      "created_at": "2025-03-06T16:35:19Z",
+      "updated_at": "2025-03-06T16:35:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cvrf-backup-weekly",
+      "id": 369076449,
+      "name": "sha256:f45f5746a5cd66201492b5f2709fc36926451cafb5d10283c1fc05c2d60ce95b",
+      "created_at": "2025-03-06T16:35:18Z",
+      "updated_at": "2025-03-06T16:35:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cve-backup-weekly",
+      "id": 369076418,
+      "name": "sha256:ac153f5704d549c1561fbbdfc6d41ffd5b22cf0aa40b0dd561331abbd22dded6",
+      "created_at": "2025-03-06T16:35:17Z",
+      "updated_at": "2025-03-06T16:35:17Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpematch-backup-weekly",
+      "id": 369076415,
+      "name": "sha256:ef434d38a522a7a1eafcd035a191938435a3d349be80317e1ed15c8af8a17faf",
+      "created_at": "2025-03-06T16:35:16Z",
+      "updated_at": "2025-03-06T16:35:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-osv-backup-weekly",
+      "id": 369076413,
+      "name": "sha256:07760d241611fdd402bf7238ed64aa966d7863a86a933edbb6cad3f696df3f68",
+      "created_at": "2025-03-06T16:35:16Z",
+      "updated_at": "2025-03-06T16:35:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cve-backup-weekly",
+      "id": 369076402,
+      "name": "sha256:204034f0ce16ffae58fec118ddf771066d3a575c4a1778ff05194e2da1e7529e",
+      "created_at": "2025-03-06T16:35:16Z",
+      "updated_at": "2025-03-06T16:35:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-osv-backup-weekly",
+      "id": 369076401,
+      "name": "sha256:5440cd7704192ff4adde906c89a72270bfe7ddf0bd2c3c79467c3a521a72ee27",
+      "created_at": "2025-03-06T16:35:16Z",
+      "updated_at": "2025-03-06T16:35:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-ghsa-backup-weekly",
+      "id": 369076396,
+      "name": "sha256:cf1afb6629d753ae168d6daa96daccd9201b240525f6f4fd431b731feaece944",
+      "created_at": "2025-03-06T16:35:15Z",
+      "updated_at": "2025-03-06T16:35:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-oracle-backup-weekly",
+      "id": 369076379,
+      "name": "sha256:b7e3a6a8dccc58d47a234a33c628714c48b3516585beb4caba3e4ba55b237e42",
+      "created_at": "2025-03-06T16:35:14Z",
+      "updated_at": "2025-03-06T16:35:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-ghsa-backup-weekly",
+      "id": 369076340,
+      "name": "sha256:6cbb13beb1af0a1002c4032800ab8f0328a8bb2ac6f675637769f1dffbedc4c4",
+      "created_at": "2025-03-06T16:35:12Z",
+      "updated_at": "2025-03-06T16:35:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpe-backup-weekly",
+      "id": 369076330,
+      "name": "sha256:080823cacd22a7b3d4b02b962157d61f8fb471cf0080661396ed15bfac564ef2",
+      "created_at": "2025-03-06T16:35:11Z",
+      "updated_at": "2025-03-06T16:35:11Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-glsa-backup-weekly",
+      "id": 369076319,
+      "name": "sha256:c79d6424afdb8697685c1e59b56d5d4f043d3eaeb970e03a7143ece7ed50e717",
+      "created_at": "2025-03-06T16:35:10Z",
+      "updated_at": "2025-03-06T16:35:10Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-rhel-backup-monthly",
+      "id": 369076317,
+      "name": "sha256:18de4f23ce0945341cdfd0e7603ce825607e24ffb3fb74be7ab75398e67d54f3",
+      "created_at": "2025-03-06T16:35:10Z",
+      "updated_at": "2025-03-06T16:35:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-oss-fuzz-osv-backup-weekly",
+      "id": 369076306,
+      "name": "sha256:be4c2ff5e2edbbbe38af8f3d1a1e87ac5e6dd9190038d143f1a4fbcfaa28fa3e",
+      "created_at": "2025-03-06T16:35:08Z",
+      "updated_at": "2025-03-06T16:35:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-oval-backup-weekly",
+      "id": 369076289,
+      "name": "sha256:34f29eea0adf60ad44c06e50e412e4dede4e0888687e419ba95a8870b2c4561c",
+      "created_at": "2025-03-06T16:35:07Z",
+      "updated_at": "2025-03-06T16:35:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-osv-backup-weekly",
+      "id": 369076263,
+      "name": "sha256:c981adfdb3966a5a88c4511c384a5cd62e9f43ac36a1d61b51c088a41a0d601f",
+      "created_at": "2025-03-06T16:35:05Z",
+      "updated_at": "2025-03-06T16:35:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-glsa-backup-weekly",
+      "id": 369076253,
+      "name": "sha256:ecb4e009ba65ab24f6e49db6d6ecdcf501e1c59f9c40d0f72455b9a1e778621d",
+      "created_at": "2025-03-06T16:35:04Z",
+      "updated_at": "2025-03-06T16:35:04Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-glsa-backup-weekly",
+      "id": 369076248,
+      "name": "sha256:92f01cd807efbbe22e8862b5b06689faff531266dc9a0eccc1c75b80cbfd3e8a",
+      "created_at": "2025-03-06T16:35:04Z",
+      "updated_at": "2025-03-06T16:35:04Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-osv-backup-weekly",
+      "id": 369076224,
+      "name": "sha256:e4f5e9704fecab354be181f6fef9059ed8cc789443bf96686aedce6eb0895704",
+      "created_at": "2025-03-06T16:35:03Z",
+      "updated_at": "2025-03-06T16:35:03Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-ghsa-backup-weekly",
+      "id": 369076206,
+      "name": "sha256:3d93712508437bd2935bdaa857429819fb9fa93a6212510d4005a827aba638be",
+      "created_at": "2025-03-06T16:35:01Z",
+      "updated_at": "2025-03-06T16:35:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v5-backup-weekly",
+      "id": 369076204,
+      "name": "sha256:3bdec2aa9c137a44b1882440bc5c7d87b855aa58bc47abcb4c9369ccd8a38f39",
+      "created_at": "2025-03-06T16:35:01Z",
+      "updated_at": "2025-03-06T16:35:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-netbsd-backup-weekly",
+      "id": 369076177,
+      "name": "sha256:cc940589356b8e7520ea9dca65b022425e2c4a455cf8a27569552452e90324b0",
+      "created_at": "2025-03-06T16:34:59Z",
+      "updated_at": "2025-03-06T16:34:59Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-ghsa-backup-weekly",
+      "id": 369076175,
+      "name": "sha256:59a4ffd219f4ab470649c6ca577ad464f9625de0c88fa98c7b4e6d834b341ed2",
+      "created_at": "2025-03-06T16:34:59Z",
+      "updated_at": "2025-03-06T16:34:59Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-cvrf-backup-weekly",
+      "id": 369076174,
+      "name": "sha256:f6d99a55cca716c37f0733d77d4932f353853e1b1166d8a38788c578b4d3e3c8",
+      "created_at": "2025-03-06T16:34:59Z",
+      "updated_at": "2025-03-06T16:34:59Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-detail-backup-weekly",
+      "id": 369076156,
+      "name": "sha256:29c480632dda4c2836effee7bddcf7835b60f30ac31596722749e02f88915b3a",
+      "created_at": "2025-03-06T16:34:58Z",
+      "updated_at": "2025-03-06T16:34:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v4-backup-weekly",
+      "id": 369076145,
+      "name": "sha256:9412dc4ce53be30db43ffed73aa9da1be77fb7494eb3407efd9bfbb99f447ba9",
+      "created_at": "2025-03-06T16:34:57Z",
+      "updated_at": "2025-03-06T16:34:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-osv-backup-weekly",
+      "id": 369076114,
+      "name": "sha256:51dd44201b81184acd622a2e96a3887ba645b730b54b59b37ab51947e3c424b6",
+      "created_at": "2025-03-06T16:34:55Z",
+      "updated_at": "2025-03-06T16:34:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-msf-backup-weekly",
+      "id": 369076110,
+      "name": "sha256:e30c45bac05000570d27787cc7e5caedf54063914a430711710b7b9a8eb08294",
+      "created_at": "2025-03-06T16:34:55Z",
+      "updated_at": "2025-03-06T16:34:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-rss-backup-weekly",
+      "id": 369076090,
+      "name": "sha256:fe32307f5787b68cf053ca174357ab13da464bfbca481af780a0442408a8f9b6",
+      "created_at": "2025-03-06T16:34:54Z",
+      "updated_at": "2025-03-06T16:34:54Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-product-backup-weekly",
+      "id": 369076062,
+      "name": "sha256:a0c43cc12587ebdea0a7da97d932fa6df6c2abedb84afc289c70ec3531b04dcb",
+      "created_at": "2025-03-06T16:34:52Z",
+      "updated_at": "2025-03-06T16:34:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-glsa-backup-weekly",
+      "id": 369076052,
+      "name": "sha256:1f740f894d4837a6bdffeeb468423d7ef1bb44943a4abd725bdc0e6ecf463c6a",
+      "created_at": "2025-03-06T16:34:52Z",
+      "updated_at": "2025-03-06T16:34:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-linux-osv-backup-weekly",
+      "id": 369076044,
+      "name": "sha256:0bfa59933c69f4ce57c403b3303668d52e6bdc7693e53cc3a0fa35953d4cbd08",
+      "created_at": "2025-03-06T16:34:51Z",
+      "updated_at": "2025-03-06T16:34:51Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-ghsa-backup-weekly",
+      "id": 369076031,
+      "name": "sha256:646e07ecbd3c9ed9c4b47e9cfec0a43123f139bf5181c90ef39b19e399ad3a62",
+      "created_at": "2025-03-06T16:34:50Z",
+      "updated_at": "2025-03-06T16:34:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-kev-backup-weekly",
+      "id": 369076023,
+      "name": "sha256:241a8863f41fe683b2b602270f79face8fe30f1ac1d2354f4916de4c40ffe0bd",
+      "created_at": "2025-03-06T16:34:49Z",
+      "updated_at": "2025-03-06T16:34:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-haskell-osv-backup-weekly",
+      "id": 369075997,
+      "name": "sha256:6b4a204825b47dfef3e19f3df9c9474d1b2f3e4356150c42265ebdecf1f123da",
+      "created_at": "2025-03-06T16:34:48Z",
+      "updated_at": "2025-03-06T16:34:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-osv-backup-weekly",
+      "id": 369075989,
+      "name": "sha256:055fb749210f32f10588f06636188eb47021c1b9784e02c8d57640ebba633c83",
+      "created_at": "2025-03-06T16:34:48Z",
+      "updated_at": "2025-03-06T16:34:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-git-osv-backup-weekly",
+      "id": 369075982,
+      "name": "sha256:f13e0e3dcccc2336c02769c71db63963b1493169f49e15abe4e39de5c5973904",
+      "created_at": "2025-03-06T16:34:47Z",
+      "updated_at": "2025-03-06T16:34:47Z"
+    },
+    {
+      "tag": "vuls-data-raw-fedora-backup-weekly",
+      "id": 369075970,
+      "name": "sha256:583ae1b60033f0d6b1e4bbf7a4d9c3ca22bd0402fecc83415b5c62d7443406d4",
+      "created_at": "2025-03-06T16:34:46Z",
+      "updated_at": "2025-03-06T16:34:46Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-ghsa-backup-weekly",
+      "id": 369075968,
+      "name": "sha256:be17a1f2d684a3bc0530e275c39b00d14bf6d509971abca39e69c78274f60521",
+      "created_at": "2025-03-06T16:34:46Z",
+      "updated_at": "2025-03-06T16:34:46Z"
+    },
+    {
+      "tag": "vuls-data-raw-ghactions-osv-backup-weekly",
+      "id": 369075945,
+      "name": "sha256:da898ece5fc814703d121726cfe425f9a2d6a09c205a02ae92d0a2b409000457",
+      "created_at": "2025-03-06T16:34:44Z",
+      "updated_at": "2025-03-06T16:34:44Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-glsa-backup-weekly",
+      "id": 369075932,
+      "name": "sha256:19eae82c52ba825e2ea531dc6f6045b518bb3ff3b30164edf1764637949c73b9",
+      "created_at": "2025-03-06T16:34:43Z",
+      "updated_at": "2025-03-06T16:34:43Z"
+    },
+    {
+      "tag": "vuls-data-raw-gentoo-backup-weekly",
+      "id": 369075908,
+      "name": "sha256:fde6e5af7dbbedfc5732c3a73158109216cf4e2c21ea80a9881e3ade5f5c5459",
+      "created_at": "2025-03-06T16:34:42Z",
+      "updated_at": "2025-03-06T16:34:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-freebsd-backup-weekly",
+      "id": 369075901,
+      "name": "sha256:c055d782d317d6c5e7408177d264bacd8620733b1ef3d3256ea8e5f20a6075ef",
+      "created_at": "2025-03-06T16:34:42Z",
+      "updated_at": "2025-03-06T16:34:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-backup-weekly",
+      "id": 369075872,
+      "name": "sha256:0c309643649378995134946b8d27847510aacee7da95611f00199c45af511cdc",
+      "created_at": "2025-03-06T16:34:41Z",
+      "updated_at": "2025-03-06T16:34:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-trickest-backup-weekly",
+      "id": 369075862,
+      "name": "sha256:d2a0afb12ef1383900e9399c88ba9916e91c66dbd78b4b718add56e87d05b432",
+      "created_at": "2025-03-06T16:34:40Z",
+      "updated_at": "2025-03-06T16:34:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-cvrf-backup-weekly",
+      "id": 369075857,
+      "name": "sha256:c935067b0c035285d351e78aea93238d13ae68c1cee2a87d6a31428f6b7316a7",
+      "created_at": "2025-03-06T16:34:40Z",
+      "updated_at": "2025-03-06T16:34:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-inthewild-backup-weekly",
+      "id": 369075826,
+      "name": "sha256:d3e74186ececeef21cb3b7126cfccf1ed63727c6374dee42068455edca7559fd",
+      "created_at": "2025-03-06T16:34:39Z",
+      "updated_at": "2025-03-06T16:34:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-epss-backup-weekly",
+      "id": 369075808,
+      "name": "sha256:87af965bd791f0610b7e153793c4282e043c493aeed9dd42f2a319683f27600a",
+      "created_at": "2025-03-06T16:34:38Z",
+      "updated_at": "2025-03-06T16:34:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-api-backup-weekly",
+      "id": 369075765,
+      "name": "sha256:1464996d17b99a502d87f4d08e97dae6b78276db8e3fd97dbfb7aa18d8a793d1",
+      "created_at": "2025-03-06T16:34:36Z",
+      "updated_at": "2025-03-06T16:34:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-osv-backup-weekly",
+      "id": 369075762,
+      "name": "sha256:c7d62e2712c231e3efe99cb3edac9824659382c68dfbfccea9c888adbec8b2d7",
+      "created_at": "2025-03-06T16:34:35Z",
+      "updated_at": "2025-03-06T16:34:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-salsa-backup-weekly",
+      "id": 369075754,
+      "name": "sha256:5559db3285f405884874dafcdf5cd24168dc9997684aced85575705f423de0bf",
+      "created_at": "2025-03-06T16:34:35Z",
+      "updated_at": "2025-03-06T16:34:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-github-backup-weekly",
+      "id": 369075752,
+      "name": "sha256:0469e83d895ed4265a5bc47df6229c37f6220768a2a9b015d1c111665625dcbb",
+      "created_at": "2025-03-06T16:34:35Z",
+      "updated_at": "2025-03-06T16:34:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-exploitdb-backup-weekly",
+      "id": 369075743,
+      "name": "sha256:1a57558e43eb11a1612f3c58cb77fa11c2758514237a62bb825da641740bccfd",
+      "created_at": "2025-03-06T16:34:34Z",
+      "updated_at": "2025-03-06T16:34:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-oval-backup-weekly",
+      "id": 369075742,
+      "name": "sha256:55a9e2aefb2e5e9798c9a60f98db453fec243cac7f68fd9d316d69737a668148",
+      "created_at": "2025-03-06T16:34:34Z",
+      "updated_at": "2025-03-06T16:34:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-ghsa-backup-weekly",
+      "id": 369075729,
+      "name": "sha256:1d7b9abee3bd8672a926e98668eff3fda5cd9d5d017c96915518973ff9dc1e25",
+      "created_at": "2025-03-06T16:34:33Z",
+      "updated_at": "2025-03-06T16:34:33Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-osv-backup-weekly",
+      "id": 369075698,
+      "name": "sha256:6fed71224c88a95fb583b68c4fbdb181e50aca44ab6dc29116cad76810a563c3",
+      "created_at": "2025-03-06T16:34:32Z",
+      "updated_at": "2025-03-06T16:34:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-csaf-backup-monthly",
+      "id": 369075676,
+      "name": "sha256:fe0077ae6b753a3afe9be846ab1e1d5baa1437c7905171399aeeaa1a7ad7c462",
+      "created_at": "2025-03-06T16:34:30Z",
+      "updated_at": "2025-03-06T16:34:30Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-errata-backup-monthly",
+      "id": 369075672,
+      "name": "sha256:1297613bc5899ab58912b3c8993379fce3b202df1d6a72da08c33a64dcec4c92",
+      "created_at": "2025-03-06T16:34:30Z",
+      "updated_at": "2025-03-06T16:34:30Z"
+    },
+    {
+      "tag": "vuls-data-raw-cwe-backup-weekly",
+      "id": 369075667,
+      "name": "sha256:12653baf4d05cdc2be10a64381ca6d0e1c1d509e545c8a9dd2e18aff9ac7c2b5",
+      "created_at": "2025-03-06T16:34:29Z",
+      "updated_at": "2025-03-06T16:34:29Z"
+    },
+    {
+      "tag": "vuls-data-extracted-cargo-ghsa-backup-monthly",
+      "id": 369075631,
+      "name": "sha256:8df3c00bf2de80bfa10ed67aeaecc8afee4d8161beb19ec2299ea315f8b90665",
+      "created_at": "2025-03-06T16:34:28Z",
+      "updated_at": "2025-03-06T16:34:28Z"
+    },
+    {
+      "tag": "vuls-data-extracted-eol-backup-monthly",
+      "id": 369075625,
+      "name": "sha256:61d6b93407d3f6c2125a6efe0f71cdb546551b56bbb3bfb9e64feba6f9248ac8",
+      "created_at": "2025-03-06T16:34:27Z",
+      "updated_at": "2025-03-06T16:34:27Z"
+    },
+    {
+      "tag": "vuls-data-extracted-amazon-backup-monthly",
+      "id": 369075549,
+      "name": "sha256:508da7c7fcedef4c610a95e938d82b1c97609b9c8dab134075835c3f66a27892",
+      "created_at": "2025-03-06T16:34:24Z",
+      "updated_at": "2025-03-06T16:34:24Z"
+    },
+    {
+      "tag": "vuls-data-extracted-arch-backup-monthly",
+      "id": 369075533,
+      "name": "sha256:0b5bed46b823f5fd711b98213fd42d1319effdeb023cb17d10786253471d176c",
+      "created_at": "2025-03-06T16:34:23Z",
+      "updated_at": "2025-03-06T16:34:23Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cve-backup-monthly",
+      "id": 369075532,
+      "name": "sha256:aaa5d24c8ced028dde69bd92ad9fef316c6173c465f858ea690ead41267058ad",
+      "created_at": "2025-03-06T16:34:23Z",
+      "updated_at": "2025-03-06T16:34:23Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-osv-backup-monthly",
+      "id": 369075530,
+      "name": "sha256:f446b33185480eff39112ad3ede6bcd067b8754dd01ee2e868039a9f1544a856",
+      "created_at": "2025-03-06T16:34:23Z",
+      "updated_at": "2025-03-06T16:34:23Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-osv-backup-monthly",
+      "id": 369075493,
+      "name": "sha256:8ffe1d2aeb7c23777df8435485770ac0931d72a33a71c0ccba89b12a09997e3f",
+      "created_at": "2025-03-06T16:34:21Z",
+      "updated_at": "2025-03-06T16:34:21Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-secdb-backup-monthly",
+      "id": 369075491,
+      "name": "sha256:5a1398ac6ae56f6b582bf7addb5e2a7085c58d02cb6678440a5ef23ed5a73b19",
+      "created_at": "2025-03-06T16:34:21Z",
+      "updated_at": "2025-03-06T16:34:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cvrf-backup-monthly",
+      "id": 369075479,
+      "name": "sha256:aff791b4b355909e66f7e13b8516f8ead90eea8eefff297c664e0210f3c08945",
+      "created_at": "2025-03-06T16:34:21Z",
+      "updated_at": "2025-03-06T16:34:21Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-osv-backup-monthly",
+      "id": 369075472,
+      "name": "sha256:364d3bb428931930c1bf2d243af1a773a16e24d06798002093f6c207add79e6b",
+      "created_at": "2025-03-06T16:34:20Z",
+      "updated_at": "2025-03-06T16:34:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cve-backup-monthly",
+      "id": 369075460,
+      "name": "sha256:9e63db5d66073dbb837ccd264077217568ee2b2f527ae3bcd7086646992dd891",
+      "created_at": "2025-03-06T16:34:20Z",
+      "updated_at": "2025-03-06T16:34:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpematch-backup-monthly",
+      "id": 369075412,
+      "name": "sha256:c3a9c4286f5b315a5e8101e83f76cb4dc8a1ca81fab28dc3721b8f8b95b86e0f",
+      "created_at": "2025-03-06T16:34:18Z",
+      "updated_at": "2025-03-06T16:34:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpematch-backup-monthly",
+      "id": 369075398,
+      "name": "sha256:7c943d35e0d85d9308e9c09ba9948bc0c6c96a61c844232d1dd873517b7bf8c1",
+      "created_at": "2025-03-06T16:34:17Z",
+      "updated_at": "2025-03-06T16:34:17Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpe-backup-monthly",
+      "id": 369075346,
+      "name": "sha256:a5d0e13c1f18baa37db83d68ff99eab5b7469d3408f9b0c147fc83ee466ff982",
+      "created_at": "2025-03-06T16:34:15Z",
+      "updated_at": "2025-03-06T16:34:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-ghsa-backup-monthly",
+      "id": 369075315,
+      "name": "sha256:6fbf8d9200cf6ed0109e161e2d0b3aec6b72021f3f96d5d07705a679f699cc11",
+      "created_at": "2025-03-06T16:34:13Z",
+      "updated_at": "2025-03-06T16:34:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-oracle-backup-monthly",
+      "id": 369075313,
+      "name": "sha256:e8b395a9458ee8122ff5a84ab289ecc1978af94a32a2e2e8fa9543d1678f70ca",
+      "created_at": "2025-03-06T16:34:13Z",
+      "updated_at": "2025-03-06T16:34:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cve-backup-monthly",
+      "id": 369075307,
+      "name": "sha256:d72445687d64e4260b441aecfa7c09fbb7cb4e6a816e21d779c916a73997308e",
+      "created_at": "2025-03-06T16:34:12Z",
+      "updated_at": "2025-03-06T16:34:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-osv-backup-monthly",
+      "id": 369075294,
+      "name": "sha256:586908feb9dc427428a40bb312fd592de352a76bfff21073b811443edad49e77",
+      "created_at": "2025-03-06T16:34:11Z",
+      "updated_at": "2025-03-06T16:34:11Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-osv-backup-monthly",
+      "id": 369075285,
+      "name": "sha256:5c38522353a1bc1f5a2e45a1824f97ed8546de95117ab3edec0816385a25c76e",
+      "created_at": "2025-03-06T16:34:11Z",
+      "updated_at": "2025-03-06T16:34:11Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-glsa-backup-monthly",
+      "id": 369075274,
+      "name": "sha256:a6e820b1152b76a266890cd817c9566fd69daa17933cdf2b09ad4961128a8b46",
+      "created_at": "2025-03-06T16:34:10Z",
+      "updated_at": "2025-03-06T16:34:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v5-backup-monthly",
+      "id": 369075246,
+      "name": "sha256:439d3af456d52d8a68a9ad1b01c65a4cd85a3a115445a34bec67ccc7058a3c38",
+      "created_at": "2025-03-06T16:34:08Z",
+      "updated_at": "2025-03-06T16:34:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-oss-fuzz-osv-backup-monthly",
+      "id": 369075238,
+      "name": "sha256:8b218353c280e773c27a9c191c517d291b23d3e01d81950a0c5117ccca3d15be",
+      "created_at": "2025-03-06T16:34:07Z",
+      "updated_at": "2025-03-06T16:34:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-ghsa-backup-monthly",
+      "id": 369075227,
+      "name": "sha256:6422110bc1efb19f1ec6ca94c39be84b59ca0af954f16b3e625b15bd9f6a22a3",
+      "created_at": "2025-03-06T16:34:06Z",
+      "updated_at": "2025-03-06T16:34:06Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpe-backup-monthly",
+      "id": 369075191,
+      "name": "sha256:6302b4ed7c5e02636a8e4a4a2fbaea759170f855a082d3fb217f993b3e2e8e9b",
+      "created_at": "2025-03-06T16:34:04Z",
+      "updated_at": "2025-03-06T16:34:04Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-glsa-backup-monthly",
+      "id": 369075187,
+      "name": "sha256:603286c7fd72561604262b15eaa70528f27364ed861a88d7c15b12b02d34154b",
+      "created_at": "2025-03-06T16:34:04Z",
+      "updated_at": "2025-03-06T16:34:04Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-cvrf-backup-monthly",
+      "id": 369075147,
+      "name": "sha256:4993cfee6a96ec6c0fbd6936b182ff7fc0cef457e3174a025e056d28af45a742",
+      "created_at": "2025-03-06T16:34:00Z",
+      "updated_at": "2025-03-06T16:34:00Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-osv-backup-monthly",
+      "id": 369075138,
+      "name": "sha256:3a8c5de57acd653469d9e91e6847e3469b8f6a22ea04e4f64f3d1c807be984d2",
+      "created_at": "2025-03-06T16:34:00Z",
+      "updated_at": "2025-03-06T16:34:00Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-ghsa-backup-monthly",
+      "id": 369075109,
+      "name": "sha256:739d716a02632b9c140f659f796c309407043e742fa721633a1a74f3124be744",
+      "created_at": "2025-03-06T16:33:58Z",
+      "updated_at": "2025-03-06T16:33:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-ghsa-backup-monthly",
+      "id": 369075093,
+      "name": "sha256:8ded30fee27320ef79e22b9b50d985e8dcb0d5808ee4c346dfabf6d19fe8797a",
+      "created_at": "2025-03-06T16:33:57Z",
+      "updated_at": "2025-03-06T16:33:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-netbsd-backup-monthly",
+      "id": 369075089,
+      "name": "sha256:71e445e5924569bf15c690fa9ceac417abe5417489184a29459a78fae143c47a",
+      "created_at": "2025-03-06T16:33:57Z",
+      "updated_at": "2025-03-06T16:33:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-glsa-backup-monthly",
+      "id": 369075087,
+      "name": "sha256:b94b9bbb57a3b3ae7b8a20eb4cbe7a3a7c5dd99fc3ff91f795106dfbf6d3529b",
+      "created_at": "2025-03-06T16:33:57Z",
+      "updated_at": "2025-03-06T16:33:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-osv-backup-monthly",
+      "id": 369075084,
+      "name": "sha256:21e16235f10d1e24f5d65047a851614e72f80ecf3187346ba191a6a27e39000d",
+      "created_at": "2025-03-06T16:33:56Z",
+      "updated_at": "2025-03-06T16:33:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-msf-backup-monthly",
+      "id": 369075070,
+      "name": "sha256:d0afe7af7615d225f60ada55c4f06d267d4ec87133aa8ea54fdc806d309320db",
+      "created_at": "2025-03-06T16:33:56Z",
+      "updated_at": "2025-03-06T16:33:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-rss-backup-monthly",
+      "id": 369075067,
+      "name": "sha256:3e43289e3e4cce73f4230a0026b26bd8a4a57d0aeab57610fd8ce3ae929a5687",
+      "created_at": "2025-03-06T16:33:56Z",
+      "updated_at": "2025-03-06T16:33:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-ghsa-backup-monthly",
+      "id": 369075031,
+      "name": "sha256:523a4a7de7fdd3f73c4c5b4af90a1385d36073905aae535cfdce3763d8da2ebc",
+      "created_at": "2025-03-06T16:33:53Z",
+      "updated_at": "2025-03-06T16:33:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v4-backup-monthly",
+      "id": 369075028,
+      "name": "sha256:bf1741aa59fe3ee4b31fb03a133a3bdbc31adda830b36833ca83bf7ffd3c2122",
+      "created_at": "2025-03-06T16:33:53Z",
+      "updated_at": "2025-03-06T16:33:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-vex-backup-monthly",
+      "id": 369075020,
+      "name": "sha256:8cad0d12d7e21bdb9b8947cbf67b7025b2841d3818ac4cc01f507a06972c9a3a",
+      "created_at": "2025-03-06T16:33:53Z",
+      "updated_at": "2025-03-06T16:33:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-osv-backup-monthly",
+      "id": 369075016,
+      "name": "sha256:e3e44b9dc400bbb7b27a296d5733ed6741e369e1bc264f3f63ae82fb0d53d92d",
+      "created_at": "2025-03-06T16:33:52Z",
+      "updated_at": "2025-03-06T16:33:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-glsa-backup-monthly",
+      "id": 369075008,
+      "name": "sha256:cc54b6ed8ee4d856c50ce01fcfca6d3391f6fbad83a6bc83ed84ab6a31b2fecf",
+      "created_at": "2025-03-06T16:33:51Z",
+      "updated_at": "2025-03-06T16:33:51Z"
+    },
+    {
+      "tag": "vuls-data-raw-linux-osv-backup-monthly",
+      "id": 369074992,
+      "name": "sha256:b36c76f8d0c6c468796bf11a513fbb434c19a2017a88e371058c2cc1488574b1",
+      "created_at": "2025-03-06T16:33:50Z",
+      "updated_at": "2025-03-06T16:33:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-kev-backup-monthly",
+      "id": 369074966,
+      "name": "sha256:8bbe36edbad59294cb409d737020c3aa6002f143ac48f56b71d132ac6a7d0b1d",
+      "created_at": "2025-03-06T16:33:48Z",
+      "updated_at": "2025-03-06T16:33:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-detail-backup-monthly",
+      "id": 369074948,
+      "name": "sha256:4adc57d82f2cc292c1ed4086a52a1540257d5d7ff9867d5a292abf2532ce7dee",
+      "created_at": "2025-03-06T16:33:47Z",
+      "updated_at": "2025-03-06T16:33:47Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-product-backup-monthly",
+      "id": 369074946,
+      "name": "sha256:0f4db908b71cf9d9c8a928988440cbfb3a5fdee793eb177cc64c676682c51a2c",
+      "created_at": "2025-03-06T16:33:47Z",
+      "updated_at": "2025-03-06T16:33:47Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-ghsa-backup-monthly",
+      "id": 369074936,
+      "name": "sha256:81e5a9f3fb838f1daf3929c44d1bbaedd29fef5467a04601974f691a04799990",
+      "created_at": "2025-03-06T16:33:46Z",
+      "updated_at": "2025-03-06T16:33:46Z"
+    },
+    {
+      "tag": "vuls-data-raw-haskell-osv-backup-monthly",
+      "id": 369074924,
+      "name": "sha256:44de8d4f4214f882f8ab65f32aa6a4ed2a875e2fadfcdaab073f42388f49a307",
+      "created_at": "2025-03-06T16:33:45Z",
+      "updated_at": "2025-03-06T16:33:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-gentoo-backup-monthly",
+      "id": 369074920,
+      "name": "sha256:feb9e8e90e8873ccd172b965eb74cbc9e26df52499e41f290b19b25144e28c1f",
+      "created_at": "2025-03-06T16:33:45Z",
+      "updated_at": "2025-03-06T16:33:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-osv-backup-monthly",
+      "id": 369074901,
+      "name": "sha256:dd63f32b2f89e3094debe66d820a4e350b216c698744f2fe49d603b9560c041b",
+      "created_at": "2025-03-06T16:33:44Z",
+      "updated_at": "2025-03-06T16:33:44Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-glsa-backup-monthly",
+      "id": 369074883,
+      "name": "sha256:d33f85069b9f47cc10398b388d04d891904b2af2539f1507e09bf484d794a17f",
+      "created_at": "2025-03-06T16:33:44Z",
+      "updated_at": "2025-03-06T16:33:44Z"
+    },
+    {
+      "tag": "vuls-data-raw-freebsd-backup-monthly",
+      "id": 369074846,
+      "name": "sha256:d76e1ee3190219a25ea8a203e980af1309b97803ad3897317d5de456f9b66bf8",
+      "created_at": "2025-03-06T16:33:42Z",
+      "updated_at": "2025-03-06T16:33:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-git-osv-backup-monthly",
+      "id": 369074840,
+      "name": "sha256:f9eb89dbaceceaa7e999105aa0f0747225253dd3de3343c7caa3c75b66a13cf5",
+      "created_at": "2025-03-06T16:33:42Z",
+      "updated_at": "2025-03-06T16:33:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-cvrf-backup-monthly",
+      "id": 369074831,
+      "name": "sha256:035e9ff8f3198d3411eda9eed02280880971549c1182a004f288c1daf4050963",
+      "created_at": "2025-03-06T16:33:41Z",
+      "updated_at": "2025-03-06T16:33:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-ghactions-osv-backup-monthly",
+      "id": 369074827,
+      "name": "sha256:6661b6f698566a18bb0ead648ef4e9030c976ddbbaface75a0220fbf1dd6278d",
+      "created_at": "2025-03-06T16:33:41Z",
+      "updated_at": "2025-03-06T16:33:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-conan-glsa-backup-weekly",
+      "id": 369074791,
+      "name": "sha256:1e7d44a8efd48b7f6d5222a70854607ccd210f73509da73cb72e0d92dc8bb287",
+      "created_at": "2025-03-06T16:33:39Z",
+      "updated_at": "2025-03-06T16:33:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-backup-monthly",
+      "id": 369074781,
+      "name": "sha256:9365006da44d02c7590131374277d4963e78dcb4adb7cf125f5c12707d4b9847",
+      "created_at": "2025-03-06T16:33:38Z",
+      "updated_at": "2025-03-06T16:33:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-osv-backup-weekly",
+      "id": 369074768,
+      "name": "sha256:f397e85aed1af6ddfce25de162d62b2272583b4ef5be682c9bcc627f027e1634",
+      "created_at": "2025-03-06T16:33:37Z",
+      "updated_at": "2025-03-06T16:33:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-osv-backup-weekly",
+      "id": 369074752,
+      "name": "sha256:cc3f6dfc31fb37b45d2e79832e6722395e2db52aa39cb4faa1f8d71076e10c9a",
+      "created_at": "2025-03-06T16:33:37Z",
+      "updated_at": "2025-03-06T16:33:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-glsa-backup-weekly",
+      "id": 369074739,
+      "name": "sha256:b2c12d3b72ebac8d596c3f2585573623e4026384ee677596a705d7962718ee64",
+      "created_at": "2025-03-06T16:33:36Z",
+      "updated_at": "2025-03-06T16:33:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-ghsa-backup-weekly",
+      "id": 369074730,
+      "name": "sha256:e30a76e6d70889d7f202389aebe299a348004877d14b70b0759e517642e0cf60",
+      "created_at": "2025-03-06T16:33:35Z",
+      "updated_at": "2025-03-06T16:33:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-attack-backup-weekly",
+      "id": 369074719,
+      "name": "sha256:89999470e5f937d3795e3dd36bcfd643c711ef8f340e42013e0abe836ba2e71b",
+      "created_at": "2025-03-06T16:33:34Z",
+      "updated_at": "2025-03-06T16:33:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-chainguard-osv-backup-weekly",
+      "id": 369074717,
+      "name": "sha256:614c8ece91b25df6f0be625a55406a759468352e94ac0d4ecc29b7dde64de83b",
+      "created_at": "2025-03-06T16:33:34Z",
+      "updated_at": "2025-03-06T16:33:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-bitnami-osv-backup-weekly",
+      "id": 369074712,
+      "name": "sha256:fd4eab93e2669f340876bf5d377bf9d7ef506296c766a8e4eee93b083d9f4c18",
+      "created_at": "2025-03-06T16:33:34Z",
+      "updated_at": "2025-03-06T16:33:34Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-backup-weekly",
+      "id": 369074685,
+      "name": "sha256:e36a4bd8002be4f41158edeefdcdc7a923247302c5120ea5ffea6ae7a6712bbe",
+      "created_at": "2025-03-06T16:33:32Z",
+      "updated_at": "2025-03-06T16:33:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-capec-backup-weekly",
+      "id": 369074682,
+      "name": "sha256:cd07c60e01c9841033a123521b7a6bf07c1633befacbe698fc031c1660097962",
+      "created_at": "2025-03-06T16:33:32Z",
+      "updated_at": "2025-03-06T16:33:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-ghsa-backup-weekly",
+      "id": 369074680,
+      "name": "sha256:e07d01cddc4405be74e1a6825e674bc5f90a6149d477ed5c9c7f746de189d633",
+      "created_at": "2025-03-06T16:33:32Z",
+      "updated_at": "2025-03-06T16:33:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-android-osv-backup-weekly",
+      "id": 369074643,
+      "name": "sha256:4759a54a487132909b8c59bf72a2f271a81822afbf11b1199d376fda9eea78f0",
+      "created_at": "2025-03-06T16:33:30Z",
+      "updated_at": "2025-03-06T16:33:30Z"
+    },
+    {
+      "tag": "vuls-data-raw-arch-backup-weekly",
+      "id": 369074638,
+      "name": "sha256:1cfd2d43e2a31aab799e00cfd02836cc15ae14b73a375e0a639f75d585c77234",
+      "created_at": "2025-03-06T16:33:30Z",
+      "updated_at": "2025-03-06T16:33:30Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-osv-backup-weekly",
+      "id": 369074599,
+      "name": "sha256:78f6248807787f104d3900d721ce42a2f6076e701015c034f76a366f2a5ba609",
+      "created_at": "2025-03-06T16:33:29Z",
+      "updated_at": "2025-03-06T16:33:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-amazon-backup-weekly",
+      "id": 369074582,
+      "name": "sha256:58a3f20558318202e5c88d327de5c8bb0b126379aa32ea742387e18abd59ca11",
+      "created_at": "2025-03-06T16:33:28Z",
+      "updated_at": "2025-03-06T16:33:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-cve-backup-weekly",
+      "id": 369074574,
+      "name": "sha256:d3041cc55c1595cb977729c41fb08fa2cdbd2629f9e58c5f2a89f160cbdb7c07",
+      "created_at": "2025-03-06T16:33:27Z",
+      "updated_at": "2025-03-06T16:33:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-secdb-backup-weekly",
+      "id": 369074537,
+      "name": "sha256:793985fe9b186391b3951df272f90d32e2ea48c81a0dc096744e460502516ea3",
+      "created_at": "2025-03-06T16:33:26Z",
+      "updated_at": "2025-03-06T16:33:26Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-backup-weekly",
+      "id": 369074532,
+      "name": "sha256:d9b2e25e306c24c728e3267377e5304254e2c356731cf3dce3b652b90a242123",
+      "created_at": "2025-03-06T16:33:25Z",
+      "updated_at": "2025-03-06T16:33:25Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-rhel-backup-weekly",
+      "id": 369074495,
+      "name": "sha256:fb0df8c6d694272b490b96669ff204491df2a7aa9dceed5c6390e5e244e5b6fe",
+      "created_at": "2025-03-06T16:33:24Z",
+      "updated_at": "2025-03-06T16:33:24Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-rhel-backup-weekly",
+      "id": 369074488,
+      "name": "sha256:327b58f5b33af9767aa5bab71ed0e8930f56a773af299e5978b434219a8bd52f",
+      "created_at": "2025-03-06T16:33:23Z",
+      "updated_at": "2025-03-06T16:33:23Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-oval-backup-weekly",
+      "id": 369074482,
+      "name": "sha256:900ea5783e67ca3f7a8b3f68f1481317ec9bb32ceb80d8922823f1bc7c7b0ba4",
+      "created_at": "2025-03-06T16:33:23Z",
+      "updated_at": "2025-03-06T16:33:23Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-osv-backup-weekly",
+      "id": 369074465,
+      "name": "sha256:b644b6db303eaa0dab40367c536a11e8e77259bb78e50d3f1f3fe5c607a87c39",
+      "created_at": "2025-03-06T16:33:22Z",
+      "updated_at": "2025-03-06T16:33:22Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-errata-backup-weekly",
+      "id": 369074446,
+      "name": "sha256:601c8b77dacb0df6c6d668cd75b46da8c243b9ff5443edd475a5c1e0aeb7f3b4",
+      "created_at": "2025-03-06T16:33:21Z",
+      "updated_at": "2025-03-06T16:33:21Z"
+    },
+    {
+      "tag": "vuls-data-extracted-rocky-errata-backup-weekly",
+      "id": 369074442,
+      "name": "sha256:992b61890e33495178d6615bbbc1902b3305ef840bb6dba40992b10fb8f8327e",
+      "created_at": "2025-03-06T16:33:21Z",
+      "updated_at": "2025-03-06T16:33:21Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-backup-weekly",
+      "id": 369074435,
+      "name": "sha256:4c39db3a56fffd520b336acc9167dd427d8da07cd428a8c3e25537c5aaa21c9c",
+      "created_at": "2025-03-06T16:33:21Z",
+      "updated_at": "2025-03-06T16:33:21Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-backup-weekly",
+      "id": 369074433,
+      "name": "sha256:37a9558b7256a03129ffa07c59aa94ee489b7f83201211bf8c88ec2c183c9dfe",
+      "created_at": "2025-03-06T16:33:20Z",
+      "updated_at": "2025-03-06T16:33:20Z"
+    },
+    {
+      "tag": "vuls-data-extracted-nvd-api-cve-backup-weekly",
+      "id": 369074361,
+      "name": "sha256:bfa996b10cb9d73a550e58d7e3f5622c7a55d199665dbcf00c1a89c1fd998c40",
+      "created_at": "2025-03-06T16:33:15Z",
+      "updated_at": "2025-03-06T16:33:15Z"
+    },
+    {
+      "tag": "vuls-data-extracted-oracle-backup-weekly",
+      "id": 369074347,
+      "name": "sha256:38ef0bdbd4a6c97ebcfe65004ea6b0d782ba8e34f04f5ed9e7b0fd394af7dc28",
+      "created_at": "2025-03-06T16:33:14Z",
+      "updated_at": "2025-03-06T16:33:14Z"
+    },
+    {
+      "tag": "vuls-data-extracted-kev-backup-weekly",
+      "id": 369074329,
+      "name": "sha256:d50c81952132aa9c745554355a17923de7b43d3e57dcfdf79a83cf917c66c657",
+      "created_at": "2025-03-06T16:33:13Z",
+      "updated_at": "2025-03-06T16:33:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-fedora-backup-monthly",
+      "id": 369074322,
+      "name": "sha256:a2ad15d24f9ec3c878a559a2215f4a28b8668ccd5375d0e112fb3e8c79b3cac5",
+      "created_at": "2025-03-06T16:33:13Z",
+      "updated_at": "2025-03-06T16:33:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-oval-backup-monthly",
+      "id": 369074317,
+      "name": "sha256:e7e5f5d7c0e787eea86199554635be6ec1d8a28f717123f8fe0ef5dfaf0334b2",
+      "created_at": "2025-03-06T16:33:12Z",
+      "updated_at": "2025-03-06T16:33:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-msuc-backup-weekly",
+      "id": 369074306,
+      "name": "sha256:b64e2e1e38a09bf1486edd5b0b6c20789d3a4823f5e48256902fac638dd85c09",
+      "created_at": "2025-03-06T16:33:11Z",
+      "updated_at": "2025-03-06T16:33:11Z"
+    },
+    {
+      "tag": "vuls-data-extracted-freebsd-backup-weekly",
+      "id": 369074304,
+      "name": "sha256:a9d998fd69a843ff179bfcf9d6816c0238ca8b32a22c09b15de4f31b58b982f4",
+      "created_at": "2025-03-06T16:33:11Z",
+      "updated_at": "2025-03-06T16:33:11Z"
+    },
+    {
+      "tag": "vuls-data-extracted-mitre-v5-backup-weekly",
+      "id": 369074303,
+      "name": "sha256:aeefeec0921dc7b2eede1bf6c8f193b8d8ccf041a684e3ee0670f5d07173a83f",
+      "created_at": "2025-03-06T16:33:11Z",
+      "updated_at": "2025-03-06T16:33:11Z"
+    },
+    {
+      "tag": "vuls-data-extracted-epss-backup-daily",
+      "id": 369074286,
+      "name": "sha256:c8de75cbd512673557c51288b4cd973bf13d9547b8fc516129741da4d8626593",
+      "created_at": "2025-03-06T16:33:09Z",
+      "updated_at": "2025-03-06T16:33:09Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-trickest-backup-monthly",
+      "id": 369074267,
+      "name": "sha256:a955173c00670b376e539abfac01406711a96c801a861e33cc52bf8095c7549c",
+      "created_at": "2025-03-06T16:33:08Z",
+      "updated_at": "2025-03-06T16:33:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-github-backup-monthly",
+      "id": 369074265,
+      "name": "sha256:0038ed475bf804c3a1e2325afcd9b6ecd173ed828b24c63afcd146c3e61bf851",
+      "created_at": "2025-03-06T16:33:07Z",
+      "updated_at": "2025-03-06T16:33:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-vex-backup-monthly",
+      "id": 369074185,
+      "name": "sha256:897b2ac906630341988fbdaeb949d67ba3f2b8c96fe041d155581fcdaefdfaf6",
+      "created_at": "2025-03-06T16:33:03Z",
+      "updated_at": "2025-03-06T16:33:03Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-wsusscn2-backup-weekly",
+      "id": 369074140,
+      "name": "sha256:fd5c8d604f1ee8ed89bc0563b5b06ac88fc91e5f735f6823ed1e0e5aa90a78e8",
+      "created_at": "2025-03-06T16:33:01Z",
+      "updated_at": "2025-03-06T16:33:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-osv-backup-weekly",
+      "id": 369074138,
+      "name": "sha256:e368b7b70668518517e2cde9ad965fb16c395f77378d3a48f92131429caafa34",
+      "created_at": "2025-03-06T16:33:01Z",
+      "updated_at": "2025-03-06T16:33:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-vex-backup-weekly",
+      "id": 369074130,
+      "name": "sha256:135c4fc76e4ace30398c21c4c0c63a794e1f849994f8559f0dbf4f094ee74462",
+      "created_at": "2025-03-06T16:33:01Z",
+      "updated_at": "2025-03-06T16:33:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-oval-backup-weekly",
+      "id": 369074127,
+      "name": "sha256:dc46f084f2533f1750499f7b2ba5364bc62601f26152805c160aa153c08bb9f5",
+      "created_at": "2025-03-06T16:33:01Z",
+      "updated_at": "2025-03-06T16:33:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-wolfi-osv-backup-weekly",
+      "id": 369074113,
+      "name": "sha256:705771071c4021b1e977f91ec7a86d7d9c334e6c06659857c869fde5bddaadc4",
+      "created_at": "2025-03-06T16:33:00Z",
+      "updated_at": "2025-03-06T16:33:00Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-cvrf-backup-weekly",
+      "id": 369074097,
+      "name": "sha256:bd08c2480c44997227d4765572645c59d40e4282070fa64167ef22c338b0eac3",
+      "created_at": "2025-03-06T16:32:59Z",
+      "updated_at": "2025-03-06T16:32:59Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-bulletin-backup-weekly",
+      "id": 369074066,
+      "name": "sha256:9bd04df3cc6d71d88531395da1b202c065ddb9e79b100cbb0d48d6fbd13560ab",
+      "created_at": "2025-03-06T16:32:57Z",
+      "updated_at": "2025-03-06T16:32:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-cve-tracker-backup-weekly",
+      "id": 369074026,
+      "name": "sha256:2550017b342acdfbba4d607093df05380c07de0bcc4ce20cf78b4b48b758c886",
+      "created_at": "2025-03-06T16:32:56Z",
+      "updated_at": "2025-03-06T16:32:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-vulncheck-kev-backup-weekly",
+      "id": 369074016,
+      "name": "sha256:1d71d23235a416a8687c6d435179f6f955ae4f7fc5286a825584728906eb700b",
+      "created_at": "2025-03-06T16:32:55Z",
+      "updated_at": "2025-03-06T16:32:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-ghsa-backup-weekly",
+      "id": 369073960,
+      "name": "sha256:10061bd5ba0d7911aa8d4e33b8a3f1330fc554f8dfc7a48cbfaadcb49a3437b0",
+      "created_at": "2025-03-06T16:32:53Z",
+      "updated_at": "2025-03-06T16:32:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-backup-weekly",
+      "id": 369073930,
+      "name": "sha256:10e289a51991d385c7b016d3aa93f8d7096a42921ae8c755abf30885651468d9",
+      "created_at": "2025-03-06T16:32:52Z",
+      "updated_at": "2025-03-06T16:32:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-osv-backup-weekly",
+      "id": 369073914,
+      "name": "sha256:6ee2a58160d900fe14cd4086e452b189646b3ea87c13eba8a6adcada2b59a41b",
+      "created_at": "2025-03-06T16:32:50Z",
+      "updated_at": "2025-03-06T16:32:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-oval-backup-monthly",
+      "id": 369073903,
+      "name": "sha256:d50d1dcdf87b85c44bbad3a6903e5e3b15199125c0d95c7c9044bc795719071f",
+      "created_at": "2025-03-06T16:32:49Z",
+      "updated_at": "2025-03-06T16:32:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-osv-backup-weekly",
+      "id": 369073902,
+      "name": "sha256:d44849e0253bf4fb87f70bfe3d2411354eca79b1476a1f3773eef42c36c6b683",
+      "created_at": "2025-03-06T16:32:49Z",
+      "updated_at": "2025-03-06T16:32:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-csaf-backup-daily",
+      "id": 369073890,
+      "name": "sha256:da56c16a4ff8ced86a728f28a3747d9a24f67af837ccc441810beeb9840e0b7d",
+      "created_at": "2025-03-06T16:32:48Z",
+      "updated_at": "2025-03-06T16:32:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv2-backup-weekly",
+      "id": 369073888,
+      "name": "sha256:e0c772119b5f578bc74a0698065173b0638f0961910663a121058f86a77df10a",
+      "created_at": "2025-03-06T16:32:48Z",
+      "updated_at": "2025-03-06T16:32:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-epss-backup-monthly",
+      "id": 369073858,
+      "name": "sha256:0ebc3fabc0d87824954290e18e02f17d757d7c9723b256d1feef20c995972a24",
+      "created_at": "2025-03-06T16:32:45Z",
+      "updated_at": "2025-03-06T16:32:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-backup-weekly",
+      "id": 369073843,
+      "name": "sha256:9cabb85fad1044b909ab0c38e5c4ecdda412cb0d0e9b3532716d245357f567a3",
+      "created_at": "2025-03-06T16:32:45Z",
+      "updated_at": "2025-03-06T16:32:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-snort-backup-weekly",
+      "id": 369073782,
+      "name": "sha256:6541e47f54ae03b53dc1d4309719a4c07d7c3f7d3d96687bdb41735271566ae9",
+      "created_at": "2025-03-06T16:32:42Z",
+      "updated_at": "2025-03-06T16:32:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-glsa-backup-weekly",
+      "id": 369073750,
+      "name": "sha256:6fcbbfc3979d60998d5261662256e1c141cee214a4d410eb57d5e389edb68a44",
+      "created_at": "2025-03-06T16:32:40Z",
+      "updated_at": "2025-03-06T16:32:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-salsa-backup-monthly",
+      "id": 369073742,
+      "name": "sha256:d1ad603f8a6c395217d72a216ab63c7f5af390d5f03cba45fa13785864f9b605",
+      "created_at": "2025-03-06T16:32:39Z",
+      "updated_at": "2025-03-06T16:32:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-osv-backup-weekly",
+      "id": 369073737,
+      "name": "sha256:db4342ac3d67496ff64ee0c1316167ce412aee821aac4660ef79089916986de0",
+      "created_at": "2025-03-06T16:32:39Z",
+      "updated_at": "2025-03-06T16:32:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-errata-backup-weekly",
+      "id": 369073726,
+      "name": "sha256:efd1957936712454c0df1e759d509590df861e2c6e76ccf96960174b25aeb4a2",
+      "created_at": "2025-03-06T16:32:38Z",
+      "updated_at": "2025-03-06T16:32:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-ghsa-backup-weekly",
+      "id": 369073716,
+      "name": "sha256:11f74e4180406b7ae305f498a7969099aaaae948dfed0db49e8142b86253ad40",
+      "created_at": "2025-03-06T16:32:37Z",
+      "updated_at": "2025-03-06T16:32:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-osv-backup-weekly",
+      "id": 369073698,
+      "name": "sha256:0982e5bbec83c3222bd597020c7b79bfbbca47132d5047a927694d251ba783d2",
+      "created_at": "2025-03-06T16:32:36Z",
+      "updated_at": "2025-03-06T16:32:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-r-osv-backup-weekly",
+      "id": 369073694,
+      "name": "sha256:90a66d459d29f04d3c129b68f9898509385ddc4ae9faa946e26a0fc654cecbb3",
+      "created_at": "2025-03-06T16:32:36Z",
+      "updated_at": "2025-03-06T16:32:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-api-backup-monthly",
+      "id": 369073623,
+      "name": "sha256:0601a160ad5f67089c544081b3f97764a0ce1c961f16f39b6418fef04a523336",
+      "created_at": "2025-03-06T16:32:33Z",
+      "updated_at": "2025-03-06T16:32:33Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-repository-to-cpe-backup-weekly",
+      "id": 369073599,
+      "name": "sha256:93131b3d64b8babfe1d8673651897e678a0fe85c3e8acac2f47c467f37ca2ae9",
+      "created_at": "2025-03-06T16:32:31Z",
+      "updated_at": "2025-03-06T16:32:31Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-inthewild-backup-monthly",
+      "id": 369073557,
+      "name": "sha256:8b386386155fe23f3b8c8b74fc931b767728741607c871660e525e28fcf990d8",
+      "created_at": "2025-03-06T16:32:29Z",
+      "updated_at": "2025-03-06T16:32:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv1-backup-weekly",
+      "id": 369073552,
+      "name": "sha256:a488f127971f2b394488944eb6bc7e718556e41fe1f6eab5efdcf0746142b2d4",
+      "created_at": "2025-03-06T16:32:29Z",
+      "updated_at": "2025-03-06T16:32:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-ghsa-backup-monthly",
+      "id": 369073514,
+      "name": "sha256:047ec47cfb1268c7d24df038eb6c24c653aeb698dfcb40d56386cdf536cd421f",
+      "created_at": "2025-03-06T16:32:28Z",
+      "updated_at": "2025-03-06T16:32:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-osv-backup-monthly",
+      "id": 369073513,
+      "name": "sha256:fdd9553efaaa872826b6bc7d66e3d445523367718c5cb56d8aa796841f26cdfd",
+      "created_at": "2025-03-06T16:32:27Z",
+      "updated_at": "2025-03-06T16:32:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-exploitdb-backup-monthly",
+      "id": 369073512,
+      "name": "sha256:0b65a6de563116f806ba4472428fee16029732bdb84dfe256a88363a425b0103",
+      "created_at": "2025-03-06T16:32:27Z",
+      "updated_at": "2025-03-06T16:32:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-msuc-backup-monthly",
+      "id": 369073469,
+      "name": "sha256:1c163ba7cdfd5650981c5704ad6adf7143ca2c5ab2097e756f45748bccbc6e8e",
+      "created_at": "2025-03-06T16:32:25Z",
+      "updated_at": "2025-03-06T16:32:25Z"
+    },
+    {
+      "tag": "vuls-data-raw-cwe-backup-monthly",
+      "id": 369073406,
+      "name": "sha256:de2e7107abf23b24184211d976367e99499a981c3e092e70926b8bd6194fe01b",
+      "created_at": "2025-03-06T16:32:21Z",
+      "updated_at": "2025-03-06T16:32:21Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-backup-monthly",
+      "id": 369073401,
+      "name": "sha256:24f72a5a99908a62624247f709fd1169599448f94bc2e7e0b024d7fc73b13e3c",
+      "created_at": "2025-03-06T16:32:20Z",
+      "updated_at": "2025-03-06T16:32:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-ghsa-backup-monthly",
+      "id": 369073399,
+      "name": "sha256:2b21bc43dd6932f42773146554041f666b1b1ec7ab9364bf5f34a789f56eae42",
+      "created_at": "2025-03-06T16:32:20Z",
+      "updated_at": "2025-03-06T16:32:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-osv-backup-monthly",
+      "id": 369073393,
+      "name": "sha256:f067d5f32959ea7f7a46172fc4ac04da60d26426bc63f6abaea1af48265ed328",
+      "created_at": "2025-03-06T16:32:20Z",
+      "updated_at": "2025-03-06T16:32:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-osv-backup-monthly",
+      "id": 369073369,
+      "name": "sha256:ea0c625601a0cd87713afd6860c7c824f9971c03eafab4e10f20b9b7de6f616d",
+      "created_at": "2025-03-06T16:32:18Z",
+      "updated_at": "2025-03-06T16:32:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-conan-glsa-backup-monthly",
+      "id": 369073359,
+      "name": "sha256:f039abed3b3fb346fd8e95c2ef33ab824ea3c759f23f86e63f47aafc1dfc2ef5",
+      "created_at": "2025-03-06T16:32:18Z",
+      "updated_at": "2025-03-06T16:32:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-chainguard-osv-backup-monthly",
+      "id": 369073357,
+      "name": "sha256:bcfb94c04d22859a9825c46c43e7c63911997c08ea0fbeaf5f1c43a99b95265f",
+      "created_at": "2025-03-06T16:32:18Z",
+      "updated_at": "2025-03-06T16:32:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-glsa-backup-monthly",
+      "id": 369073346,
+      "name": "sha256:f3921aa3b1d5fbfda7498def3454a4fef83efd3378e8e5eb996a89b0f15280c3",
+      "created_at": "2025-03-06T16:32:17Z",
+      "updated_at": "2025-03-06T16:32:17Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-osv-backup-monthly",
+      "id": 369073327,
+      "name": "sha256:a2c77a5448b6623d1f44a955c1994a9b63d654ed4b1f655f33cd49660be79a13",
+      "created_at": "2025-03-06T16:32:16Z",
+      "updated_at": "2025-03-06T16:32:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-capec-backup-monthly",
+      "id": 369073293,
+      "name": "sha256:b7e2a5fcd85b27f30eceb8f10e945a663ad629122bd75912eba2e5dfdbe4f871",
+      "created_at": "2025-03-06T16:32:14Z",
+      "updated_at": "2025-03-06T16:32:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-ghsa-backup-monthly",
+      "id": 369073262,
+      "name": "sha256:628f21d3805ce62a78c801ed61639093483c3f59ea4a099e6d6528f355c41382",
+      "created_at": "2025-03-06T16:32:12Z",
+      "updated_at": "2025-03-06T16:32:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-attack-backup-monthly",
+      "id": 369073230,
+      "name": "sha256:46563ccd524705ccf72308545cec4ccf5b33aa22c2c38771a1c2a9e2105e2d32",
+      "created_at": "2025-03-06T16:32:10Z",
+      "updated_at": "2025-03-06T16:32:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-bitnami-osv-backup-monthly",
+      "id": 369073229,
+      "name": "sha256:a5636ef948dec5b222386c46ce9af1ac714032a08f195b828d46dccdea0d2e86",
+      "created_at": "2025-03-06T16:32:10Z",
+      "updated_at": "2025-03-06T16:32:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-amazon-backup-monthly",
+      "id": 369073210,
+      "name": "sha256:a8d930cd23436020c9567371802fcbc689ebc8cad7915eb0383ee19601bf8a5b",
+      "created_at": "2025-03-06T16:32:09Z",
+      "updated_at": "2025-03-06T16:32:09Z"
+    },
+    {
+      "tag": "vuls-data-raw-arch-backup-monthly",
+      "id": 369073193,
+      "name": "sha256:4a15b6f9ac5e0c6a9f16b6853e4a2e94004c011b93f1e68f24b8556623c29405",
+      "created_at": "2025-03-06T16:32:08Z",
+      "updated_at": "2025-03-06T16:32:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-android-osv-backup-monthly",
+      "id": 369073190,
+      "name": "sha256:423425c6fb477f8b4d9f6244dd9bb88185d34a22735de982ba02eeab40635a0b",
+      "created_at": "2025-03-06T16:32:07Z",
+      "updated_at": "2025-03-06T16:32:07Z"
+    },
+    {
+      "tag": "vuls-data-extracted-nvd-api-cve-backup-monthly",
+      "id": 369073181,
+      "name": "sha256:bf0f00636e7ff9ebbbfedc1af47e01b68e7bab96db44bee0c248deccb26d0f2c",
+      "created_at": "2025-03-06T16:32:07Z",
+      "updated_at": "2025-03-06T16:32:07Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-rhel-backup-monthly",
+      "id": 369073117,
+      "name": "sha256:6be7276cf79bf972f3a61455dd47e290701c73163e8f59637fa43eb61f3fee1c",
+      "created_at": "2025-03-06T16:32:03Z",
+      "updated_at": "2025-03-06T16:32:03Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-rhel-backup-daily",
+      "id": 369073107,
+      "name": "sha256:5e44ffb16d552695ac5ba263e525cf9baec658ea312a81ec35f995e2b4606c9c",
+      "created_at": "2025-03-06T16:32:03Z",
+      "updated_at": "2025-03-06T16:32:03Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-oval-backup-monthly",
+      "id": 369073092,
+      "name": "sha256:056db78f1eccd8ae9e827e26a43bc36662ab90219926bbc20b4736771a06065b",
+      "created_at": "2025-03-06T16:32:02Z",
+      "updated_at": "2025-03-06T16:32:02Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-secdb-backup-monthly",
+      "id": 369073067,
+      "name": "sha256:e0db70c8afd62b72baaa28a66c2fcac7b0d53fde3ae62972baeb7c4f6d0ec54a",
+      "created_at": "2025-03-06T16:32:01Z",
+      "updated_at": "2025-03-06T16:32:01Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-backup-monthly",
+      "id": 369073064,
+      "name": "sha256:55151a2e2e872b96f9dd11d6c9e2441cae8ab8fdd6720e07ea743041f17e6a6a",
+      "created_at": "2025-03-06T16:32:01Z",
+      "updated_at": "2025-03-06T16:32:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-osv-backup-monthly",
+      "id": 369073059,
+      "name": "sha256:f7367d973338720c28b5d4fa0af4372b0716684c84eed4854e51edb7ec114147",
+      "created_at": "2025-03-06T16:32:00Z",
+      "updated_at": "2025-03-06T16:32:00Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-backup-monthly",
+      "id": 369073050,
+      "name": "sha256:b773380937add7203e4c132e0f9a34023b0e0f610d969f9fe9c9a841f82f4199",
+      "created_at": "2025-03-06T16:32:00Z",
+      "updated_at": "2025-03-06T16:32:00Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-osv-backup-monthly",
+      "id": 369073017,
+      "name": "sha256:cf0bff5635578242bbd1396d0a8571c3f30a1034308441a21808bdadfb440de4",
+      "created_at": "2025-03-06T16:31:58Z",
+      "updated_at": "2025-03-06T16:31:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-errata-backup-monthly",
+      "id": 369072976,
+      "name": "sha256:9889660641eb080a7a375d39f4c263abeb0f318ae7bc6b82b90aedbee6754a07",
+      "created_at": "2025-03-06T16:31:55Z",
+      "updated_at": "2025-03-06T16:31:55Z"
+    },
+    {
+      "tag": "vuls-data-extracted-rocky-errata-backup-monthly",
+      "id": 369072928,
+      "name": "sha256:137071ab5429a606d24246eef00465e575be5f7022755a9d9663c204a8228f85",
+      "created_at": "2025-03-06T16:31:52Z",
+      "updated_at": "2025-03-06T16:31:52Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-rhel-backup-monthly",
+      "id": 369072918,
+      "name": "sha256:2891d46767b1c5b953f0ca88eedcb1a641b14de7a4300af55eff976bd7656958",
+      "created_at": "2025-03-06T16:31:51Z",
+      "updated_at": "2025-03-06T16:31:51Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-oval-backup-monthly",
+      "id": 369072913,
+      "name": "sha256:207e32d0ce6f68f4869c43c6349b5f95d601b4532be44a64f81ede8f52bcdac5",
+      "created_at": "2025-03-06T16:31:51Z",
+      "updated_at": "2025-03-06T16:31:51Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-backup-monthly",
+      "id": 369072891,
+      "name": "sha256:c7ac47d1cb70412e5a64287e73200df35544a9f7da27f87b322a11bb72d1b2ab",
+      "created_at": "2025-03-06T16:31:50Z",
+      "updated_at": "2025-03-06T16:31:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-cve-backup-monthly",
+      "id": 369072872,
+      "name": "sha256:f74692b21134a006cdb7a8100298a3174745944b8a750337e70fedb1cf4e3468",
+      "created_at": "2025-03-06T16:31:48Z",
+      "updated_at": "2025-03-06T16:31:48Z"
+    },
+    {
+      "tag": "vuls-data-extracted-mitre-v5-backup-monthly",
+      "id": 369072765,
+      "name": "sha256:2c3317072a2c2382c1fbb8118b8e9f64e9a3bae3201d1a0947ed3593905d2dec",
+      "created_at": "2025-03-06T16:31:43Z",
+      "updated_at": "2025-03-06T16:31:43Z"
+    },
+    {
+      "tag": "vuls-data-extracted-oracle-backup-monthly",
+      "id": 369072723,
+      "name": "sha256:c060fb6ccc617917b5a6d2b2da534ae547e7d3310d12ee32d1a72a1d89d17dc6",
+      "created_at": "2025-03-06T16:31:40Z",
+      "updated_at": "2025-03-06T16:31:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-osv-backup-monthly",
+      "id": 369072722,
+      "name": "sha256:32f697131eba01fc071d1918e3cae7b8545067fa6d14145e9b2b84ae756a52b1",
+      "created_at": "2025-03-06T16:31:40Z",
+      "updated_at": "2025-03-06T16:31:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-wolfi-osv-backup-monthly",
+      "id": 369072716,
+      "name": "sha256:98c2c610bbbab7985eb56977188bc874db9a4a44f09718f0fb272d05e1c47f33",
+      "created_at": "2025-03-06T16:31:40Z",
+      "updated_at": "2025-03-06T16:31:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-backup-monthly",
+      "id": 369072713,
+      "name": "sha256:959b9c7fea074652cec774f487192f29db50f65075d18dc9a32ad38920ca599c",
+      "created_at": "2025-03-06T16:31:40Z",
+      "updated_at": "2025-03-06T16:31:40Z"
+    },
+    {
+      "tag": "vuls-data-extracted-freebsd-backup-monthly",
+      "id": 369072708,
+      "name": "sha256:149dbcbb3ea413f27fe5991b687182f4ab5659d30b342880bca75131c7d0d0d6",
+      "created_at": "2025-03-06T16:31:39Z",
+      "updated_at": "2025-03-06T16:31:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-cvrf-backup-monthly",
+      "id": 369072700,
+      "name": "sha256:fbfd8947949ddfda05f8955a837299b614e578f0162876df06c646779a2c87f6",
+      "created_at": "2025-03-06T16:31:39Z",
+      "updated_at": "2025-03-06T16:31:39Z"
+    },
+    {
+      "tag": "vuls-data-extracted-kev-backup-monthly",
+      "id": 369072688,
+      "name": "sha256:7875d185110fd375e10807205194703a0f61d575ea3dce319885bf2cfc0eed3b",
+      "created_at": "2025-03-06T16:31:38Z",
+      "updated_at": "2025-03-06T16:31:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-wsusscn2-backup-monthly",
+      "id": 369072660,
+      "name": "sha256:b15f8e4d43014152f77acb0378b68e6ca8e2e18547d04d91246fef5dd2815ac5",
+      "created_at": "2025-03-06T16:31:37Z",
+      "updated_at": "2025-03-06T16:31:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-cve-tracker-backup-monthly",
+      "id": 369072636,
+      "name": "sha256:fa3cc905d5c6e72c7b2c95d19f667d154a4e054dcf56aec7d8ae6aad6cb4251e",
+      "created_at": "2025-03-06T16:31:35Z",
+      "updated_at": "2025-03-06T16:31:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-bulletin-backup-monthly",
+      "id": 369072543,
+      "name": "sha256:fee55474fd98c12b2cad3051a96eb122aa7774aaa2d3d5344dfd45b0376c6240",
+      "created_at": "2025-03-06T16:31:30Z",
+      "updated_at": "2025-03-06T16:31:30Z"
+    },
+    {
+      "tag": "vuls-data-raw-vulncheck-kev-backup-monthly",
+      "id": 369072537,
+      "name": "sha256:04fea635a7353d35243b336dcbd9a595dc4fa794d900aa434c1dd108efbabb75",
+      "created_at": "2025-03-06T16:31:30Z",
+      "updated_at": "2025-03-06T16:31:30Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpematch-backup-daily",
+      "id": 369072522,
+      "name": "sha256:aa1acf3b42fba4dd264d311f6ddf959f455a326df130e908c64e372b535e4a7f",
+      "created_at": "2025-03-06T16:31:29Z",
+      "updated_at": "2025-03-06T16:31:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-osv-backup-monthly",
+      "id": 369072520,
+      "name": "sha256:2e2fde8f4ed700f7fa055084ee8a33e5d550927dbe4c301057c7c3db1a8209cd",
+      "created_at": "2025-03-06T16:31:29Z",
+      "updated_at": "2025-03-06T16:31:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-ghsa-backup-monthly",
+      "id": 369072491,
+      "name": "sha256:c580ee38b7045669529791c22ed882c68fc489d01e9a82521d132a2feb0d792b",
+      "created_at": "2025-03-06T16:31:27Z",
+      "updated_at": "2025-03-06T16:31:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-backup-monthly",
+      "id": 369072481,
+      "name": "sha256:77bc86bcebb8b7627608b3e0ccb714b7386c426765351ffb6bb44af76733ec8b",
+      "created_at": "2025-03-06T16:31:27Z",
+      "updated_at": "2025-03-06T16:31:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-osv-backup-monthly",
+      "id": 369072426,
+      "name": "sha256:e2b3df9cbba2474d962e45294312fb94ed1c610e0e5283161d4a02a17be7860d",
+      "created_at": "2025-03-06T16:31:25Z",
+      "updated_at": "2025-03-06T16:31:25Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-oval-backup-daily",
+      "id": 369072320,
+      "name": "sha256:14393465b44be08d516a453d2330f0be9819a2a29f3fc759eeb79cb1a349863f",
+      "created_at": "2025-03-06T16:31:20Z",
+      "updated_at": "2025-03-06T16:31:20Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-glsa-backup-monthly",
+      "id": 369072315,
+      "name": "sha256:dccce396c3be04b242075ca1203fe5abedbec3d88cc3f8a86e17914fcd886c0d",
+      "created_at": "2025-03-06T16:31:19Z",
+      "updated_at": "2025-03-06T16:31:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-snort-backup-monthly",
+      "id": 369072312,
+      "name": "sha256:91a53c0a422f675a8f9082cbbba2dd669d6047212f7e9da26f8f9fba17c7919d",
+      "created_at": "2025-03-06T16:31:19Z",
+      "updated_at": "2025-03-06T16:31:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-osv-backup-monthly",
+      "id": 369072310,
+      "name": "sha256:333b037ac7b51ba37b68a97188d93a30a4326589026dc8da81788a6a99428e48",
+      "created_at": "2025-03-06T16:31:19Z",
+      "updated_at": "2025-03-06T16:31:19Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv2-backup-monthly",
+      "id": 369072301,
+      "name": "sha256:3a3f1a0473394460b767580e2c91fa6c89200484159f294b0ae1f187d7431ffb",
+      "created_at": "2025-03-06T16:31:18Z",
+      "updated_at": "2025-03-06T16:31:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-oval-backup-daily",
+      "id": 369072295,
+      "name": "sha256:acc739e8500ac898c5adecbba9ac881413c7e2c6188c76d29860bda9ad20588c",
+      "created_at": "2025-03-06T16:31:18Z",
+      "updated_at": "2025-03-06T16:31:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-r-osv-backup-monthly",
+      "id": 369072270,
+      "name": "sha256:d0ec8b2b6b9eac52b525f495818b4359dff6c86dcfe482d371fb1131717c3f3e",
+      "created_at": "2025-03-06T16:31:16Z",
+      "updated_at": "2025-03-06T16:31:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-ghsa-backup-monthly",
+      "id": 369072268,
+      "name": "sha256:fc84869f9cfdedb10780e3b4ec4388f8a9239f62ad44430f97a11efacbd8bc89",
+      "created_at": "2025-03-06T16:31:16Z",
+      "updated_at": "2025-03-06T16:31:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-errata-backup-monthly",
+      "id": 369072263,
+      "name": "sha256:6d3539dfdfd4fd41f44a6653bb3761a857f3ddbcd128e85c2ce766f61840cfd7",
+      "created_at": "2025-03-06T16:31:16Z",
+      "updated_at": "2025-03-06T16:31:16Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-repository-to-cpe-backup-monthly",
+      "id": 369072247,
+      "name": "sha256:57016c9eacfde05f8c8c23e2acad23762965a8f72fd91f56c1b9c38f5a607df3",
+      "created_at": "2025-03-06T16:31:15Z",
+      "updated_at": "2025-03-06T16:31:15Z"
+    },
+    {
+      "tag": "vuls-data-extracted-amazon-backup-daily",
+      "id": 369072226,
+      "name": "sha256:b6f7de71e6b914d5333d23b0ec39f38bc7926dcf0efd0ef15525729d710cf1c2",
+      "created_at": "2025-03-06T16:31:13Z",
+      "updated_at": "2025-03-06T16:31:13Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-osv-backup-monthly",
+      "id": 369072219,
+      "name": "sha256:d33f156b69b661d62f9121ff4376e89bf826a4917594644f8395fef90dd7ce24",
+      "created_at": "2025-03-06T16:31:12Z",
+      "updated_at": "2025-03-06T16:31:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cve-backup-daily",
+      "id": 369072218,
+      "name": "sha256:b09f7cfdf7976b18829616f5d46865a0863bb41058e0844881ae70bb8a7470ae",
+      "created_at": "2025-03-06T16:31:12Z",
+      "updated_at": "2025-03-06T16:31:12Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv1-backup-monthly",
+      "id": 369072216,
+      "name": "sha256:e6cb96b7dcc0662a7001873a83fa84313e046a935b9b89136af5fa6094c8f400",
+      "created_at": "2025-03-06T16:31:12Z",
+      "updated_at": "2025-03-06T16:31:12Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-errata-backup-daily",
+      "id": 369072168,
+      "name": "sha256:fba537e67e2cf5f80b157f170e87849eafc69f225dfc0711708e8b95966e1462",
+      "created_at": "2025-03-06T16:31:09Z",
+      "updated_at": "2025-03-06T16:31:09Z"
+    },
+    {
+      "tag": "vuls-data-extracted-cargo-ghsa-backup-daily",
+      "id": 369072139,
+      "name": "sha256:5b692714ae788ac59cadb62d1f0373d258050c3c9e7dd240603b33e59339112c",
+      "created_at": "2025-03-06T16:31:08Z",
+      "updated_at": "2025-03-06T16:31:08Z"
+    },
+    {
+      "tag": "vuls-data-extracted-eol-backup-daily",
+      "id": 369072130,
+      "name": "sha256:7e3e06adf538ad167e0effb26aae023544a640976015e25f3c70ee64894cfe2f",
+      "created_at": "2025-03-06T16:31:07Z",
+      "updated_at": "2025-03-06T16:31:07Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-osv-backup-daily",
+      "id": 369072097,
+      "name": "sha256:da73f45ece81abe6f0e471bab94491a73a18e42b8e29cd2ea0e4739abab4aca3",
+      "created_at": "2025-03-06T16:31:05Z",
+      "updated_at": "2025-03-06T16:31:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-vex-backup-daily",
+      "id": 369072092,
+      "name": "sha256:b26f003103e2f19ce7df6afbca0143e1dbc491eaeac3d63ccda2de1af723534b",
+      "created_at": "2025-03-06T16:31:05Z",
+      "updated_at": "2025-03-06T16:31:05Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpe-backup-daily",
+      "id": 369072069,
+      "name": "sha256:0cde1bf6e0de29ace6651076099f1750527333a3f12ccf04a161d2a16fd68510",
+      "created_at": "2025-03-06T16:31:03Z",
+      "updated_at": "2025-03-06T16:31:03Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alpine-secdb-backup-daily",
+      "id": 369072067,
+      "name": "sha256:4f175caf4510862382720a46dbfd28c6dbc5a9fff2c78e62024a335b7f19933e",
+      "created_at": "2025-03-06T16:31:03Z",
+      "updated_at": "2025-03-06T16:31:03Z"
+    },
+    {
+      "tag": "vuls-data-extracted-arch-backup-daily",
+      "id": 369072059,
+      "name": "sha256:64670adeac24cb6711c4940a59dba75df74640dae6a6b9ec1a8aaebb23d663f3",
+      "created_at": "2025-03-06T16:31:02Z",
+      "updated_at": "2025-03-06T16:31:02Z"
+    },
+    {
+      "tag": "vuls-data-extracted-alma-osv-backup-daily",
+      "id": 369072036,
+      "name": "sha256:9803598e7b5e2c236035c47a1b336c2e575b428e83f7b6e3212639df753e443f",
+      "created_at": "2025-03-06T16:31:01Z",
+      "updated_at": "2025-03-06T16:31:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-osv-backup-daily",
+      "id": 369072018,
+      "name": "sha256:74dd0cdc621821373c174b1f1b7ed266b447e02d95b2448d71a0d3841d34fc7e",
+      "created_at": "2025-03-06T16:31:00Z",
+      "updated_at": "2025-03-06T16:31:00Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cve-backup-daily",
+      "id": 369072005,
+      "name": "sha256:ecbce76ba9bdd6ec8fde956426986286e213eb6df38141560830e4d6d227853c",
+      "created_at": "2025-03-06T16:30:58Z",
+      "updated_at": "2025-03-06T16:30:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-cvrf-backup-daily",
+      "id": 369071962,
+      "name": "sha256:ffc90cb45d5449da9a982234cdf05a9ab7f99e97d376da99317c5812c0cc5985",
+      "created_at": "2025-03-06T16:30:56Z",
+      "updated_at": "2025-03-06T16:30:56Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cve-backup-daily",
+      "id": 369071953,
+      "name": "sha256:6602f46c3e80221fa2cc0e24e012dc1b5fd7a3bc9ce43c9dd4bc8c34199c1be4",
+      "created_at": "2025-03-06T16:30:55Z",
+      "updated_at": "2025-03-06T16:30:55Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-osv-backup-daily",
+      "id": 369071941,
+      "name": "sha256:aa48fe99cf1fb2d6cc72b6d9f391cdaa241f7101205f8a5e93e9453fddc4b4b8",
+      "created_at": "2025-03-06T16:30:54Z",
+      "updated_at": "2025-03-06T16:30:54Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-osv-backup-daily",
+      "id": 369071927,
+      "name": "sha256:376b45a275aa4a0801df49a86020929be3256e232b98fae9733985476fd4ed3a",
+      "created_at": "2025-03-06T16:30:53Z",
+      "updated_at": "2025-03-06T16:30:53Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-feed-cpe-backup-daily",
+      "id": 369071907,
+      "name": "sha256:ca71a0701a7cbd1c3faff1491821d7a260a40c0ffde7f4d2f48ee2c842191424",
+      "created_at": "2025-03-06T16:30:52Z",
+      "updated_at": "2025-03-06T16:30:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-pub-ghsa-backup-daily",
+      "id": 369071902,
+      "name": "sha256:5926acfbe44b93ff6be7b6c7bb10fb40f416bd3d08a3937910b30ff3be280f3d",
+      "created_at": "2025-03-06T16:30:52Z",
+      "updated_at": "2025-03-06T16:30:52Z"
+    },
+    {
+      "tag": "vuls-data-raw-oracle-backup-daily",
+      "id": 369071889,
+      "name": "sha256:4795e2c899c3341cd9295b589e2870b339ce08f828042f87b33bb1f2a43015e1",
+      "created_at": "2025-03-06T16:30:51Z",
+      "updated_at": "2025-03-06T16:30:51Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-ghsa-backup-daily",
+      "id": 369071857,
+      "name": "sha256:b15e69cd0b425d77ae89aea6e0919eca0dabd40c9b8f70762dc8d45b18b8860f",
+      "created_at": "2025-03-06T16:30:49Z",
+      "updated_at": "2025-03-06T16:30:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-pip-glsa-backup-daily",
+      "id": 369071855,
+      "name": "sha256:9046c6cb4191059ab1e7e215e8416dce3134aab209c3972210460d42452c73b4",
+      "created_at": "2025-03-06T16:30:49Z",
+      "updated_at": "2025-03-06T16:30:49Z"
+    },
+    {
+      "tag": "vuls-data-raw-oss-fuzz-osv-backup-daily",
+      "id": 369071827,
+      "name": "sha256:59b78f92d87de962a2aafb355139cdb85a03607cf7fbb80777de709c1ef14c34",
+      "created_at": "2025-03-06T16:30:48Z",
+      "updated_at": "2025-03-06T16:30:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v5-backup-daily",
+      "id": 369071821,
+      "name": "sha256:a07d1a9d9030d29c3ce7dc557bf85ee6750a427557eb1c1273fa8be5e3fee70a",
+      "created_at": "2025-03-06T16:30:47Z",
+      "updated_at": "2025-03-06T16:30:47Z"
+    },
+    {
+      "tag": "vuls-data-raw-nvd-api-cpematch-backup-daily",
+      "id": 369071801,
+      "name": "sha256:2187322a7ce983819495cc48b7b9ad03ff81ab15e48385b75bcfcc5481c63b0f",
+      "created_at": "2025-03-06T16:30:45Z",
+      "updated_at": "2025-03-06T16:30:45Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-glsa-backup-daily",
+      "id": 369071742,
+      "name": "sha256:e4273c6cc1603db1f63a7e264e9d5c440c85d42ff8329715151258f13e59007a",
+      "created_at": "2025-03-06T16:30:42Z",
+      "updated_at": "2025-03-06T16:30:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-ghsa-backup-daily",
+      "id": 369071728,
+      "name": "sha256:7abc843cf2039265ead1572b598f4f6366d196b047c44e4522e66f0f2346f993",
+      "created_at": "2025-03-06T16:30:41Z",
+      "updated_at": "2025-03-06T16:30:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-netbsd-backup-daily",
+      "id": 369071703,
+      "name": "sha256:cc037b4c6554290b1de864b7eb5ed8eb1e016a4179c4c2c1f10817e0e97fb725",
+      "created_at": "2025-03-06T16:30:40Z",
+      "updated_at": "2025-03-06T16:30:40Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-osv-backup-daily",
+      "id": 369071679,
+      "name": "sha256:ccf7fbca7e50a5c557036f0b93959a01fd4b9dcd07d7c2ad3fb879b25961aebd",
+      "created_at": "2025-03-06T16:30:38Z",
+      "updated_at": "2025-03-06T16:30:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-nuget-osv-backup-daily",
+      "id": 369071673,
+      "name": "sha256:6c1306c99de678f3b2b69267956f15daa352821876540c7149a8fe5709a3f646",
+      "created_at": "2025-03-06T16:30:38Z",
+      "updated_at": "2025-03-06T16:30:38Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-ghsa-backup-daily",
+      "id": 369071664,
+      "name": "sha256:1d699725772942c4683834bdb6f3594d672f2e819b1d6f8e8eeec8244ff78ed5",
+      "created_at": "2025-03-06T16:30:37Z",
+      "updated_at": "2025-03-06T16:30:37Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-api-backup-daily",
+      "id": 369071646,
+      "name": "sha256:19102e4da93339bdea5be8e019532068c7a07cb635210a5d60b92632a32921fc",
+      "created_at": "2025-03-06T16:30:36Z",
+      "updated_at": "2025-03-06T16:30:36Z"
+    },
+    {
+      "tag": "vuls-data-raw-npm-glsa-backup-daily",
+      "id": 369071642,
+      "name": "sha256:dbce72ab0067b9ae31463491c96f81e688f01659c6cdb81d8e9d74787ca5beeb",
+      "created_at": "2025-03-06T16:30:36Z",
+      "updated_at": "2025-03-06T16:30:36Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-csaf-backup-daily",
+      "id": 369071640,
+      "name": "sha256:24892bce80e7005c1908be72eb1c79d2e54730fab17b90696973afeed51bfe33",
+      "created_at": "2025-03-06T16:30:35Z",
+      "updated_at": "2025-03-06T16:30:35Z"
+    },
+    {
+      "tag": "vuls-data-raw-msf-backup-daily",
+      "id": 369071620,
+      "name": "sha256:3c898eeaeee097076377567d9e813962e953125b0634394d4753c10b442cabf1",
+      "created_at": "2025-03-06T16:30:34Z",
+      "updated_at": "2025-03-06T16:30:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-cvrf-backup-daily",
+      "id": 369071603,
+      "name": "sha256:26bf129d56b3f3d63d46942a17347ae0d6c4ed785cfc113f49d6a269cb93eecb",
+      "created_at": "2025-03-06T16:30:33Z",
+      "updated_at": "2025-03-06T16:30:33Z"
+    },
+    {
+      "tag": "vuls-data-raw-mitre-v4-backup-daily",
+      "id": 369071547,
+      "name": "sha256:b4f47c844e271cdf4f6b78a7574b04332f7e9202d9facd2c7e0ceaebbb0afac3",
+      "created_at": "2025-03-06T16:30:29Z",
+      "updated_at": "2025-03-06T16:30:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-fedora-backup-daily",
+      "id": 369071541,
+      "name": "sha256:17013af8f71025c87c720e91ec5762a242d1d63c3a63f822a81e35e029432f42",
+      "created_at": "2025-03-06T16:30:29Z",
+      "updated_at": "2025-03-06T16:30:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-epss-backup-daily",
+      "id": 369071524,
+      "name": "sha256:f4e97c4c6ff17ade12fc7bec43cb16bafd8a778acd2e15ab981a863b2df26c10",
+      "created_at": "2025-03-06T16:30:28Z",
+      "updated_at": "2025-03-06T16:30:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-detail-backup-daily",
+      "id": 369071508,
+      "name": "sha256:03346c123f5fd2aca7692c8136b3fd41274106d2597d87135db38782b4fee844",
+      "created_at": "2025-03-06T16:30:27Z",
+      "updated_at": "2025-03-06T16:30:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-osv-backup-daily",
+      "id": 369071493,
+      "name": "sha256:d59590a4c8e98b4f37106c37a23f9b0d2044d6982821c359207320c077dff294",
+      "created_at": "2025-03-06T16:30:26Z",
+      "updated_at": "2025-03-06T16:30:26Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-glsa-backup-daily",
+      "id": 369071483,
+      "name": "sha256:177a2a00392379b72deea781aa776f93ea8d779dd718130d0ca23888443900ea",
+      "created_at": "2025-03-06T16:30:26Z",
+      "updated_at": "2025-03-06T16:30:26Z"
+    },
+    {
+      "tag": "vuls-data-raw-linux-osv-backup-daily",
+      "id": 369071482,
+      "name": "sha256:e4fbab5cf0bf333b85bc98323b1c75f51d584445a62406364bab278f0bb5d109",
+      "created_at": "2025-03-06T16:30:26Z",
+      "updated_at": "2025-03-06T16:30:26Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-rss-backup-daily",
+      "id": 369071475,
+      "name": "sha256:6b312dd69e7f1cf0d21ef44244ff58a1125a5cf234c26da7cb827860f64623b4",
+      "created_at": "2025-03-06T16:30:26Z",
+      "updated_at": "2025-03-06T16:30:26Z"
+    },
+    {
+      "tag": "vuls-data-raw-jvn-feed-product-backup-daily",
+      "id": 369071466,
+      "name": "sha256:4988d491e167dbaa4789e3f197b3ca0a1b7f56ec2dfbeb00b14206ed02993aa5",
+      "created_at": "2025-03-06T16:30:24Z",
+      "updated_at": "2025-03-06T16:30:24Z"
+    },
+    {
+      "tag": "vuls-data-raw-kev-backup-daily",
+      "id": 369071460,
+      "name": "sha256:6f44b26f31aae83f03fdbac1adaa466f54aecde7b235dcd677efef050c4911fe",
+      "created_at": "2025-03-06T16:30:24Z",
+      "updated_at": "2025-03-06T16:30:24Z"
+    },
+    {
+      "tag": "vuls-data-raw-haskell-osv-backup-daily",
+      "id": 369071438,
+      "name": "sha256:8eac7096b8c67dc350e3efbe65403b18c9124de87b43a5adf6d9b67fb74378df",
+      "created_at": "2025-03-06T16:30:22Z",
+      "updated_at": "2025-03-06T16:30:22Z"
+    },
+    {
+      "tag": "vuls-data-raw-maven-ghsa-backup-daily",
+      "id": 369071414,
+      "name": "sha256:8e3e84353bebfe75cc28f8833f5485233f896d0f93c68d60c80f181075092992",
+      "created_at": "2025-03-06T16:30:21Z",
+      "updated_at": "2025-03-06T16:30:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-glsa-backup-daily",
+      "id": 369071371,
+      "name": "sha256:7b8f0dd0fa3f3bc0839fe9cfb26603a785487dbfebe3fe05e39ecb4bcd06b98e",
+      "created_at": "2025-03-06T16:30:18Z",
+      "updated_at": "2025-03-06T16:30:18Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-osv-backup-daily",
+      "id": 369071326,
+      "name": "sha256:75ddc37a838a520a69b9d28f74059e1c66af40c48b853ffaac3f2b649b69d2ab",
+      "created_at": "2025-03-06T16:30:15Z",
+      "updated_at": "2025-03-06T16:30:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-vex-backup-daily",
+      "id": 369071325,
+      "name": "sha256:2b829f510148f3b9b7c8c12024aa632e92088f648d39a41d4ba5ba2f571ef100",
+      "created_at": "2025-03-06T16:30:15Z",
+      "updated_at": "2025-03-06T16:30:15Z"
+    },
+    {
+      "tag": "vuls-data-raw-git-osv-backup-daily",
+      "id": 369071301,
+      "name": "sha256:1543040f6beb9d2adc6930c461fc877f29571c0f615b8627486c7988ab64a09f",
+      "created_at": "2025-03-06T16:30:14Z",
+      "updated_at": "2025-03-06T16:30:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-freebsd-backup-daily",
+      "id": 369071268,
+      "name": "sha256:b5459021b721e7857d957740bec30e838bb254206e6009b98ff0d2eeded677b7",
+      "created_at": "2025-03-06T16:30:11Z",
+      "updated_at": "2025-03-06T16:30:11Z"
+    },
+    {
+      "tag": "vuls-data-raw-ghactions-osv-backup-daily",
+      "id": 369071235,
+      "name": "sha256:149676a98c0338d6d0901148c0b0a8a897a97c48e9dbcd306c6a2585f1ea785d",
+      "created_at": "2025-03-06T16:30:10Z",
+      "updated_at": "2025-03-06T16:30:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-golang-ghsa-backup-daily",
+      "id": 369071232,
+      "name": "sha256:ed4162966fa6c02e1e7cd15c1c39817591b4f063881a9b16ecfce75d39d34c4d",
+      "created_at": "2025-03-06T16:30:10Z",
+      "updated_at": "2025-03-06T16:30:10Z"
+    },
+    {
+      "tag": "vuls-data-raw-gentoo-backup-daily",
+      "id": 369071221,
+      "name": "sha256:1939d03de63a4aeee7e10396db714abd7d04bfa2fbe1d90199a3267079b564aa",
+      "created_at": "2025-03-06T16:30:09Z",
+      "updated_at": "2025-03-06T16:30:09Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-backup-daily",
+      "id": 369071212,
+      "name": "sha256:01a20a71ad92c3327be45b17e52b7f238b3006d3b3c031915bf45a29f36a139c",
+      "created_at": "2025-03-06T16:30:09Z",
+      "updated_at": "2025-03-06T16:30:09Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv2-backup-daily",
+      "id": 369071174,
+      "name": "sha256:764a0c28b9bca2d28473bc52adf0228b51f79ddb793ea796c23bd89fbf154e2c",
+      "created_at": "2025-03-06T16:30:07Z",
+      "updated_at": "2025-03-06T16:30:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-fortinet-cvrf-backup-daily",
+      "id": 369071161,
+      "name": "sha256:a7093330160b4491529ba0d013a5e252bfe094b48ba429099903ea70d8215e13",
+      "created_at": "2025-03-06T16:30:06Z",
+      "updated_at": "2025-03-06T16:30:06Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-security-tracker-salsa-backup-daily",
+      "id": 369071101,
+      "name": "sha256:826a1f62f3f94879bb09bcffae09636df5858fd4822c0e5b85183ead78a65b42",
+      "created_at": "2025-03-06T16:30:04Z",
+      "updated_at": "2025-03-06T16:30:04Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-trickest-backup-daily",
+      "id": 369071088,
+      "name": "sha256:aa4e69970da46f8b6dc43d1608402e3b607f8ab049c20350197c7b3dff155f24",
+      "created_at": "2025-03-06T16:30:03Z",
+      "updated_at": "2025-03-06T16:30:03Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-inthewild-backup-daily",
+      "id": 369071040,
+      "name": "sha256:5a11e2c6cb3e5214b99031a46f7b75a420a8070c29de93eff1f3dd3377f29946",
+      "created_at": "2025-03-06T16:29:58Z",
+      "updated_at": "2025-03-06T16:29:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-github-backup-daily",
+      "id": 369071039,
+      "name": "sha256:178d8629c6ceb7f4b7907aedb871afcde6d9efdefeacedf73133c582b2dd5127",
+      "created_at": "2025-03-06T16:29:58Z",
+      "updated_at": "2025-03-06T16:29:58Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-osv-backup-daily",
+      "id": 369071032,
+      "name": "sha256:422eff243543a8aaae6cf9de430161018db877b944db2f1a5d221ac08f44ffb8",
+      "created_at": "2025-03-06T16:29:57Z",
+      "updated_at": "2025-03-06T16:29:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-exploit-exploitdb-backup-daily",
+      "id": 369071025,
+      "name": "sha256:a7056abd0b92c20b839b0888f4aff9e0669a7ee93f68a752bb27619f18cd2b99",
+      "created_at": "2025-03-06T16:29:57Z",
+      "updated_at": "2025-03-06T16:29:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-debian-osv-backup-daily",
+      "id": 369071024,
+      "name": "sha256:370f2456ae74d0054c1527566a9c53388ac7c288a936d7e679371e3ae750c004",
+      "created_at": "2025-03-06T16:29:57Z",
+      "updated_at": "2025-03-06T16:29:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-erlang-ghsa-backup-daily",
+      "id": 369071023,
+      "name": "sha256:fcd6d938c4cf4c30e6dfafcf6b0a00cef5e1f8ddfbb58255e6f80bf995e31946",
+      "created_at": "2025-03-06T16:29:57Z",
+      "updated_at": "2025-03-06T16:29:57Z"
+    },
+    {
+      "tag": "vuls-data-raw-cwe-backup-daily",
+      "id": 369070898,
+      "name": "sha256:901ad414e52108e019643ef6a01eed1a2bda56ae1a728fa1fd733ca769747727",
+      "created_at": "2025-03-06T16:29:50Z",
+      "updated_at": "2025-03-06T16:29:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-conan-glsa-backup-daily",
+      "id": 369070893,
+      "name": "sha256:e95aaab4f3b9e7819f0a43b84b8c937b9a9079d053c13b11d93a63878063a770",
+      "created_at": "2025-03-06T16:29:50Z",
+      "updated_at": "2025-03-06T16:29:50Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-msuc-backup-daily",
+      "id": 369070865,
+      "name": "sha256:231ffb339a4010decd37c08fe3823c85c8a0cecb41ce2d4d6d173217454330e5",
+      "created_at": "2025-03-06T16:29:48Z",
+      "updated_at": "2025-03-06T16:29:48Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-osv-backup-daily",
+      "id": 369070851,
+      "name": "sha256:b6f380f86a03d071992dfebcd5b7f0399079b9775ca389febcfaf85e59a91acf",
+      "created_at": "2025-03-06T16:29:47Z",
+      "updated_at": "2025-03-06T16:29:47Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-glsa-backup-daily",
+      "id": 369070834,
+      "name": "sha256:73ec9e156a427eff5d74b058467ecb0bb448a259f2e61c463f76af178bfb723d",
+      "created_at": "2025-03-06T16:29:46Z",
+      "updated_at": "2025-03-06T16:29:46Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-rhel-backup-daily",
+      "id": 369070800,
+      "name": "sha256:391ae26618a3ea58e3141287098e895604154a01ae891850d7585211d34e4123",
+      "created_at": "2025-03-06T16:29:44Z",
+      "updated_at": "2025-03-06T16:29:44Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-ghsa-backup-daily",
+      "id": 369070794,
+      "name": "sha256:ff45f18ed3932e56634d1fe6c3c8b48dc762807b9926aa677bf6e7a3cd94bdc6",
+      "created_at": "2025-03-06T16:29:44Z",
+      "updated_at": "2025-03-06T16:29:44Z"
+    },
+    {
+      "tag": "vuls-data-raw-composer-ghsa-backup-daily",
+      "id": 369070771,
+      "name": "sha256:7971f5ec6278d6d88265cebd85a28c4ef785cb6f5b3f5e040b165b904bea8f6a",
+      "created_at": "2025-03-06T16:29:43Z",
+      "updated_at": "2025-03-06T16:29:43Z"
+    },
+    {
+      "tag": "vuls-data-raw-chainguard-osv-backup-daily",
+      "id": 369070768,
+      "name": "sha256:b8a44ef5e311a7471ef2cd0b94dba91a97e7f12c353e27dad0e4c501d3bafa22",
+      "created_at": "2025-03-06T16:29:43Z",
+      "updated_at": "2025-03-06T16:29:43Z"
+    },
+    {
+      "tag": "vuls-data-raw-cargo-osv-backup-daily",
+      "id": 369070754,
+      "name": "sha256:6cebf70e20db2833fbdff408740c27e5b4273d9d574ebaac76433aced78d8837",
+      "created_at": "2025-03-06T16:29:42Z",
+      "updated_at": "2025-03-06T16:29:42Z"
+    },
+    {
+      "tag": "vuls-data-raw-capec-backup-daily",
+      "id": 369070690,
+      "name": "sha256:bf1d7c410e05cce18a9eaf28bffe313c04b55fb6b4599bb2e56340cea887860a",
+      "created_at": "2025-03-06T16:29:39Z",
+      "updated_at": "2025-03-06T16:29:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-bitnami-osv-backup-daily",
+      "id": 369070686,
+      "name": "sha256:e5ca9dcac01258104cbc0f0fe58b377f0e893e3793b2bd62ffbcf0ab2cecb35e",
+      "created_at": "2025-03-06T16:29:39Z",
+      "updated_at": "2025-03-06T16:29:39Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-cve-backup-daily",
+      "id": 369070564,
+      "name": "sha256:3d37173f06e87dd3b734426b81637e93563634bf39624aeee3e1c530a206a8f9",
+      "created_at": "2025-03-06T16:29:34Z",
+      "updated_at": "2025-03-06T16:29:34Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-backup-daily",
+      "id": 369070563,
+      "name": "sha256:e200e89e05c162cdbcfbb5beed88c219644f19328b73006f4a0a633ce08ff3e1",
+      "created_at": "2025-03-06T16:29:34Z",
+      "updated_at": "2025-03-06T16:29:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-osv-backup-daily",
+      "id": 369070548,
+      "name": "sha256:67ca60904c20effedb1b20d75e2f11573f3c862360c3b117a7491123b736a8c7",
+      "created_at": "2025-03-06T16:29:34Z",
+      "updated_at": "2025-03-06T16:29:34Z"
+    },
+    {
+      "tag": "vuls-data-raw-attack-backup-daily",
+      "id": 369070531,
+      "name": "sha256:f76e545b3a7bd335ea90f67d5a54c1c7ee4828e073c7a52abe36d550b4a48ade",
+      "created_at": "2025-03-06T16:29:33Z",
+      "updated_at": "2025-03-06T16:29:33Z"
+    },
+    {
+      "tag": "vuls-data-raw-arch-backup-daily",
+      "id": 369070523,
+      "name": "sha256:14634488b4356aa6d599f675ab5c23579e55df9f85fa960cfd69379854c3d0d9",
+      "created_at": "2025-03-06T16:29:33Z",
+      "updated_at": "2025-03-06T16:29:33Z"
+    },
+    {
+      "tag": "vuls-data-raw-android-osv-backup-daily",
+      "id": 369070502,
+      "name": "sha256:85d9d4a53431f271637aa306c09d968973bb1fe1db001c85b05f5950b85ca286",
+      "created_at": "2025-03-06T16:29:32Z",
+      "updated_at": "2025-03-06T16:29:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-amazon-backup-daily",
+      "id": 369070493,
+      "name": "sha256:a01022c83c3f80391af90651d6a08b82d78e27e095b76d12cfa9cef9b2c4b936",
+      "created_at": "2025-03-06T16:29:31Z",
+      "updated_at": "2025-03-06T16:29:31Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-oval-backup-daily",
+      "id": 369070476,
+      "name": "sha256:88ffbe7f3ae2d418438dea0fff2dbb3a67006b9aeb887034568b2a28f67705aa",
+      "created_at": "2025-03-06T16:29:30Z",
+      "updated_at": "2025-03-06T16:29:30Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-vex-backup-daily",
+      "id": 369070473,
+      "name": "sha256:27eb8ef48e7b8a76e9a9449c971927b0122ff4873acb98d1a1a900e245c504a8",
+      "created_at": "2025-03-06T16:29:29Z",
+      "updated_at": "2025-03-06T16:29:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-alpine-secdb-backup-daily",
+      "id": 369070459,
+      "name": "sha256:fbd597332d6ea454b1031e21074383973065db8178ba92c423bb731eeebea4f6",
+      "created_at": "2025-03-06T16:29:29Z",
+      "updated_at": "2025-03-06T16:29:29Z"
+    },
+    {
+      "tag": "vuls-data-extracted-nvd-api-cve-backup-daily",
+      "id": 369070443,
+      "name": "sha256:c6a9012d63423def123adedd7987f38ccd62bc79b2901fb601df325eb3f084eb",
+      "created_at": "2025-03-06T16:29:28Z",
+      "updated_at": "2025-03-06T16:29:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-osv-backup-daily",
+      "id": 369070332,
+      "name": "sha256:9dd4282c9528cf8be593f4e6bf65619a348073b41c8ba412ae66147f95711937",
+      "created_at": "2025-03-06T16:29:22Z",
+      "updated_at": "2025-03-06T16:29:22Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-osv-backup-daily",
+      "id": 369070317,
+      "name": "sha256:62972c6260d9f98bd6ca473e9aa18502922745ea465cda029ace17ef00bd8009",
+      "created_at": "2025-03-06T16:29:21Z",
+      "updated_at": "2025-03-06T16:29:21Z"
+    },
+    {
+      "tag": "vuls-data-raw-alma-errata-backup-daily",
+      "id": 369070305,
+      "name": "sha256:055243c73dcc7f2e48daf959f83fa2a376d572435d5427bd9b5fbfd62b56689a",
+      "created_at": "2025-03-06T16:29:20Z",
+      "updated_at": "2025-03-06T16:29:20Z"
+    },
+    {
+      "tag": "vuls-data-extracted-mitre-v5-backup-daily",
+      "id": 369070275,
+      "name": "sha256:4ecf37921ede0dc9b2b563592ec343ad0c5878eca77380e78262ca28d0f10c27",
+      "created_at": "2025-03-06T16:29:19Z",
+      "updated_at": "2025-03-06T16:29:19Z"
+    },
+    {
+      "tag": "vuls-data-extracted-rocky-errata-backup-daily",
+      "id": 369070248,
+      "name": "sha256:fa0621bb7b0b23fbf94da66d8ef9fc71bda334f8aa1a0d729a585b0c7ab8c636",
+      "created_at": "2025-03-06T16:29:18Z",
+      "updated_at": "2025-03-06T16:29:18Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv2-rhel-backup-daily",
+      "id": 369070243,
+      "name": "sha256:92c0964f5d9aec406af519158c27d6ec95e452dfc2d94149c08e82ece12a31f3",
+      "created_at": "2025-03-06T16:29:17Z",
+      "updated_at": "2025-03-06T16:29:17Z"
+    },
+    {
+      "tag": "vuls-data-extracted-redhat-ovalv1-backup-daily",
+      "id": 369070183,
+      "name": "sha256:eaf727afdfec078469f63c8532dc850aa0a8d02edcfce3c2e3c8f393089b5606",
+      "created_at": "2025-03-06T16:29:14Z",
+      "updated_at": "2025-03-06T16:29:14Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-oval-backup-daily",
+      "id": 369070098,
+      "name": "sha256:d0efbc586f3c1d8d5780a397994502928c3b4e1e0eecbec13407b26476b16b76",
+      "created_at": "2025-03-06T16:29:08Z",
+      "updated_at": "2025-03-06T16:29:08Z"
+    },
+    {
+      "tag": "vuls-data-raw-ubuntu-cve-tracker-backup-daily",
+      "id": 369070097,
+      "name": "sha256:b35c4147a1cbb7ec24da0ac45a2435df3ec5f4af96c3022e2c47f07b99672407",
+      "created_at": "2025-03-06T16:29:08Z",
+      "updated_at": "2025-03-06T16:29:08Z"
+    },
+    {
+      "tag": "vuls-data-extracted-oracle-backup-daily",
+      "id": 369070080,
+      "name": "sha256:73821f622e8300e263eff15b127db4f1896884115467a307e3acd703504d52b6",
+      "created_at": "2025-03-06T16:29:07Z",
+      "updated_at": "2025-03-06T16:29:07Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-cvrf-backup-daily",
+      "id": 369070078,
+      "name": "sha256:5a3d7d7483bdb4a992622016a471f7bea33347cfbf7767b3a2d9875ef5cd1b78",
+      "created_at": "2025-03-06T16:29:07Z",
+      "updated_at": "2025-03-06T16:29:07Z"
+    },
+    {
+      "tag": "vuls-data-extracted-freebsd-backup-daily",
+      "id": 369070065,
+      "name": "sha256:3c63d819aa787100f5e45529de89d83e4895f145879492e650160f6f45294d8f",
+      "created_at": "2025-03-06T16:29:06Z",
+      "updated_at": "2025-03-06T16:29:06Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-wsusscn2-backup-daily",
+      "id": 369069972,
+      "name": "sha256:8ca0efbeeec8dff0a819efb91d447cac6eacf3ef0325444b856751ea60e69567",
+      "created_at": "2025-03-06T16:29:02Z",
+      "updated_at": "2025-03-06T16:29:02Z"
+    },
+    {
+      "tag": "vuls-data-raw-wolfi-osv-backup-daily",
+      "id": 369069970,
+      "name": "sha256:21d003d711d59420bf4f3f54cf3ff3169c4e30e1f848af505bbfd15b6d77430c",
+      "created_at": "2025-03-06T16:29:02Z",
+      "updated_at": "2025-03-06T16:29:02Z"
+    },
+    {
+      "tag": "vuls-data-raw-windows-bulletin-backup-daily",
+      "id": 369069968,
+      "name": "sha256:6df99ff4ba344ec456d9636304c45655d113de8506aced14eb2b041f5314ff60",
+      "created_at": "2025-03-06T16:29:02Z",
+      "updated_at": "2025-03-06T16:29:02Z"
+    },
+    {
+      "tag": "vuls-data-extracted-kev-backup-daily",
+      "id": 369069964,
+      "name": "sha256:0bb7af1dea667e2ae7976c1e2b6871379f6233c69e4d8c17baffe93bd1004d54",
+      "created_at": "2025-03-06T16:29:02Z",
+      "updated_at": "2025-03-06T16:29:02Z"
+    },
+    {
+      "tag": "vuls-data-raw-vulncheck-kev-backup-daily",
+      "id": 369069945,
+      "name": "sha256:6a0d1128c002dec4a1ea55cdbba1b03d61ed57e184d8d169ab40061f13e6a210",
+      "created_at": "2025-03-06T16:29:01Z",
+      "updated_at": "2025-03-06T16:29:01Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-cvrf-backup-daily",
+      "id": 369069805,
+      "name": "sha256:df5cfdc3437b634283640096349deeed820b3ff67675fb01abc95c7c8ebf1d83",
+      "created_at": "2025-03-06T16:28:54Z",
+      "updated_at": "2025-03-06T16:28:54Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-csaf-backup-daily",
+      "id": 369069572,
+      "name": "sha256:81de06b8bcdf930641966622ea330677255eebe0e99ad4449fd4e0ea0cf52f65",
+      "created_at": "2025-03-06T16:28:41Z",
+      "updated_at": "2025-03-06T16:28:41Z"
+    },
+    {
+      "tag": "vuls-data-raw-suse-osv-backup-daily",
+      "id": 369069429,
+      "name": "sha256:78532c25bd5a6679e0a46f059b96822d8b0a377bdcb12ff7a6b26fc27255428d",
+      "created_at": "2025-03-06T16:28:32Z",
+      "updated_at": "2025-03-06T16:28:32Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-errata-backup-daily",
+      "id": 369069383,
+      "name": "sha256:23e36f96193b7255e90599d6f2bdb5e31b1c81dcf399236a34af20b933f358aa",
+      "created_at": "2025-03-06T16:28:29Z",
+      "updated_at": "2025-03-06T16:28:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-glsa-backup-daily",
+      "id": 369069382,
+      "name": "sha256:87f4345eab39435d0a477d9e4563bc85c50ff046248ab3b6f9ca290b6e21ebe2",
+      "created_at": "2025-03-06T16:28:29Z",
+      "updated_at": "2025-03-06T16:28:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-ghsa-backup-daily",
+      "id": 369069381,
+      "name": "sha256:bd713327b835181450c974e2cd31f574e72d1acab5298b8a5742baa93e9f081c",
+      "created_at": "2025-03-06T16:28:29Z",
+      "updated_at": "2025-03-06T16:28:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-repository-to-cpe-backup-daily",
+      "id": 369069376,
+      "name": "sha256:1248c24752c354174e592346c1a2096a7349b57b436ccf93aae4e9a7f6bc215b",
+      "created_at": "2025-03-06T16:28:29Z",
+      "updated_at": "2025-03-06T16:28:29Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-osv-backup-daily",
+      "id": 369069367,
+      "name": "sha256:5baf942d73a0825cb697b4efb377ebf88e51683e05083a213d01d7044652d91a",
+      "created_at": "2025-03-06T16:28:28Z",
+      "updated_at": "2025-03-06T16:28:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-r-osv-backup-daily",
+      "id": 369069364,
+      "name": "sha256:c0c5b0162ae15ea554941e95e95a4e483d195c385e8f484882e841bb9e8a36bc",
+      "created_at": "2025-03-06T16:28:28Z",
+      "updated_at": "2025-03-06T16:28:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-swift-ghsa-backup-daily",
+      "id": 369069352,
+      "name": "sha256:403ed8ddd678591dffac0ea5089d28ff9e0721069b15a91c2ddb0b8a54914c2b",
+      "created_at": "2025-03-06T16:28:28Z",
+      "updated_at": "2025-03-06T16:28:28Z"
+    },
+    {
+      "tag": "vuls-data-raw-snort-backup-daily",
+      "id": 369069339,
+      "name": "sha256:041b387a654692b83feba1fe65e5bd24e996564002139f2d4003e5f67a8a3448",
+      "created_at": "2025-03-06T16:28:27Z",
+      "updated_at": "2025-03-06T16:28:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-rubygems-osv-backup-daily",
+      "id": 369069334,
+      "name": "sha256:3415156ff843336c6e73c0c81d90306945063ceae96ec29cf68105a4bcb8c269",
+      "created_at": "2025-03-06T16:28:27Z",
+      "updated_at": "2025-03-06T16:28:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-rocky-osv-backup-daily",
+      "id": 369069328,
+      "name": "sha256:3536b979618146344bcf470c9baac8632f1893e5378890d95a18e1ace8543751",
+      "created_at": "2025-03-06T16:28:27Z",
+      "updated_at": "2025-03-06T16:28:27Z"
+    },
+    {
+      "tag": "vuls-data-raw-redhat-ovalv1-backup-daily",
+      "id": 369069296,
+      "name": "sha256:2d54bdbca674b78b90a02dd8ffebd85e6e49c809256bf891d043b2fde043f9ed",
+      "created_at": "2025-03-06T16:28:25Z",
+      "updated_at": "2025-03-06T16:28:25Z"
+    }
+  ]
+}
