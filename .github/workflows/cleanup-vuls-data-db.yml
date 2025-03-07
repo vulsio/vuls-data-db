@@ -1,0 +1,15 @@
+name: Cleanup vulsio/vuls-data-db
+
+on:
+  workflow_run:
+    workflows: [Fetch All, Extract All, Restore All, Git GC All]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Cleanup untagged images in vulsio/vuls-data-db
+    uses: ./.github/workflows/cleanup.yml
+    with:
+      package: vuls-data-db

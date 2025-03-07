@@ -1,0 +1,15 @@
+name: Cleanup vulsio/vuls-data-db-backup
+
+on:
+  workflow_run:
+    workflows: [Backup Daily, Backup Weekly, Backup Monthly]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Cleanup untagged images in vulsio/vuls-data-db-backup
+    uses: ./.github/workflows/cleanup.yml
+    with:
+      package: vuls-data-db-backup
