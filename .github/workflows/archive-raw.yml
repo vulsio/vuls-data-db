@@ -128,4 +128,4 @@ jobs:
     uses: ./.github/workflows/archive.yml
     with:
       tag: vuls-data-raw-${{ matrix.target }}
-      threshold-mb: 1024
+      threshold-mb: 1024000
