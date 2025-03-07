@@ -80,13 +80,20 @@ jobs:
         with:
           go-version-file: "go.mod"
 
-      - name: go install
+      - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
+      - name: Mkdir vuls-data-raw-windows-msuc
+        run: mkdir vuls-data-raw-windows-msuc
+
       - name: Fetch
+        continue-on-error: true
         run: |
-          mkdir vuls-data-raw-windows-msuc
           vuls-data-update fetch windows-msuc --dir vuls-data-raw-windows-msuc ${{ matrix.target }}
+
+      - name: Fetch Error Handling
+        if: failure()
+        run: rm -rf vuls-data-raw-windows-msuc/*
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
@@ -133,16 +140,18 @@ jobs:
           oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
           tar -xf vuls-data-raw-windows-msuc.tar.zst
           rm vuls-data-raw-windows-msuc.tar.zst
+          git -C vuls-data-raw-windows-msuc restore .
 
       - name: Aggregate windows-msuc-data-*
         run: |
+          DIR=$(mktemp -d)
           for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
-            oras pull ghcr.io/${{ github.repository }}:windows-msuc-data-${index}
-            tar -xf vuls-data-raw-windows-msuc.tar.zst
-            rm vuls-data-raw-windows-msuc.tar.zst
+            oras pull -o ${DIR} ghcr.io/${{ github.repository }}:windows-msuc-data-${index}
+            tar -xf ${DIR}/vuls-data-raw-windows-msuc.tar.zst -C ${DIR}
+            rm ${DIR}/vuls-data-raw-windows-msuc.tar.zst
+            mv -f ${DIR}/vuls-data-raw-windows-msuc/* vuls-data-raw-windows-msuc
           done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          rm -rf ${DIR}
 
       - name: Set Git config
         run: |
