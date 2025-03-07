@@ -1,0 +1,142 @@
+name: Truncate
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      threshold-mb:
+        required: true
+        type: number
+      log-ratio:
+        required: true
+        type: number
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        type: choice
+        options:
+          - vuls-data-extracted-alma-errata
+          - vuls-data-extracted-alma-osv
+          - vuls-data-extracted-alpine-osv
+          - vuls-data-extracted-alpine-secdb
+          - vuls-data-extracted-amazon
+          - vuls-data-extracted-arch
+          - vuls-data-extracted-cargo-ghsa
+          - vuls-data-extracted-eol
+          - vuls-data-extracted-epss
+          - vuls-data-extracted-freebsd
+          - vuls-data-extracted-kev
+          - vuls-data-extracted-mitre-v5
+          - vuls-data-extracted-nvd-api-cve
+          - vuls-data-extracted-oracle
+          - vuls-data-extracted-redhat-csaf
+          - vuls-data-extracted-redhat-csaf-rhel
+          - vuls-data-extracted-redhat-ovalv1
+          - vuls-data-extracted-redhat-ovalv1-rhel
+          - vuls-data-extracted-redhat-ovalv2
+          - vuls-data-extracted-redhat-ovalv2-rhel
+          - vuls-data-extracted-redhat-vex
+          - vuls-data-extracted-redhat-vex-rhel
+          - vuls-data-extracted-rocky-errata
+      threshold-mb:
+        required: true
+        type: number
+      log-ratio:
+        required: true
+        type: number
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: Check if ${{ inputs.tag }} exceeds ${{ inputs.threshold-mb }}MB
+    runs-on: ubuntu-latest
+    outputs:
+      do_truncate: ${{ steps.truncate_check.outputs.do_truncate }}
+    steps:
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Decide whether to truncate
+        id: truncate_check
+        run: |
+          SIZE=$(oras manifest fetch ghcr.io/${{ github.repository }}:${{ inputs.tag }} | jq '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .size')
+          echo "repository size [KB]:" $(( ${SIZE} / 1024 ))
+          echo "repository size [MB]:" $(( ${SIZE} / 1024 / 1024 ))
+          if [ ${SIZE} -gt $((${{ inputs.threshold-mb }} * 1024 * 1024)) ]; then
+            echo "do_truncate=true" >> ${GITHUB_OUTPUT}
+          fi
+
+  truncate:
+    name: Truncate ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    if: ${{ needs.check.outputs.do_truncate == 'true' }}
+    needs: [check]
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+          tar -xf ${{ inputs.tag }}.tar.zst
+          rm ${{ inputs.tag }}.tar.zst
+
+      - name: Decide log length
+        id: decide_log_length
+        run: |
+          TOTAL=$(git -C ${{ inputs.tag }} log --oneline main | wc -l)
+          LENGTH=$(echo "scale=0; ${TOTAL} * ${{ inputs.log-ratio }} / 1" | bc)
+          echo "Will truncate log length ${TOTAL} -> ${LENGTH}"
+          echo "length=${LENGTH}" >> ${GITHUB_OUTPUT}
+
+      - name: Truncate dotgit
+        run: |
+          mv ${{ inputs.tag }} ${{inputs.tag}}.full
+
+          echo "Create the trucated repository..."
+          git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.full ${{ inputs.tag }}
+          git -C ${{ inputs.tag }} branch nightly origin/nightly
+
+          rm -rf ${{ inputs.tag }}.full
+          tar --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }}
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push truncated dotgit
+        run: |
+          oras push ghcr.io/vulsio/vuls-data-db:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
