@@ -1,58 +1,20 @@
-name: Git GC
+name: Archive
 
 on:
   workflow_call:
     inputs:
-      repository:
-        required: true
-        type: string
       tag:
         required: true
         type: string
-      pack-threads:
+      threshold-mb:
         required: true
-        default: 2
         type: number
-      pack-windowMemory:
-        required: true
-        default: 4g
-        type: string
   workflow_dispatch:
     inputs:
-      repository:
-        required: true
-        type: choice
-        options:
-          - vulsio/vuls-data-db
-          - vulsio/vuls-data-db-archive
-          - vulsio/vuls-data-db-backup
       tag:
         required: true
         type: choice
         options:
-          - vuls-data-extracted-alma-errata
-          - vuls-data-extracted-alma-osv
-          - vuls-data-extracted-alpine-osv
-          - vuls-data-extracted-alpine-secdb
-          - vuls-data-extracted-amazon
-          - vuls-data-extracted-arch
-          - vuls-data-extracted-cargo-ghsa
-          - vuls-data-extracted-eol
-          - vuls-data-extracted-epss
-          - vuls-data-extracted-freebsd
-          - vuls-data-extracted-kev
-          - vuls-data-extracted-mitre-v5
-          - vuls-data-extracted-nvd-api-cve
-          - vuls-data-extracted-oracle
-          - vuls-data-extracted-redhat-csaf
-          - vuls-data-extracted-redhat-csaf-rhel
-          - vuls-data-extracted-redhat-ovalv1
-          - vuls-data-extracted-redhat-ovalv1-rhel
-          - vuls-data-extracted-redhat-ovalv2
-          - vuls-data-extracted-redhat-ovalv2-rhel
-          - vuls-data-extracted-redhat-vex
-          - vuls-data-extracted-redhat-vex-rhel
-          - vuls-data-extracted-rocky-errata
           - vuls-data-raw-alma-errata
           - vuls-data-raw-alma-osv
           - vuls-data-raw-alma-oval
@@ -158,19 +120,48 @@ on:
           - vuls-data-raw-windows-msuc
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
-      pack-threads:
+      threshold-mb:
         required: true
-        default: 2
         type: number
-      pack-windowMemory:
-        required: true
-        default: 4g
-        type: string
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  gc:
-    name: Git GC ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
+  check:
+    name: Check if ${{ inputs.tag }} exceeds ${{ inputs.threshold-mb }}MB
     runs-on: ubuntu-latest
+    outputs:
+      do_archive: ${{ steps.archive_check.outputs.do_archive }}
+    steps:
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Decide whether to archive
+        id: archive_check
+        run: |
+          SIZE=$(oras manifest fetch ghcr.io/${{ github.repository }}:${{ inputs.tag }} | jq '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .size')
+          echo "repository size [KB]:" $(( ${SIZE} / 1024 ))
+          echo "repository size [MB]:" $(( ${SIZE} / 1024 / 1024 ))
+          if [ ${SIZE} -gt $((${{ inputs.threshold-mb }} * 1024 * 1024)) ]; then
+            echo "do_archive=true" >> ${GITHUB_OUTPUT}
+          fi
+
+  archive:
+    name: Archive ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    if: ${{ needs.check.outputs.do_archive == 'true' }}
+    needs: [check]
+    outputs:
+      tag: ${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -192,53 +183,40 @@ jobs:
           sudo mv oras-install/oras /usr/local/bin/
           rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
-      - name: Pull ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
-        id: pull
+      - name: Pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
         run: |
-          MANIFEST=$(oras manifest fetch ghcr.io/${{ inputs.repository }}:${{ inputs.tag }})
-          DIGEST=$(echo ${MANIFEST} | jq -r '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .digest')
-          TITLE=$(echo ${MANIFEST} | jq -r '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .annotations."org.opencontainers.image.title"')
+          oras pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
 
-          oras blob fetch --output ${TITLE} ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}@${DIGEST}
-          tar -xf ${TITLE}
-          rm ${TITLE}
-
-          BASENAME=$(basename "${TITLE}" .tar.zst)
-          echo "basename=${BASENAME}" >> ${GITHUB_OUTPUT}
-
-      - name: Print git gc before .git size
-        id: before
-        run: echo "size=$(du -sh ${{ steps.pull.outputs.basename }}/.git/ | cut -f1)" >> $GITHUB_OUTPUT
-
-      - name: Set Git config
+      - name: Set archive suffix
+        id: set_archive_suffix
         run: |
-          git -C ${{ steps.pull.outputs.basename }} config pack.threads ${{ inputs.pack-threads }}
-          git -C ${{ steps.pull.outputs.basename }} config pack.windowMemory ${{ inputs.pack-windowMemory }}
+          ARCHIVE_MAX=$(
+              (
+                echo "${{ inputs.tag }}-archive-0" ;
+                gh api --paginate /orgs/vulsio/packages/container/vuls-data-db-archive/versions |
+                  jq -r '.[] | .metadata.container.tags[0] | select(. // "" | startswith("${{ inputs.tag }}-archive-"))'
+              ) |
+              sed -e 's/${{ inputs.tag }}-archive-//' |
+              sort -rn |
+              head -1
+          )
+          ARCHIVE_SUFFIX=archive-$(( ${ARCHIVE_MAX} + 1 ))
+          echo "archive_suffix=${ARCHIVE_SUFFIX}" | tee ${GITHUB_OUTPUT}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run git gc
-        run: /usr/bin/time -v git -C ${{ steps.pull.outputs.basename }} gc --aggressive
-
-      - name: Print git gc after .git size
-        id: after
-        run: echo "size=$(du -sh ${{ steps.pull.outputs.basename }}/.git/ | cut -f1)" >> $GITHUB_OUTPUT
-
-      - name: Summarize git gc
+      - name: Split archive
+        id: split_archive
         run: |
-          (
-            echo ### git gc --aggressize ${{ steps.pull.outputs.basename }}
-            echo "\`\`\`md"
-            echo "|      | before | after | "
-            echo "| :--: | :----: | :---: | "
-            echo "| size | ${{ steps.before.outputs.size }} | ${{ steps.after.outputs.size }} | "
-            echo "\`\`\`"
-          ) >> $GITHUB_STEP_SUMMARY
+          mkdir latest/
+          cd latest/
+          tar -xf ../${{ inputs.tag }}.tar.zst
+          mv ${{ inputs.tag }} ${{ inputs.tag }}.tmp
 
-      - name: Create dotgit tarball
-        run: |
-          mv ${{ steps.pull.outputs.basename }} ${{ steps.pull.outputs.basename }}.tmp
-          mkdir ${{ steps.pull.outputs.basename }}
-          mv ${{ steps.pull.outputs.basename }}.tmp/.git ${{ steps.pull.outputs.basename }}
-          tar --remove-files -acf ${{ steps.pull.outputs.basename }}.tar.zst ${{ steps.pull.outputs.basename }}
+          echo "Create the latest repository..."
+          git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.tmp ${{ inputs.tag }}
+          rm -rf ${{ inputs.tag }}.tmp
+          tar --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -247,6 +225,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
+      - name: Push archive dotgit
         run: |
-          oras push ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} ${{ steps.pull.outputs.basename }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+          oras push ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }} ${{ inputs.tag }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+
+      - name: Push latest dotgit
+        run: |
+          cd latest/
+          oras push ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+
+  gc:
+    name: GC vulsio/vuls-data-db-archive:${{ needs.archive.outputs.tag }}
+    needs: [archive]
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: vulsio/vuls-data-db-archive
+      tag: ${{ needs.archive.outputs.tag }}
+      pack-threads: 2
+      pack-windowMemory: 4g
