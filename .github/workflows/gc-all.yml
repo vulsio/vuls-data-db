@@ -35,7 +35,7 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-epss
-            pack-threads: 2
+            pack-threads: 1
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-freebsd
             pack-threads: 2
@@ -53,11 +53,11 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-redhat-csaf
-            pack-threads: 2
-            pack-windowMemory: 4g
+            pack-threads: 4
+            pack-windowMemory: 2g
           - tag: vuls-data-extracted-redhat-csaf-rhel
-            pack-threads: 2
-            pack-windowMemory: 4g
+            pack-threads: 4
+            pack-windowMemory: 2g
           - tag: vuls-data-extracted-redhat-ovalv1
             pack-threads: 2
             pack-windowMemory: 4g
@@ -320,7 +320,7 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-vex
-            pack-threads: 2
+            pack-threads: 1
             pack-windowMemory: 4g
           - tag: vuls-data-raw-rocky-errata
             pack-threads: 2
