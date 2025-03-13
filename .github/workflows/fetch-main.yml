@@ -186,7 +186,7 @@ jobs:
           mv vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tmp
           mkdir vuls-data-raw-${{ inputs.target }}
           mv vuls-data-raw-${{ inputs.target }}.tmp/.git vuls-data-raw-${{ inputs.target }}
-          tar --remove-files -acf vuls-data-raw-${{ inputs.target }}.tar.zst vuls-data-raw-${{ inputs.target }}
+          tar --warning=no-file-removed --remove-files -acf vuls-data-raw-${{ inputs.target }}.tar.zst vuls-data-raw-${{ inputs.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

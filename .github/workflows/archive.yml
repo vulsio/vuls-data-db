@@ -216,7 +216,7 @@ jobs:
           echo "Create the latest repository..."
           git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.tmp ${{ inputs.tag }}
           rm -rf ${{ inputs.tag }}.tmp
-          tar --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }}
+          tar --warning=no-file-removed --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

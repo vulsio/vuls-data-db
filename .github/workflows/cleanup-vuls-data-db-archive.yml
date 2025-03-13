@@ -1,0 +1,15 @@
+name: Cleanup vulsio/vuls-data-db-archive
+
+on:
+  workflow_run:
+    workflows: [Archive Raw]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Cleanup untagged images in vulsio/vuls-data-db-archive
+    uses: ./.github/workflows/cleanup.yml
+    with:
+      package: vuls-data-db-archive

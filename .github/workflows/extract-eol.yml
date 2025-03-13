@@ -81,7 +81,7 @@ jobs:
           mv vuls-data-extracted-eol vuls-data-extracted-eol.tmp
           mkdir vuls-data-extracted-eol
           mv vuls-data-extracted-eol.tmp/.git vuls-data-extracted-eol
-          tar --remove-files -acf vuls-data-extracted-eol.tar.zst vuls-data-extracted-eol
+          tar --warning=no-file-removed --remove-files -acf vuls-data-extracted-eol.tar.zst vuls-data-extracted-eol
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
