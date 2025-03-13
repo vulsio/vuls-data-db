@@ -792,5 +792,49 @@
       "updated_at": "2025-02-20T04:09:04Z",
       "size": "16363098932"
     }
+  },
+  "vulsio/vuls-data-db-archive": {
+    "vuls-data-raw-sample-archive-1": {
+      "name": "sha256:7dd959e785c27b54861bd6c9b30533b8fef01445d66e642af1b471de8d91602a",
+      "created_at": "2025-03-13T05:29:14Z",
+      "updated_at": "2025-03-13T05:29:14Z",
+      "size": "14501457"
+    },
+    "vuls-data-raw-redhat-vex-archive-1": {
+      "name": "sha256:de4af78bcc16d9197401f86ace068ae426b77cdad3e7b1348992266f9f45795f",
+      "created_at": "2025-03-13T03:15:46Z",
+      "updated_at": "2025-03-13T03:15:46Z",
+      "size": "794033096"
+    },
+    "vuls-data-raw-epss-archive-2": {
+      "name": "sha256:0a2a35b2d8af35f4acd17785efd26c678d508695f5f9aa64fbc7e7851bc3e61c",
+      "created_at": "2025-03-09T07:06:30Z",
+      "updated_at": "2025-03-09T07:06:30Z",
+      "size": "1638926767"
+    },
+    "vuls-data-raw-epss-archive-1": {
+      "name": "sha256:1ec44637a552e5c8af24fb478089b9adeba51fb7620856f510d502e61fc06268",
+      "created_at": "2025-03-08T18:07:56Z",
+      "updated_at": "2025-03-08T18:07:56Z",
+      "size": "1645365646"
+    },
+    "vuls-data-raw-ubuntu-oval-archive-1": {
+      "name": "sha256:f9129f83227b7e18ef05346824056c524362acc259096057c77178110f04c0b2",
+      "created_at": "2025-03-08T16:13:58Z",
+      "updated_at": "2025-03-08T16:13:58Z",
+      "size": "1845051411"
+    },
+    "vuls-data-raw-windows-msuc-archive-1": {
+      "name": "sha256:2cb586319e59f79cb993854439f43f1ae69435b252a4e665759a1c5ea5243ec5",
+      "created_at": "2025-03-08T15:27:43Z",
+      "updated_at": "2025-03-08T15:27:43Z",
+      "size": "1338321097"
+    },
+    "vuls-data-raw-debian-oval-archive-1": {
+      "name": "sha256:172db61c0cc7f9501d7fb17c0af456d8d61c76e48db217ce2c4b5715d241b9f6",
+      "created_at": "2025-03-08T14:19:31Z",
+      "updated_at": "2025-03-08T14:19:31Z",
+      "size": "1083303049"
+    }
   }
 }
