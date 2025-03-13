@@ -47,7 +47,7 @@ jobs:
         run: |
           mkdir ${{ inputs.target }}
           mv .git ${{ inputs.target }}
-          tar --warning=no-file-removed --remove-files -acf ${{ inputs.target }}.tar.zst ${{ inputs.target }}
+          tar --remove-files -acf ${{ inputs.target }}.tar.zst ${{ inputs.target }} || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

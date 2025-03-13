@@ -76,7 +76,7 @@ jobs:
           mv vuls-data-raw-epss vuls-data-raw-epss.tmp
           mkdir vuls-data-raw-epss
           mv vuls-data-raw-epss.tmp/.git vuls-data-raw-epss
-          tar --warning=no-file-removed --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss
+          tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
