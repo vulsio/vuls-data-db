@@ -2,7 +2,8 @@ name: Cleanup vulsio/vuls-data-db
 
 on:
   workflow_run:
-    workflows: [Fetch All, Extract All, Restore All, Git GC All]
+    workflows:
+      [Fetch All, Extract All, Truncate Extracted, Restore All, Git GC All]
     types:
       - completed
   workflow_dispatch:
