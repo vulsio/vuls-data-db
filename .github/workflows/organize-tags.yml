@@ -39,6 +39,8 @@ jobs:
             else . end
           )')" '.["vulsio/${{ inputs.package }}"] |= $new' images.json > tmp.json
           mv tmp.json images.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update layer size
         run: |
