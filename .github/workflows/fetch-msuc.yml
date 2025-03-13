@@ -89,7 +89,7 @@ jobs:
           vuls-data-update fetch windows-msuc --dir vuls-data-raw-windows-msuc ${{ matrix.target }}
 
       - name: Create tarball
-        run: tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
+        run: tar --warning=no-file-removed --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -161,7 +161,7 @@ jobs:
           mv vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tmp
           mkdir vuls-data-raw-windows-msuc
           mv vuls-data-raw-windows-msuc.tmp/.git vuls-data-raw-windows-msuc
-          tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
+          tar --warning=no-file-removed --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
