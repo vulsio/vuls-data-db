@@ -1,5 +1,17 @@
 {
   "vulsio/vuls-data-db": {
+    "vuls-data-extracted-redhat-csaf-rhel": {
+      "name": "sha256:45e97dbbd9546b3c10eabb7682a4154ca6a749e121f86fb3aec64c580a9653d2",
+      "created_at": "2025-03-13T11:12:59Z",
+      "updated_at": "2025-03-13T11:12:59Z",
+      "size": "2877866886"
+    },
+    "vuls-data-extracted-redhat-vex-rhel": {
+      "name": "sha256:97d76445798193d1c750f221c094cf1a4bea582f81ba877a522425332db94447",
+      "created_at": "2025-03-13T08:03:34Z",
+      "updated_at": "2025-03-13T08:03:34Z",
+      "size": "367927407"
+    },
     "vuls-data-extracted-sample": {
       "name": "sha256:ff01e0d12d4f0ec100dcc87c6cfff526e4531f7a7634a6ea945439d7d8881e5f",
       "created_at": "2025-03-13T05:30:06Z",
@@ -11,12 +23,6 @@
       "created_at": "2025-03-13T05:28:19Z",
       "updated_at": "2025-03-13T05:28:19Z",
       "size": "6072320"
-    },
-    "vuls-data-extracted-redhat-vex-rhel": {
-      "name": "sha256:1dce986fbd6d068ab00056150acf6fdc7e8a095910e536eb5a564d3e6d613a18",
-      "created_at": "2025-03-13T04:47:41Z",
-      "updated_at": "2025-03-13T04:47:41Z",
-      "size": "366456441"
     },
     "vuls-data-extracted-redhat-ovalv2": {
       "name": "sha256:8ff5784e7a336da18f2f095f749c93e207bd9c2013d9213f516d4f3720aa37b0",
@@ -695,12 +701,6 @@
       "created_at": "2025-03-13T01:24:06Z",
       "updated_at": "2025-03-13T01:24:06Z",
       "size": "19256713"
-    },
-    "vuls-data-extracted-redhat-csaf-rhel": {
-      "name": "sha256:ab510fe27793a0514e7bcf990a2fcdb77a7151287eca60b3401aa81e61ea7838",
-      "created_at": "2025-03-12T21:36:07Z",
-      "updated_at": "2025-03-12T21:36:07Z",
-      "size": "2639037629"
     },
     "vuls-data-raw-ubuntu-osv": {
       "name": "sha256:8ac0320f1368de5815b82d57398d9a04a2bd20a440cfadb3120505e93693e31c",
