@@ -125,6 +125,7 @@ jobs:
 
           echo "Create the trucated repository..."
           git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.full ${{ inputs.tag }}
+          git -C ${{ inputs.tag }} reset
           git -C ${{ inputs.tag }} branch nightly origin/nightly
 
           rm -rf ${{ inputs.tag }}.full
