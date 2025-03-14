@@ -95,7 +95,7 @@ jobs:
           mv vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tmp
           mkdir vuls-data-extracted-nvd-api-cve
           mv vuls-data-extracted-nvd-api-cve.tmp/.git vuls-data-extracted-nvd-api-cve
-          tar --warning=no-file-removed --remove-files -acf vuls-data-extracted-nvd-api-cve.tar.zst vuls-data-extracted-nvd-api-cve
+          tar --remove-files -acf vuls-data-extracted-nvd-api-cve.tar.zst vuls-data-extracted-nvd-api-cve || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

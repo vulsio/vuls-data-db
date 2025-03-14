@@ -129,7 +129,7 @@ jobs:
           git -C ${{ inputs.tag }} branch nightly origin/nightly
 
           rm -rf ${{ inputs.tag }}.full
-          tar --warning=no-file-removed --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }}
+          tar --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }} || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

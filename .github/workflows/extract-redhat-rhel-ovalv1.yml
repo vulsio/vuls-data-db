@@ -99,7 +99,7 @@ jobs:
           mv vuls-data-extracted-redhat-ovalv1-rhel vuls-data-extracted-redhat-ovalv1-rhel.tmp
           mkdir vuls-data-extracted-redhat-ovalv1-rhel
           mv vuls-data-extracted-redhat-ovalv1-rhel.tmp/.git vuls-data-extracted-redhat-ovalv1-rhel
-          tar --warning=no-file-removed --remove-files -acf vuls-data-extracted-redhat-ovalv1-rhel.tar.zst vuls-data-extracted-redhat-ovalv1-rhel
+          tar --remove-files -acf vuls-data-extracted-redhat-ovalv1-rhel.tar.zst vuls-data-extracted-redhat-ovalv1-rhel || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

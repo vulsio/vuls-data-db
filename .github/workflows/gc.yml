@@ -236,7 +236,7 @@ jobs:
           mv ${{ steps.pull.outputs.basename }} ${{ steps.pull.outputs.basename }}.tmp
           mkdir ${{ steps.pull.outputs.basename }}
           mv ${{ steps.pull.outputs.basename }}.tmp/.git ${{ steps.pull.outputs.basename }}
-          tar --warning=no-file-removed --remove-files -acf ${{ steps.pull.outputs.basename }}.tar.zst ${{ steps.pull.outputs.basename }}
+          tar --remove-files -acf ${{ steps.pull.outputs.basename }}.tar.zst ${{ steps.pull.outputs.basename }} || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3

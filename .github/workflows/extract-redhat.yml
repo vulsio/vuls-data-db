@@ -106,7 +106,7 @@ jobs:
           mv vuls-data-extracted-${{ inputs.target }} vuls-data-extracted-${{ inputs.target }}.tmp
           mkdir vuls-data-extracted-${{ inputs.target }}
           mv vuls-data-extracted-${{ inputs.target }}.tmp/.git vuls-data-extracted-${{ inputs.target }}
-          tar --warning=no-file-removed --remove-files -acf vuls-data-extracted-${{ inputs.target }}.tar.zst vuls-data-extracted-${{ inputs.target }}
+          tar --remove-files -acf vuls-data-extracted-${{ inputs.target }}.tar.zst vuls-data-extracted-${{ inputs.target }} || [[ $? == 1 ]]
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
