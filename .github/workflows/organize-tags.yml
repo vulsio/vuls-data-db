@@ -61,6 +61,11 @@ jobs:
             mv tmp.json images.json
           done
 
+      - name: Sort images.json
+        run: |
+          jq --sort-keys . images.json > tmp.json
+          mv tmp.json images.json
+
       - name: Set Git config
         run: |
           git config user.email "action@github.com"
