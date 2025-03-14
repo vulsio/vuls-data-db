@@ -38,7 +38,6 @@ on:
           - vuls-data-raw-debian-oval
           - vuls-data-raw-debian-security-tracker-api
           - vuls-data-raw-debian-security-tracker-salsa
-          - vuls-data-raw-epss
           - vuls-data-raw-erlang-ghsa
           - vuls-data-raw-erlang-osv
           - vuls-data-raw-exploit-exploitdb
