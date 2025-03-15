@@ -56,7 +56,7 @@ jobs:
             rm -rf vuls-data-raw-epss/${y}
             tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
             
-            oras push ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.data.layer.v1.tar+zstd
+            oras push ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
             tags+=("\"vuls-data-raw-epss-archive-$(( ${y} - 2020 ))\"")
 
             rm -rf vuls-data-raw-epss/ vuls-data-raw-epss.tar.zst
@@ -79,7 +79,7 @@ jobs:
           rm -rf vuls-data-raw-epss/$(date "+%Y")
           tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
 
-          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.data.layer.v1.tar+zstd
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
 
   gc:
     name: GC vulsio/vuls-data-db-archive:${{ matrix.tag }}
