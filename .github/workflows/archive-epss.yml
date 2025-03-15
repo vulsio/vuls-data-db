@@ -66,7 +66,18 @@ jobs:
 
       - name: Push latest
         run: |
+          cd vuls-data-raw-epss/
+
+          mkdir vuls-data-raw-epss/
+          mv $(date "+%Y") vuls-data-raw-epss
+          git -C vuls-data-raw-epss -c init.defaultBranch=main init .
+          git -C vuls-data-raw-epss config user.email "action@github.com"
+          git -C vuls-data-raw-epss config user.name "GitHub Action"
+          git -C vuls-data-raw-epss add $(date "+%Y")
+          git -C vuls-data-raw-epss commit -m "update"
+          rm -rf vuls-data-raw-epss/$(date "+%Y")
           tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
+
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.data.layer.v1.tar+zstd
 
   gc:
