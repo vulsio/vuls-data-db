@@ -48,7 +48,9 @@ jobs:
 
             mkdir vuls-data-raw-epss/
             mv ${y} vuls-data-raw-epss
-            git -C vuls-data-raw-epss init .
+            git -C vuls-data-raw-epss -c init.defaultBranch=main init .
+            git -C vuls-data-raw-epss config user.email "action@github.com"
+            git -C vuls-data-raw-epss config user.name "GitHub Action"
             git -C vuls-data-raw-epss add ${y}
             git -C vuls-data-raw-epss commit -m "update"
             rm -rf vuls-data-raw-epss/${y}
