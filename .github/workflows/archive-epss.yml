@@ -1,0 +1,82 @@
+name: Archive EPSS
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  archive:
+    name: Archive vuls-data-raw-epss
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.push_archive.outputs.tags }}
+    steps:
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          tar -xf vuls-data-raw-epss.tar.zst
+          rm vuls-data-raw-epss.tar.zst
+          git -C vuls-data-raw-epss restore .
+
+      - name: Push archive
+        id: push_archive
+        run: |
+          cd vuls-data-raw-epss/
+
+          tags=()
+          for y in *; do
+            if [[ ${y} == $(date "+%Y") ]]; then
+              continue
+            fi
+
+            mkdir vuls-data-raw-epss/
+            mv ${y} vuls-data-raw-epss
+            git -C vuls-data-raw-epss init .
+            git -C vuls-data-raw-epss add ${y}
+            git -C vuls-data-raw-epss commit -m "update"
+            rm -rf vuls-data-raw-epss/${y}
+            tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
+            
+            oras push ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.data.layer.v1.tar+zstd
+            tags+=("\"vuls-data-raw-epss-archive-$(( ${y} - 2020 ))\"")
+
+            rm -rf vuls-data-raw-epss/ vuls-data-raw-epss.tar.zst
+          done
+
+          echo "tags=[${tags[*]}]" >> "$GITHUB_OUTPUT"
+
+      - name: Push latest
+        run: |
+          tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
+          oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.data.layer.v1.tar+zstd
+
+  gc:
+    name: GC vulsio/vuls-data-db-archive:${{ matrix.tag }}
+    needs: [archive]
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJson(needs.archive.outputs.tags) }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: vulsio/vuls-data-db-archive
+      tag: ${{ matrix.tag }}
+      pack-threads: 2
+      pack-windowMemory: 4g

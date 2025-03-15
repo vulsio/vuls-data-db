@@ -38,7 +38,6 @@ jobs:
           - "debian-oval"
           - "debian-security-tracker-api"
           - "debian-security-tracker-salsa"
-          - "epss"
           - "erlang-ghsa"
           - "erlang-osv"
           - "exploit-exploitdb"
@@ -129,3 +128,21 @@ jobs:
     with:
       tag: vuls-data-raw-${{ matrix.target }}
       threshold-mb: 1024
+
+  check-archive-epss:
+    name: Check if today is April 1st
+    runs-on: ubuntu-latest
+    outputs:
+      do_archive: ${{ steps.archive_check.outputs.do_archive }}
+    steps:
+      - name: Decide whether to archive
+        id: archive_check
+        run: |
+          if [ "$(date +'%m-%d')" == "04-01" ]; then
+            echo "do_archive=true" >> $GITHUB_OUTPUT
+          fi
+
+  archive-epss:
+    if: ${{ needs.check-archive-epss.outputs.do_archive == 'true' }}
+    needs: [check-archive-epss]
+    uses: ./.github/workflows/archive-epss.yml
