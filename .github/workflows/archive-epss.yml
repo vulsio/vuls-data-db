@@ -62,9 +62,10 @@ jobs:
             rm -rf vuls-data-raw-epss/ vuls-data-raw-epss.tar.zst
           done
 
-          echo "tags=[${tags[*]}]" >> "$GITHUB_OUTPUT"
+          echo "tags=[$(IFS=,; echo "${tags[*]}")]" >> "$GITHUB_OUTPUT"
 
       - name: Push latest
+        if: ${{ steps.push_archive.outputs.tags != '[]' }}
         run: |
           cd vuls-data-raw-epss/
 
@@ -83,6 +84,7 @@ jobs:
   gc:
     name: GC vulsio/vuls-data-db-archive:${{ matrix.tag }}
     needs: [archive]
+    if: ${{ needs.archive.outputs.tags != '[]' }}
     strategy:
       fail-fast: false
       matrix:
