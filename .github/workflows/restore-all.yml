@@ -145,6 +145,7 @@ jobs:
           - vuls-data-raw-vulncheck-kev
           - vuls-data-raw-windows-bulletin
           - vuls-data-raw-windows-cvrf
+          - vuls-data-raw-windows-csaf
           - vuls-data-raw-windows-msuc
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv

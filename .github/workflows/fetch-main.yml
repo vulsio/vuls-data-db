@@ -114,6 +114,7 @@ on:
           - ubuntu-osv
           - windows-bulletin
           - windows-cvrf
+          - windows-csaf
           - windows-wsusscn2
           - wolfi-osv
 

@@ -121,6 +121,7 @@ jobs:
           - "vulncheck-kev"
           # - "windows-bulletin"
           - "windows-cvrf"
+          - "windows-csaf"
           - "windows-msuc"
           - "windows-wsusscn2"
           - "wolfi-osv"

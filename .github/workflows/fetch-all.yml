@@ -114,6 +114,7 @@ jobs:
           - "ubuntu-osv"
           # - "windows-bulletin"
           - "windows-cvrf"
+          - "windows-csaf"
           - "windows-wsusscn2"
           - "wolfi-osv"
     uses: ./.github/workflows/fetch-main.yml
