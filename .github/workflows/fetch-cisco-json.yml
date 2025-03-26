@@ -1,0 +1,88 @@
+name: Fetch Cisco JSON
+
+on:
+  workflow_call:
+    secrets:
+      CISCO_CLIENT_KEY:
+        required: true
+      CISCO_CLIENT_SECRET:
+        required: true
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    name: Fetch vuls-data-raw-cisco-json
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
+        run: |
+          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
+          tar -xf vuls-data-raw-cisco-json.tar.zst
+          rm vuls-data-raw-cisco-json.tar.zst
+
+      - name: Fetch
+        run: vuls-data-update fetch cisco-json --dir vuls-data-raw-cisco-json ${{ secrets.CISCO_CLIENT_KEY }} ${{ secrets.CISCO_CLIENT_SECRET }}
+
+      - name: Set Git config
+        run: |
+          git -C vuls-data-raw-cisco-json config user.email "action@github.com"
+          git -C vuls-data-raw-cisco-json config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C vuls-data-raw-cisco-json status --porcelain) ]]; then
+            git -C vuls-data-raw-cisco-json add .
+            git -C vuls-data-raw-cisco-json commit -m "update"
+          fi
+
+      - name: Create dotgit tarball
+        run: |
+          mv vuls-data-raw-cisco-json vuls-data-raw-cisco-json.tmp
+          mkdir vuls-data-raw-cisco-json
+          mv vuls-data-raw-cisco-json.tmp/.git vuls-data-raw-cisco-json
+          tar --remove-files -acf vuls-data-raw-cisco-json.tar.zst vuls-data-raw-cisco-json || [[ $? == 1 ]]
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
+        run: |
+          oras push ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json vuls-data-raw-cisco-json.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd

@@ -57,6 +57,9 @@ jobs:
           - vuls-data-raw-cargo-ghsa
           - vuls-data-raw-cargo-osv
           - vuls-data-raw-chainguard-osv
+          - vuls-data-raw-cisco-csaf
+          - vuls-data-raw-cisco-cvrf
+          - vuls-data-raw-cisco-json
           - vuls-data-raw-composer-ghsa
           - vuls-data-raw-composer-glsa
           - vuls-data-raw-composer-osv

@@ -121,6 +121,15 @@ jobs:
           - tag: vuls-data-raw-chainguard-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-cisco-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cisco-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cisco-json
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-composer-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
