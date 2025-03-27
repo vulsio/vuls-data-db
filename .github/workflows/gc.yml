@@ -216,11 +216,12 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C ${{ steps.pull.outputs.basename }} config gc.auto 0
           git -C ${{ steps.pull.outputs.basename }} config pack.threads ${{ inputs.pack-threads }}
           git -C ${{ steps.pull.outputs.basename }} config pack.windowMemory ${{ inputs.pack-windowMemory }}
 
       - name: Run git gc
-        run: /usr/bin/time -v git -C ${{ steps.pull.outputs.basename }} gc --aggressive
+        run: /usr/bin/time -v git -C ${{ steps.pull.outputs.basename }} gc --aggressive --force
 
       - name: Print git gc after .git size
         id: after
