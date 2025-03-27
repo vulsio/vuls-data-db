@@ -116,6 +116,7 @@ on:
           - vuls-data-raw-ubuntu-cve-tracker
           - vuls-data-raw-ubuntu-osv
           - vuls-data-raw-ubuntu-oval
+          - vuls-data-raw-ubuntu-vex
           - vuls-data-raw-vulncheck-kev
           - vuls-data-raw-windows-bulletin
           - vuls-data-raw-windows-cvrf

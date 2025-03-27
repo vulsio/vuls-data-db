@@ -317,6 +317,9 @@ jobs:
           - tag: vuls-data-raw-ubuntu-oval
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-vex
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-vulncheck-kev
             pack-threads: 2
             pack-windowMemory: 4g
