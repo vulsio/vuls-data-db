@@ -164,3 +164,23 @@ jobs:
       target: ${{ matrix.target }}
     secrets:
       VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
+
+  fetch-cisco-json:
+    name: Fetch vuls-data-raw-cisco-json
+    uses: ./.github/workflows/fetch-cisco-json.yml
+    secrets:
+      CISCO_CLIENT_KEY: ${{ secrets.CISCO_CLIENT_KEY }}
+      CISCO_CLIENT_SECRET: ${{ secrets.CISCO_CLIENT_SECRET }}
+
+  fetch-cisco-cvrf-or-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    needs: fetch-cisco-json
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "cisco-cvrf"
+          - "cisco-csaf"
+    uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
+    with:
+      target: ${{ matrix.target }}
