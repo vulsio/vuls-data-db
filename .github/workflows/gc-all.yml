@@ -385,6 +385,9 @@ jobs:
           - tag: vuls-data-raw-windows-cvrf
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-windows-msuc
             pack-threads: 2
             pack-windowMemory: 4g
