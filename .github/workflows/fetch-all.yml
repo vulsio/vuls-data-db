@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "0 */12 * * *"
   workflow_dispatch:
+    inputs:
+      gc_after_fetch:
+        description: "Git GC after fetch"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   fetch-main:
@@ -184,3 +190,40 @@ jobs:
     uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
     with:
       target: ${{ matrix.target }}
+
+  check:
+    name: Decide whether to Git GC
+    if: ${{ success() || failure() }}
+    needs:
+      [
+        fetch-main,
+        fetch-nvd-api,
+        fetch-msuc,
+        fetch-fedora,
+        fetch-epss,
+        fetch-fortinet-cvrf,
+        fetch-vulncheck,
+        fetch-cisco-json,
+        fetch-cisco-cvrf-or-csaf,
+      ]
+    runs-on: ubuntu-latest
+    outputs:
+      do_gc: ${{ steps.check.outputs.do_gc }}
+    steps:
+      - name: Check if Git GC is needed
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "do_gc=${{ inputs.gc_after_fetch }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [[ $(( ${{ github.run_number }} % 10 )) -eq 0 ]]; then
+            echo "do_gc=true" >> $GITHUB_OUTPUT
+          fi
+
+  gc:
+    name: Git GC Raw
+    needs: check
+    if: ${{ needs.check.outputs.do_gc == 'true' }}
+    uses: ./.github/workflows/gc-raw.yml

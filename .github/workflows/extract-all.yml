@@ -6,6 +6,12 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      gc_after_extract:
+        description: "Git GC after extract"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   extract-main:
@@ -361,3 +367,41 @@ jobs:
     uses: ./.github/workflows/extract-eol.yml
     with:
       branch: nightly
+
+  check:
+    name: Decide whether to Git GC
+    if: ${{ success() || failure() }}
+    needs:
+      [
+        extract-main,
+        extract-main-nightly,
+        extract-redhat,
+        extract-redhat-nightly,
+        extract-redhat-csaf-or-vex-rhel,
+        extract-redhat-csaf-or-vex-rhel-nightly,
+        extract-nvd-api-cve,
+        extract-nvd-api-cve-nightly,
+        extract-eol,
+        extract-eol-nightly,
+      ]
+    runs-on: ubuntu-latest
+    outputs:
+      do_gc: ${{ steps.check.outputs.do_gc }}
+    steps:
+      - name: Check if Git GC is needed
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "do_gc=${{ inputs.gc_after_extract }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [[ $(( ${{ github.run_number }} % 10 )) -eq 0 ]]; then
+            echo "do_gc=true" >> $GITHUB_OUTPUT
+          fi
+
+  gc:
+    name: Git GC Extracted
+    needs: check
+    if: ${{ needs.check.outputs.do_gc == 'true' }}
+    uses: ./.github/workflows/gc-extracted.yml

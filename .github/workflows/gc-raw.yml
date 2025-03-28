@@ -1,84 +1,16 @@
-name: Git GC All
+name: Git GC Raw
 
 on:
+  workflow_call:
   workflow_dispatch:
 
 jobs:
-  gc-all:
+  gc:
     name: Git GC ${{ matrix.tag }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - tag: vuls-data-extracted-alma-errata
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-alma-osv
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-alpine-osv
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-alpine-secdb
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-amazon
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-arch
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-cargo-ghsa
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-eol
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-epss
-            pack-threads: 1
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-freebsd
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-kev
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-mitre-v5
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-nvd-api-cve
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-oracle
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-csaf
-            pack-threads: 4
-            pack-windowMemory: 2g
-          - tag: vuls-data-extracted-redhat-csaf-rhel
-            pack-threads: 4
-            pack-windowMemory: 2g
-          - tag: vuls-data-extracted-redhat-ovalv1
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-ovalv1-rhel
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-ovalv2
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-ovalv2-rhel
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-vex
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-vex-rhel
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-rocky-errata
-            pack-threads: 2
-            pack-windowMemory: 4g
           - tag: vuls-data-raw-alma-errata
             pack-threads: 2
             pack-windowMemory: 4g
