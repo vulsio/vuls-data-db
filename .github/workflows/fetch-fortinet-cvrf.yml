@@ -3,10 +3,35 @@ name: Fetch Fortinet CVRF
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      fetch_all:
+        description: "Fetch all Fortinet CVRF"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
+  check:
+    name: Decide whether to fetch all
+    runs-on: ubuntu-latest
+    outputs:
+      do_fetch_all: ${{ steps.check.outputs.fetch_all }}
+    steps:
+      - name:
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "fetch_all=${{ inputs.fetch_all }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [[ $(( ${{ github.run_number }} % 15 )) -eq 0 ]]; then
+            echo "fetch_all=true" >> $GITHUB_OUTPUT
+          fi
+
   fetch:
     name: Fetch vuls-data-raw-fortinet-cvrf
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -53,17 +78,29 @@ jobs:
           rm vuls-data-raw-fortinet-cvrf.tar.zst
           git -C vuls-data-raw-fortinet-cvrf restore .
 
-      - name: Fetch
-        run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf --concurrency 2 $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
-
       - name: Set Git config
         run: |
           git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
           git -C vuls-data-raw-fortinet-cvrf config user.name "GitHub Action"
 
-      - name: Restore
+      - name: Fetch All
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+        run: vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf --concurrency 1 --wait 3 $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
+
+      - name: Restore FG-IR-012-00[1-8]|FG-IR-013-001
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
         run: |
           git -C vuls-data-raw-fortinet-cvrf restore 2012/FG-IR-012-001.json 2012/FG-IR-012-002.json 2012/FG-IR-012-003.json 2012/FG-IR-012-004.json 2012/FG-IR-012-005.json 2012/FG-IR-012-006.json 2012/FG-IR-012-007.json 2012/FG-IR-012-008.json 2013/FG-IR-013-001.json
+
+      - name: Fetch RSS
+        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
+        run: |
+          vuls-data-update fetch fortinet-cvrf --dir vuls-data-raw-fortinet-cvrf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | tr '\n' ' ')
+
+      - name: Restore all deleted files
+        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
+        run: |
+          git -C vuls-data-raw-fortinet-cvrf restore $(git -C vuls-data-raw-fortinet-cvrf ls-files --deleted)
 
       - name: Commit
         run: |
