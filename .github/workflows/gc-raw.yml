@@ -224,6 +224,15 @@ jobs:
           - tag: vuls-data-raw-oss-fuzz-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-paloalto-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-paloalto-json
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-paloalto-list
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-pip-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
