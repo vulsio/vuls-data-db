@@ -147,6 +147,6 @@ jobs:
           fi
 
   archive-epss:
-    if: ${{ needs.check-archive-epss.outputs.do_archive == 'true' }}
+    if: ${{ ( success() || failure() ) && needs.check-archive-epss.outputs.do_archive == 'true' }}
     needs: [check-archive-epss]
     uses: ./.github/workflows/archive-epss.yml
