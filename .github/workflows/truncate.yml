@@ -53,37 +53,41 @@ defaults:
     shell: bash
 
 jobs:
-  check:
-    name: Check if ${{ inputs.tag }} exceeds ${{ inputs.threshold-mb }}MB
-    runs-on: ubuntu-latest
-    outputs:
-      do_truncate: ${{ steps.truncate_check.outputs.do_truncate }}
-    steps:
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+  check-before-gc:
+    name: Check Layer Size before Git GC
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: ${{ inputs.tag }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: ${{ inputs.threshold-mb }}
 
-      - name: Decide whether to truncate
-        id: truncate_check
-        run: |
-          SIZE=$(oras manifest fetch ghcr.io/${{ github.repository }}:${{ inputs.tag }} | jq '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .size')
-          echo "repository size [KB]:" $(( ${SIZE} / 1024 ))
-          echo "repository size [MB]:" $(( ${SIZE} / 1024 / 1024 ))
-          if [ ${SIZE} -gt $((${{ inputs.threshold-mb }} * 1024 * 1024)) ]; then
-            echo "do_truncate=true" >> ${GITHUB_OUTPUT}
-          fi
+  gc:
+    name: Git GC ${{ inputs.tag }}
+    needs: [check-before-gc]
+    if: ${{ needs.check-before-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: ${{ inputs.tag }}
+      pack-threads: 2
+      pack-windowMemory: 4g
+
+  check-after-gc:
+    name: Check Layer Size after Git GC
+    needs: [gc]
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: ${{ inputs.tag }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: ${{ inputs.threshold-mb }}
 
   truncate:
     name: Truncate ${{ inputs.tag }}
     runs-on: ubuntu-latest
-    if: ${{ needs.check.outputs.do_truncate == 'true' }}
-    needs: [check]
+    needs: [check-after-gc]
+    if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
