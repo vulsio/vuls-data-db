@@ -403,5 +403,5 @@ jobs:
   gc:
     name: Git GC Extracted
     needs: check
-    if: ${{ needs.check.outputs.do_gc == 'true' }}
+    if: ${{ ( success() || failure() ) && needs.check.outputs.do_gc == 'true' }}
     uses: ./.github/workflows/gc-extracted.yml
