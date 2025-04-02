@@ -118,6 +118,7 @@ jobs:
           - "ubuntu-oval"
           - "ubuntu-cve-tracker"
           - "ubuntu-osv"
+          - "ubuntu-vex"
           # - "windows-bulletin"
           - "windows-cvrf"
           - "windows-csaf"
