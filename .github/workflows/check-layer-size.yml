@@ -1,0 +1,67 @@
+name: Check if layer size exceeds threshold
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+      media-type:
+        required: true
+        type: string
+      threshold-mb:
+        required: true
+        type: number
+    outputs:
+      exceeded:
+        value: ${{ jobs.check.outputs.exceeded }}
+  workflow_dispatch:
+    inputs:
+      repository:
+        required: true
+        default: vulsio/vuls-data-db
+        type: choice
+        options:
+          - vulsio/vuls-data-db
+          - vulsio/vuls-data-db-archive
+          - vulsio/vuls-data-db-backup
+      tag:
+        required: true
+        type: string
+      media-type:
+        required: true
+        default: "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd"
+        type: string
+      threshold-mb:
+        required: true
+        type: number
+
+jobs:
+  check:
+    name: Check if ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} exceeds ${{ inputs.threshold-mb }}MB
+    runs-on: ubuntu-latest
+    outputs:
+      exceeded: ${{ steps.check.outputs.exceeded }}
+    steps:
+      - name: Install Oras
+        run: |
+          # https://oras.land/docs/installation/#linux
+          VERSION="1.2.2"
+          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+          mkdir -p oras-install/
+          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
+          sudo mv oras-install/oras /usr/local/bin/
+          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+
+      - name: Check Layer Size
+        id: check
+        run: |
+          SIZE=$(oras manifest fetch ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} | jq '.layers.[] | select( .mediaType == "${{ inputs.media-type }}") | .size')
+          echo "repository size [KB]:" $(( ${SIZE} / 1024 ))
+          echo "repository size [MB]:" $(( ${SIZE} / 1024 / 1024 ))
+          if [ ${SIZE} -gt $((${{ inputs.threshold-mb }} * 1024 * 1024)) ]; then
+            echo "exceeded=true" >> $GITHUB_OUTPUT
+          fi
