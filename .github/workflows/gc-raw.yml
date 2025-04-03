@@ -332,6 +332,18 @@ jobs:
           - tag: vuls-data-raw-windows-csaf
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-advisory
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-vulnerability
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-product
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-deployment
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-windows-msuc
             pack-threads: 2
             pack-windowMemory: 4g
