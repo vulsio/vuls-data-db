@@ -84,6 +84,7 @@ jobs:
           - "nvd-feed-cpematch"
           - "oracle"
           - "oss-fuzz-osv"
+          - "paloalto-list"
           # - "perl-db"
           - "pip-ghsa"
           - "pip-glsa"
@@ -181,6 +182,7 @@ jobs:
 
   fetch-cisco-cvrf-or-csaf:
     name: Fetch vuls-data-raw-${{ matrix.target }}
+    if: ${{ success() || failure() }}
     needs: fetch-cisco-json
     strategy:
       fail-fast: false
@@ -189,6 +191,20 @@ jobs:
           - "cisco-cvrf"
           - "cisco-csaf"
     uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
+    with:
+      target: ${{ matrix.target }}
+
+  fetch-paloalto-json-or-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    if: ${{ success() || failure() }}
+    needs: fetch-main
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "paloalto-json"
+          - "paloalto-csaf"
+    uses: ./.github/workflows/fetch-paloalto-json-or-csaf.yml
     with:
       target: ${{ matrix.target }}
 
@@ -206,6 +222,7 @@ jobs:
         fetch-vulncheck,
         fetch-cisco-json,
         fetch-cisco-cvrf-or-csaf,
+        fetch-paloalto-json-or-csaf,
       ]
     runs-on: ubuntu-latest
     outputs:

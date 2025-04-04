@@ -85,6 +85,9 @@ on:
           - vuls-data-raw-nvd-feed-cve
           - vuls-data-raw-oracle
           - vuls-data-raw-oss-fuzz-osv
+          - vuls-data-raw-paloalto-csaf
+          - vuls-data-raw-paloalto-json
+          - vuls-data-raw-paloalto-list
           - vuls-data-raw-pip-ghsa
           - vuls-data-raw-pip-glsa
           - vuls-data-raw-pip-osv
