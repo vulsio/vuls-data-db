@@ -123,6 +123,10 @@ jobs:
           # - "windows-bulletin"
           - "windows-cvrf"
           - "windows-csaf"
+          - "windows-advisory"
+          - "windows-vulnerability"
+          - "windows-product"
+          - "windows-deployment"
           - "windows-wsusscn2"
           - "wolfi-osv"
     uses: ./.github/workflows/fetch-main.yml
