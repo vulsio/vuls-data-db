@@ -153,6 +153,10 @@ jobs:
           - vuls-data-raw-windows-bulletin
           - vuls-data-raw-windows-cvrf
           - vuls-data-raw-windows-csaf
+          - vuls-data-raw-windows-advisory
+          - vuls-data-raw-windows-vulnerability
+          - vuls-data-raw-windows-product
+          - vuls-data-raw-windows-deployment
           - vuls-data-raw-windows-msuc
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
