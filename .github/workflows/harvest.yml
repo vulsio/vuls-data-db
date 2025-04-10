@@ -1,0 +1,453 @@
+name: Harvest Main
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: false
+        type: string
+      do_fetch:
+        description: "Do fetch"
+        required: true
+        default: true
+        type: boolean
+      fetch_workflow:
+        description: "Fetch workflow"
+        required: true
+        default: fetch-main.yml
+        type: string
+      gc_after_fetch:
+        description: "Git GC after fetch"
+        required: true
+        default: false
+        type: boolean
+      gc_raw_pack-threads:
+        description: "Git GC pack threads for raw repository"
+        required: true
+        default: 2
+        type: number
+      gc_raw_pack-windowMemory:
+        description: "Git GC pack window memory for raw repository"
+        required: true
+        default: 4g
+        type: string
+      raw_layer_threshold-mb:
+        description: "Layer size threshold for raw repository"
+        required: true
+        default: 1024
+        type: number
+      do_extract:
+        description: "Do extract"
+        required: true
+        default: true
+        type: boolean
+      extract_workflow:
+        description: "Extract workflow"
+        required: true
+        default: extract-main.yml
+        type: string
+      gc_after_extract:
+        description: "Git GC after extract"
+        required: true
+        default: false
+        type: boolean
+      gc_extracted_pack-threads:
+        description: "Git GC pack threads for extracted repository"
+        required: true
+        default: 2
+        type: number
+      gc_extracted_pack-windowMemory:
+        description: "Git GC pack window memory for extracted repository"
+        required: true
+        default: 4g
+        type: string
+      extracted_layer_threshold-mb:
+        description: "Layer size threshold for extracted repository"
+        required: true
+        default: 1024
+        type: number
+      truncate_log-ratio:
+        description: "Log ratio for truncate"
+        required: true
+        default: 0.8
+        type: number
+    secrets:
+      NVD_API_KEY:
+        required: false
+      VULNCHECK_API_KEY:
+        required: false
+      CISCO_CLIENT_KEY:
+        required: false
+      CISCO_CLIENT_SECRET:
+        required: false
+  workflow_dispatch:
+
+jobs:
+  fetch-main:
+    name: Fetch Main
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-main.yml' }}
+    uses: ./.github/workflows/fetch-main.yml
+    with:
+      target: ${{ inputs.target }}
+
+  fetch-nvd-api:
+    name: Fetch NVD API
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-nvd-api.yml' }}
+    uses: ./.github/workflows/fetch-nvd-api.yml
+    with:
+      target: ${{ inputs.target }}
+    secrets:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+  fetch-msuc:
+    name: Fetch MSUC
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-msuc.yml' }}
+    uses: ./.github/workflows/fetch-msuc.yml
+
+  fetch-fedora:
+    name: Fetch Fedora
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-fedora.yml' }}
+    uses: ./.github/workflows/fetch-fedora.yml
+
+  fetch-epss:
+    name: Fetch EPSs
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-epss.yml' }}
+    uses: ./.github/workflows/fetch-epss.yml
+
+  fetch-fortinet-cvrf:
+    name: Fetch Fortinet CVRF
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-fortinet-cvrf.yml' }}
+    uses: ./.github/workflows/fetch-fortinet-cvrf.yml
+
+  fetch-vulncheck:
+    name: Fetch VulnCheck
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-vulncheck.yml' }}
+    uses: ./.github/workflows/fetch-vulncheck.yml
+    with:
+      target: ${{ inputs.target }}
+    secrets:
+      VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
+
+  fetch-cisco-json:
+    name: Fetch Cisco JSON
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-cisco-json.yml' }}
+    uses: ./.github/workflows/fetch-cisco-json.yml
+    secrets:
+      CISCO_CLIENT_KEY: ${{ secrets.CISCO_CLIENT_KEY }}
+      CISCO_CLIENT_SECRET: ${{ secrets.CISCO_CLIENT_SECRET }}
+
+  fetch-cisco-cvrf-or-csaf:
+    name: Fetch Cisco CVRF or CSAF
+    if: ${{ inputs.do_fetch && inputs.fetch_workflow == 'fetch-cisco-cvrf-or-csaf.yml' }}
+    needs: fetch-cisco-json
+    uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
+    with:
+      target: ${{ inputs.target }}
+
+  raw-gc-regular:
+    name: Git GC Raw Repository
+    needs:
+      [
+        fetch-main,
+        fetch-nvd-api,
+        fetch-msuc,
+        fetch-fedora,
+        fetch-epss,
+        fetch-fortinet-cvrf,
+        fetch-vulncheck,
+        fetch-cisco-json,
+        fetch-cisco-cvrf-or-csaf,
+      ]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && inputs.gc_after_fetch }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-raw-${{ inputs.target }}
+      pack-threads: ${{ inputs.gc_raw_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_raw_pack-windowMemory }}
+
+  raw-main-check-before-gc:
+    name: Check Layer Size before Git GC
+    needs: [raw-gc-regular]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && !inputs.gc_after_fetch }}
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-raw-${{ inputs.target }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: ${{ inputs.raw_layer_threshold-mb }}
+
+  raw-gc-archive:
+    name: Git GC Raw Repository
+    needs: [raw-main-check-before-gc]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && !inputs.gc_after_fetch && needs.raw-main-check-before-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-raw-${{ inputs.target }}
+      pack-threads: ${{ inputs.gc_raw_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_raw_pack-windowMemory }}
+
+  raw-main-check-after-gc:
+    name: Check Layer Size after Git GC
+    needs: [raw-gc-archive]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch }}
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-raw-${{ inputs.target }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: ${{ inputs.raw_layer_threshold-mb }}
+
+  archive-main:
+    name: Archive
+    needs: [raw-main-check-after-gc]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && needs.raw-main-check-after-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/archive-main.yml
+    with:
+      tag: vuls-data-raw-${{ inputs.target }}
+
+  gc-archive-main:
+    name: Git GC Archive Main
+    needs: [archive-main]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && needs.raw-check-after-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: vulsio/vuls-data-db-archive
+      tag: ${{ needs.archive-main.outputs.tag }}
+      pack-threads: ${{ inputs.gc_raw_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_raw_pack-windowMemory }}
+
+  raw-epss-check:
+    name: Check if today is April 1st
+    needs: [raw-gc-regular]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch }}
+    runs-on: ubuntu-latest
+    outputs:
+      do_archive: ${{ steps.archive_check.outputs.do_archive }}
+    steps:
+      - name: Decide whether to archive
+        id: archive_check
+        run: |
+          if [ "$(date +'%m-%d')" == "04-01" ]; then
+            echo "do_archive=true" >> $GITHUB_OUTPUT
+          fi
+
+  archive-epss:
+    name: Archive
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && needs.raw-epss-check.outputs.do_archive == 'true' }}
+    needs: [raw-epss-check]
+    uses: ./.github/workflows/archive-epss.yml
+
+  gc-archive-epss:
+    name: Git GC Archive EPSS
+    needs: [archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_fetch && needs.archive-epss.outputs.tags != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJson(needs.archive-epss.outputs.tags) }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: vulsio/vuls-data-db-archive
+      tag: ${{ matrix.tag }}
+      pack-threads: ${{ inputs.gc_raw_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_raw_pack-windowMemory }}
+
+  extract-main:
+    name: Extract Main (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-main.yml' }}
+    uses: ./.github/workflows/extract-main.yml
+    with:
+      target: ${{ inputs.target }}
+      branch: main
+
+  extract-main-nightly:
+    name: Extract Main (nightly)
+    needs: [extract-main]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-main.yml'}}
+    uses: ./.github/workflows/extract-main.yml
+    with:
+      target: ${{ inputs.target }}
+      branch: nightly
+
+  extract-redhat:
+    name: Extract RedHat (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat.yml' }}
+    uses: ./.github/workflows/extract-redhat.yml
+    with:
+      target: ${{ inputs.target }}
+      branch: main
+
+  extract-redhat-nightly:
+    name: Extract RedHat (nightly)
+    needs: [extract-redhat]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat.yml' }}
+    uses: ./.github/workflows/extract-redhat.yml
+    with:
+      target: ${{ inputs.target }}
+      branch: nightly
+
+  extract-redhat-rhel-ovalv1:
+    name: Extract RedHat RHEL OVALv1 (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat-rhel-ovalv1.yml' }}
+    uses: ./.github/workflows/extract-redhat-rhel-ovalv1.yml
+    with:
+      branch: main
+
+  extract-redhat-rhel-ovalv1-nightly:
+    name: Extract RedHat RHEL OVALv1 (nightly)
+    needs: [extract-redhat-rhel-ovalv1]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat-rhel-ovalv1.yml' }}
+    uses: ./.github/workflows/extract-redhat-rhel-ovalv1.yml
+    with:
+      branch: nightly
+
+  extract-redhat-rhel-ovalv2:
+    name: Extract RedHat RHEL OVALv2 (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat-rhel-ovalv2.yml' }}
+    uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
+    with:
+      branch: main
+
+  extract-redhat-rhel-ovalv2-nightly:
+    name: Extract RedHat RHEL OVALv2 (nightly)
+    needs: [extract-redhat-rhel-ovalv2]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat-rhel-ovalv2.yml' }}
+    uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
+    with:
+      branch: nightly
+
+  extract-redhat-rhel-csaf-or-vex:
+    name: Extract RedHat RHEL CSAF or VEX (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat-rhel-csaf-or-vex.yml' }}
+    uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
+    with:
+      target: ${{ inputs.target }}
+      branch: main
+
+  extract-redhat-rhel-csaf-or-vex-nightly:
+    name: Extract RedHat RHEL CSAF or VEX (nightly)
+    needs: [extract-redhat-rhel-csaf-or-vex]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-redhat-rhel-csaf-or-vex.yml' }}
+    uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
+    with:
+      target: ${{ inputs.target }}
+      branch: nightly
+
+  extract-nvd-api-cve:
+    name: Extract NVD API CVE (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-nvd-api-cve.yml' }}
+    uses: ./.github/workflows/extract-nvd-api-cve.yml
+    with:
+      branch: main
+
+  extract-nvd-api-cve-nightly:
+    name: Extract NVD API CVE (nightly)
+    needs: [extract-nvd-api-cve]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-nvd-api-cve.yml' }}
+    uses: ./.github/workflows/extract-nvd-api-cve.yml
+    with:
+      branch: nightly
+
+  extract-eol:
+    name: Extract EOL (main)
+    needs: [archive-main, archive-epss]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-eol.yml' }}
+    uses: ./.github/workflows/extract-eol.yml
+    with:
+      branch: main
+
+  extract-eol-nightly:
+    name: Extract EOL (nightly)
+    needs: [extract-eol]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.extract_workflow == 'extract-eol.yml' }}
+    uses: ./.github/workflows/extract-eol.yml
+    with:
+      branch: nightly
+
+  extracted-gc-regular:
+    name: Git GC Extracted Repository
+    needs:
+      [
+        extract-main,
+        extract-main-nightly,
+        extract-redhat,
+        extract-redhat-nightly,
+        extract-redhat-rhel-ovalv1,
+        extract-redhat-rhel-ovalv1-nightly,
+        extract-redhat-rhel-ovalv2,
+        extract-redhat-rhel-ovalv2-nightly,
+        extract-redhat-rhel-csaf-or-vex,
+        extract-redhat-rhel-csaf-or-vex-nightly,
+        extract-nvd-api-cve,
+        extract-nvd-api-cve-nightly,
+        extract-eol,
+        extract-eol-nightly,
+      ]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && inputs.gc_after_extract }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-extracted-${{ inputs.target }}
+      pack-threads: ${{ inputs.gc_raw_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_raw_pack-windowMemory }}
+
+  extracted-check-before-gc:
+    name: Check Layer Size before Git GC
+    needs: [extracted-gc-regular]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && !inputs.gc_after_extract }}
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-extracted-${{ inputs.target }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: ${{ inputs.raw_layer_threshold-mb }}
+
+  extracted-gc-truncate:
+    name: Git GC Extracted Repository
+    needs: [extracted-check-before-gc]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && !inputs.gc_after_extract && needs.extracted-check-before-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-extracted-${{ inputs.target }}
+      pack-threads: ${{ inputs.gc_extracted_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_extracted_pack-windowMemory }}
+
+  extracted-check-after-gc:
+    name: Check Layer Size after Git GC
+    needs: [extracted-gc-truncate]
+    if: ${{ ( success() || failure() ) && inputs.do_extract }}
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-extracted-${{ inputs.target }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: ${{ inputs.extracted_layer_threshold-mb }}
+
+  truncate:
+    name: Truncate
+    needs: [extracted-check-after-gc]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && needs.extracted-check-after-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/truncate.yml
+    with:
+      tag: vuls-data-extracted-${{ inputs.target }}
+      log-ratio: ${{ inputs.truncate_log-ratio }}
+
+  gc-truncate:
+    name: Git GC Truncate
+    needs: [truncate]
+    if: ${{ ( success() || failure() ) && inputs.do_extract && needs.extracted-check-after-gc.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: vuls-data-extracted-${{ inputs.target }}
+      pack-threads: ${{ inputs.gc_extracted_pack-threads }}
+      pack-windowMemory: ${{ inputs.gc_extracted_pack-windowMemory }}
