@@ -1,4 +1,4 @@
-name: Fetch Main
+name: Fetch Vanilla
 
 on:
   workflow_call:
@@ -21,22 +21,25 @@ on:
           - android-osv
           - arch
           - attack
+          - azure-oval
           - bitnami-osv
           - capec
+          # - cargo-db
           - cargo-ghsa
           - cargo-osv
-          # - cargo-db
+          - chainguard-secdb
           - chainguard-osv
+          # - composer-db
           - composer-ghsa
           - composer-glsa
           - composer-osv
-          # - composer-db
           - conan-glsa
           - cwe
           - debian-osv
           - debian-oval
           - debian-security-tracker-api
           - debian-security-tracker-salsa
+          # - eol
           - erlang-ghsa
           - erlang-osv
           - exploit-exploitdb
@@ -47,17 +50,18 @@ on:
           - gentoo
           - ghactions-osv
           - git-osv
+          # - golang-db
+          # - golang-vulndb
           - golang-ghsa
           - golang-glsa
           - golang-osv
-          # - golang-db
-          # - golang-vulndb
           - haskell-osv
           - jvn-feed-detail
           - jvn-feed-product
           - jvn-feed-rss
           - kev
           - linux-osv
+          - mageia-osv
           - maven-ghsa
           - maven-glsa
           - maven-osv
@@ -66,20 +70,24 @@ on:
           - mitre-v5
           - msf
           - netbsd
+          # - npm-db
           - npm-ghsa
           - npm-glsa
           - npm-osv
-          # - npm-db
           - nuget-ghsa
           - nuget-glsa
           - nuget-osv
           - nvd-feed-cve
           - nvd-feed-cpe
           - nvd-feed-cpematch
+          - openeuler-cvrf
+          - openeuler-csaf
           - oracle
           - oss-fuzz-osv
           - paloalto-list
           # - perl-db
+          - photon-cve
+          - photon-oval
           - pip-ghsa
           - pip-glsa
           - pip-osv
@@ -88,19 +96,19 @@ on:
           - pub-osv
           - r-osv
           - redhat-cve
-          - redhat-csaf
-          - redhat-cvrf
-          - redhat-repository-to-cpe
           - redhat-ovalv1
           - redhat-ovalv2
+          - redhat-cvrf
+          - redhat-csaf
           - redhat-vex
           - redhat-osv
+          - redhat-repository-to-cpe
           - rocky-errata
           - rocky-osv
+          # - rubygems-db
           - rubygems-ghsa
           - rubygems-glsa
           - rubygems-osv
-          # - rubygems-db
           - snort
           - suse-oval
           - suse-cvrf
@@ -112,8 +120,11 @@ on:
           - swift-osv
           - ubuntu-oval
           - ubuntu-cve-tracker
+          - ubuntu-usndb
           - ubuntu-osv
           - ubuntu-vex
+          - ubuntu-cve
+          - ubuntu-notice
           - windows-bulletin
           - windows-cvrf
           - windows-csaf
@@ -122,6 +133,7 @@ on:
           - windows-product
           - windows-deployment
           - windows-wsusscn2
+          - wolfi-secdb
           - wolfi-osv
 
 jobs:
