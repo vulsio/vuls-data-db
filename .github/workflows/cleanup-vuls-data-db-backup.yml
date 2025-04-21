@@ -5,7 +5,6 @@ on:
     workflows: [Backup Daily, Backup Weekly, Backup Monthly]
     types:
       - completed
-  workflow_dispatch:
 
 jobs:
   cleanup:
