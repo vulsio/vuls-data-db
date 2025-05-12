@@ -1,4 +1,4 @@
-name: Extract Main
+name: Extract Vanilla
 
 on:
   workflow_call:
@@ -24,16 +24,21 @@ on:
           # - android-osv
           - arch
           # - attack
+          # - azure-oval
           # - bitnami-osv
           # - capec
+          # - cargo-db
           # - cargo-ghsa
           # - cargo-osv
-          # - cargo-db
+          # - chainguard-secdb
           # - chainguard-osv
+          # - cisco-json
+          # - cisco-cvrf
+          # - cisco-csaf
+          # - composer-db
           # - composer-ghsa
           # - composer-glsa
           # - composer-osv
-          # - composer-db
           # - conan-glsa
           # - cwe
           # - debian-osv
@@ -54,17 +59,18 @@ on:
           # - gentoo
           # - ghactions-osv
           # - git-osv
+          # - golang-db
+          # - golang-vulndb
           # - golang-ghsa
           # - golang-glsa
           # - golang-osv
-          # - golang-db
-          # - golang-vulndb
           # - haskell-osv
           # - jvn-feed-detail
           # - jvn-feed-product
           # - jvn-feed-rss
           - kev
           # - linux-osv
+          # - mageia-osv
           # - maven-ghsa
           # - maven-glsa
           # - maven-osv
@@ -73,24 +79,32 @@ on:
           - mitre-v5
           # - msf
           # - netbsd
+          # - npm-db
           # - npm-ghsa
           # - npm-glsa
           # - npm-osv
-          # - npm-db
           # - nuget-ghsa
           # - nuget-glsa
           # - nuget-osv
           # - nvd-api-cpe
+          # - nvd-api-cpematch
           # - nvd-feed-cve
           # - nvd-feed-cpe
           # - nvd-feed-cpematch
+          # - openeuler-cvrf
+          # - openeuler-csaf
           - oracle
           # - oss-fuzz-osv
+          # - paloalto-list
+          # - paloalto-json
+          # - paloalto-csaf
           # - perl-db
+          # - photon-cve
+          # - photon-oval
+          # - pip-db
           # - pip-ghsa
           # - pip-glsa
           # - pip-osv
-          # - pip-db
           # - pub-ghsa
           # - pub-osv
           # - r-osv
@@ -99,10 +113,10 @@ on:
           # - redhat-osv
           - rocky-errata
           # - rocky-osv
+          # - rubygems-db
           # - rubygems-ghsa
           # - rubygems-glsa
           # - rubygems-osv
-          # - rubygems-db
           # - snort
           # - suse-oval
           # - suse-cvrf
@@ -114,13 +128,22 @@ on:
           # - swift-osv
           # - ubuntu-oval
           # - ubuntu-cve-tracker
+          # - ubuntu-usndb
           # - ubuntu-osv
           # - ubuntu-vex
+          # - ubuntu-cve
+          # - ubuntu-notice
           # - vulncheck-kev
           # - windows-bulletin
           # - windows-cvrf
+          # - windows-csaf
+          # - windows-advisory
+          # - windows-vulnerability
+          # - windows-product
+          # - windows-deployment
           # - windows-msuc
           # - windows-wsusscn2
+          # - wolfi-secdb
           # - wolfi-osv
       branch:
         required: true

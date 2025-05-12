@@ -3,7 +3,6 @@ name: Backup Monthly
 on:
   schedule:
     - cron: "0 0 1 * *"
-  workflow_dispatch:
 
 jobs:
   backup:
@@ -44,10 +43,12 @@ jobs:
           - vuls-data-raw-android-osv
           - vuls-data-raw-arch
           - vuls-data-raw-attack
+          - vuls-data-raw-azure-oval
           - vuls-data-raw-bitnami-osv
           - vuls-data-raw-capec
           - vuls-data-raw-cargo-ghsa
           - vuls-data-raw-cargo-osv
+          - vuls-data-raw-chainguard-secdb
           - vuls-data-raw-chainguard-osv
           - vuls-data-raw-cisco-csaf
           - vuls-data-raw-cisco-cvrf
@@ -61,6 +62,7 @@ jobs:
           - vuls-data-raw-debian-oval
           - vuls-data-raw-debian-security-tracker-api
           - vuls-data-raw-debian-security-tracker-salsa
+          # - vuls-data-raw-eol
           - vuls-data-raw-epss
           - vuls-data-raw-erlang-ghsa
           - vuls-data-raw-erlang-osv
@@ -84,6 +86,7 @@ jobs:
           - vuls-data-raw-jvn-feed-rss
           - vuls-data-raw-kev
           - vuls-data-raw-linux-osv
+          - vuls-data-raw-mageia-osv
           - vuls-data-raw-maven-ghsa
           - vuls-data-raw-maven-glsa
           - vuls-data-raw-maven-osv
@@ -104,11 +107,15 @@ jobs:
           - vuls-data-raw-nvd-feed-cpe
           - vuls-data-raw-nvd-feed-cpematch
           - vuls-data-raw-nvd-feed-cve
+          - vuls-data-raw-openeuler-cvrf
+          - vuls-data-raw-openeuler-csaf
           - vuls-data-raw-oracle
           - vuls-data-raw-oss-fuzz-osv
           - vuls-data-raw-paloalto-csaf
           - vuls-data-raw-paloalto-json
           - vuls-data-raw-paloalto-list
+          - vuls-data-raw-photon-cve
+          - vuls-data-raw-photon-oval
           - vuls-data-raw-pip-ghsa
           - vuls-data-raw-pip-glsa
           - vuls-data-raw-pip-osv
@@ -137,10 +144,13 @@ jobs:
           - vuls-data-raw-suse-oval
           - vuls-data-raw-swift-ghsa
           - vuls-data-raw-swift-osv
-          - vuls-data-raw-ubuntu-cve-tracker
-          - vuls-data-raw-ubuntu-osv
           - vuls-data-raw-ubuntu-oval
+          - vuls-data-raw-ubuntu-cve-tracker
+          - vuls-data-raw-ubuntu-usndb
+          - vuls-data-raw-ubuntu-osv
           - vuls-data-raw-ubuntu-vex
+          - vuls-data-raw-ubuntu-cve
+          - vuls-data-raw-ubuntu-notice
           - vuls-data-raw-vulncheck-kev
           - vuls-data-raw-windows-bulletin
           - vuls-data-raw-windows-cvrf
@@ -151,6 +161,7 @@ jobs:
           - vuls-data-raw-windows-deployment
           - vuls-data-raw-windows-msuc
           - vuls-data-raw-windows-wsusscn2
+          - vuls-data-raw-wolfi-secdb
           - vuls-data-raw-wolfi-osv
     uses: ./.github/workflows/backup.yml
     with:

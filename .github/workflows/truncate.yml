@@ -6,9 +6,6 @@ on:
       tag:
         required: true
         type: string
-      threshold-mb:
-        required: true
-        type: number
       log-ratio:
         required: true
         type: number
@@ -41,53 +38,14 @@ on:
           - vuls-data-extracted-redhat-vex
           - vuls-data-extracted-redhat-vex-rhel
           - vuls-data-extracted-rocky-errata
-      threshold-mb:
-        required: true
-        type: number
       log-ratio:
         required: true
         type: number
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
-  check-before-gc:
-    name: Check Layer Size before Git GC
-    uses: ./.github/workflows/check-layer-size.yml
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-      threshold-mb: ${{ inputs.threshold-mb }}
-
-  gc:
-    name: Git GC ${{ inputs.tag }}
-    needs: [check-before-gc]
-    if: ${{ needs.check-before-gc.outputs.exceeded == 'true' }}
-    uses: ./.github/workflows/gc.yml
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      pack-threads: 2
-      pack-windowMemory: 4g
-
-  check-after-gc:
-    name: Check Layer Size after Git GC
-    needs: [gc]
-    uses: ./.github/workflows/check-layer-size.yml
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-      threshold-mb: ${{ inputs.threshold-mb }}
-
   truncate:
     name: Truncate ${{ inputs.tag }}
     runs-on: ubuntu-latest
-    needs: [check-after-gc]
-    if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -125,7 +83,7 @@ jobs:
 
       - name: Truncate dotgit
         run: |
-          mv ${{ inputs.tag }} ${{inputs.tag}}.full
+          mv ${{ inputs.tag }} ${{ inputs.tag }}.full
 
           echo "Create the trucated repository..."
           git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.full ${{ inputs.tag }}

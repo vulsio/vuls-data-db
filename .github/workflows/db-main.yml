@@ -1,7 +1,6 @@
 name: DB
 on:
-  schedule:
-    - cron: "0 */6 * * *"
+  workflow_call:
   workflow_dispatch:
 jobs:
   build:

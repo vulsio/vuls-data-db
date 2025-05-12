@@ -1,0 +1,54 @@
+name: Harvest Post Raw Vanilla
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      pack-threads:
+        required: true
+        default: 2
+        type: number
+      pack-windowMemory:
+        required: true
+        default: 4g
+        type: string
+
+jobs:
+  gc:
+    name: Git GC ${{ inputs.tag }}
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: ${{ inputs.tag }}
+      pack-threads: ${{ inputs.pack-threads }}
+      pack-windowMemory: ${{ inputs.pack-windowMemory }}
+
+  check:
+    name: Check ${{ inputs.tag }} Layer Size
+    needs: [gc]
+    uses: ./.github/workflows/check-layer-size.yml
+    with:
+      repository: ${{ github.repository }}
+      tag: ${{ inputs.tag }}
+      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+      threshold-mb: 1024
+
+  archive:
+    name: Archive ${{ inputs.tag }}
+    needs: [check]
+    if: ${{ needs.check.outputs.exceeded == 'true' }}
+    uses: ./.github/workflows/archive-vanilla.yml
+    with:
+      tag: ${{ inputs.tag }}
+
+  gc-archive:
+    name: Git GC ${{ needs.archive.outputs.tag }}
+    needs: [archive]
+    uses: ./.github/workflows/gc.yml
+    with:
+      repository: vulsio/vuls-data-db-archive
+      tag: ${{ needs.archive.outputs.tag }}
+      pack-threads: ${{ inputs.pack-threads }}
+      pack-windowMemory: ${{ inputs.pack-windowMemory }}

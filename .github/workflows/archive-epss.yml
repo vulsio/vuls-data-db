@@ -2,6 +2,9 @@ name: Archive EPSS
 
 on:
   workflow_call:
+    outputs:
+      tags:
+        value: ${{ jobs.archive.outputs.tags }}
   workflow_dispatch:
 
 jobs:
@@ -80,18 +83,3 @@ jobs:
           tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
 
           oras push ghcr.io/vulsio/vuls-data-db:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-
-  gc:
-    name: GC vulsio/vuls-data-db-archive:${{ matrix.tag }}
-    needs: [archive]
-    if: ${{ needs.archive.outputs.tags != '[]' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        tag: ${{ fromJson(needs.archive.outputs.tags) }}
-    uses: ./.github/workflows/gc.yml
-    with:
-      repository: vulsio/vuls-data-db-archive
-      tag: ${{ matrix.tag }}
-      pack-threads: 2
-      pack-windowMemory: 4g
