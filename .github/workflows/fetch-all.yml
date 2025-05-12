@@ -1,0 +1,251 @@
+name: Fetch All
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+    inputs:
+      gc_after_fetch:
+        description: "Git GC after fetch"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  fetch-main:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "alma-errata"
+          - "alma-osv"
+          - "alma-oval"
+          - "alpine-secdb"
+          - "alpine-osv"
+          - "amazon"
+          - "android-osv"
+          - "arch"
+          - "attack"
+          - "bitnami-osv"
+          - "capec"
+          - "cargo-ghsa"
+          - "cargo-osv"
+          # - "cargo-db"
+          - "chainguard-osv"
+          - "composer-ghsa"
+          - "composer-glsa"
+          - "composer-osv"
+          # - "composer-db"
+          - "conan-glsa"
+          - "cwe"
+          - "debian-osv"
+          - "debian-oval"
+          - "debian-security-tracker-api"
+          - "debian-security-tracker-salsa"
+          - "erlang-ghsa"
+          - "erlang-osv"
+          - "exploit-exploitdb"
+          - "exploit-github"
+          - "exploit-inthewild"
+          - "exploit-trickest"
+          - "freebsd"
+          - "gentoo"
+          - "ghactions-osv"
+          - "git-osv"
+          - "golang-ghsa"
+          - "golang-glsa"
+          - "golang-osv"
+          # - "golang-db"
+          # - "golang-vulndb"
+          - "haskell-osv"
+          - "jvn-feed-detail"
+          - "jvn-feed-product"
+          - "jvn-feed-rss"
+          - "kev"
+          - "linux-osv"
+          - "maven-ghsa"
+          - "maven-glsa"
+          - "maven-osv"
+          # - "mitre-cvrf"
+          # - "mitre-v4"
+          - "mitre-v5"
+          - "msf"
+          - "netbsd"
+          - "npm-ghsa"
+          - "npm-glsa"
+          - "npm-osv"
+          # - "npm-db"
+          - "nuget-ghsa"
+          - "nuget-glsa"
+          - "nuget-osv"
+          - "nvd-feed-cve"
+          - "nvd-feed-cpe"
+          - "nvd-feed-cpematch"
+          - "oracle"
+          - "oss-fuzz-osv"
+          - "paloalto-list"
+          # - "perl-db"
+          - "pip-ghsa"
+          - "pip-glsa"
+          - "pip-osv"
+          # - "pip-db"
+          - "pub-ghsa"
+          - "pub-osv"
+          - "r-osv"
+          - "redhat-cve"
+          - "redhat-csaf"
+          # - "redhat-cvrf"
+          - "redhat-repository-to-cpe"
+          # - "redhat-ovalv1"
+          - "redhat-ovalv2"
+          - "redhat-vex"
+          - "redhat-osv"
+          - "rocky-errata"
+          - "rocky-osv"
+          - "rubygems-ghsa"
+          - "rubygems-glsa"
+          - "rubygems-osv"
+          # - "rubygems-db"
+          - "snort"
+          - "suse-oval"
+          - "suse-cvrf"
+          - "suse-cvrf-cve"
+          - "suse-csaf"
+          - "suse-csaf-vex"
+          - "suse-osv"
+          - "swift-ghsa"
+          - "swift-osv"
+          - "ubuntu-oval"
+          - "ubuntu-cve-tracker"
+          - "ubuntu-osv"
+          - "ubuntu-vex"
+          # - "windows-bulletin"
+          - "windows-cvrf"
+          - "windows-csaf"
+          - "windows-advisory"
+          - "windows-vulnerability"
+          - "windows-product"
+          - "windows-deployment"
+          - "windows-wsusscn2"
+          - "wolfi-osv"
+    uses: ./.github/workflows/fetch-main.yml
+    with:
+      target: ${{ matrix.target }}
+
+  fetch-nvd-api:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "nvd-api-cve"
+          - "nvd-api-cpe"
+          - "nvd-api-cpematch"
+    uses: ./.github/workflows/fetch-nvd-api.yml
+    with:
+      target: ${{ matrix.target }}
+    secrets:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+  fetch-msuc:
+    name: Fetch vuls-data-raw-windows-msuc
+    uses: ./.github/workflows/fetch-msuc.yml
+
+  fetch-fedora:
+    name: Fetch vuls-data-raw-fedora
+    uses: ./.github/workflows/fetch-fedora.yml
+
+  fetch-epss:
+    name: Fetch vuls-data-raw-epss
+    uses: ./.github/workflows/fetch-epss.yml
+
+  fetch-fortinet-cvrf:
+    name: Fetch vuls-data-raw-fortinet-cvrf
+    uses: ./.github/workflows/fetch-fortinet-cvrf.yml
+
+  fetch-vulncheck:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "vulncheck-kev"
+    uses: ./.github/workflows/fetch-vulncheck.yml
+    with:
+      target: ${{ matrix.target }}
+    secrets:
+      VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
+
+  fetch-cisco-json:
+    name: Fetch vuls-data-raw-cisco-json
+    uses: ./.github/workflows/fetch-cisco-json.yml
+    secrets:
+      CISCO_CLIENT_KEY: ${{ secrets.CISCO_CLIENT_KEY }}
+      CISCO_CLIENT_SECRET: ${{ secrets.CISCO_CLIENT_SECRET }}
+
+  fetch-cisco-cvrf-or-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    if: ${{ success() || failure() }}
+    needs: fetch-cisco-json
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "cisco-cvrf"
+          - "cisco-csaf"
+    uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
+    with:
+      target: ${{ matrix.target }}
+
+  fetch-paloalto-json-or-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    if: ${{ success() || failure() }}
+    needs: fetch-main
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "paloalto-json"
+          - "paloalto-csaf"
+    uses: ./.github/workflows/fetch-paloalto-json-or-csaf.yml
+    with:
+      target: ${{ matrix.target }}
+
+  check:
+    name: Decide whether to Git GC
+    if: ${{ success() || failure() }}
+    needs:
+      [
+        fetch-main,
+        fetch-nvd-api,
+        fetch-msuc,
+        fetch-fedora,
+        fetch-epss,
+        fetch-fortinet-cvrf,
+        fetch-vulncheck,
+        fetch-cisco-json,
+        fetch-cisco-cvrf-or-csaf,
+        fetch-paloalto-json-or-csaf,
+      ]
+    runs-on: ubuntu-latest
+    outputs:
+      do_gc: ${{ steps.check.outputs.do_gc }}
+    steps:
+      - name: Check if Git GC is needed
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "do_gc=${{ inputs.gc_after_fetch }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [[ $(( ${{ github.run_number }} % 10 )) -eq 0 ]]; then
+            echo "do_gc=true" >> $GITHUB_OUTPUT
+          fi
+
+  gc:
+    name: Git GC Raw
+    needs: check
+    if: ${{ ( success() || failure() ) && needs.check.outputs.do_gc == 'true' }}
+    uses: ./.github/workflows/gc-raw.yml
