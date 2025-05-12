@@ -2,9 +2,11 @@ name: Cleanup vulsio/vuls-data-db
 
 on:
   workflow_run:
-    workflows: [Harvest All]
+    workflows:
+      [Fetch All, Extract All, Truncate Extracted, Restore All, Git GC Raw, Git GC Extracted]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   cleanup:
@@ -12,9 +14,3 @@ jobs:
     uses: ./.github/workflows/cleanup.yml
     with:
       package: vuls-data-db
-
-  cleanup-archive:
-    name: Cleanup untagged images in vulsio/vuls-data-db-archive
-    uses: ./.github/workflows/cleanup.yml
-    with:
-      package: vuls-data-db-archive

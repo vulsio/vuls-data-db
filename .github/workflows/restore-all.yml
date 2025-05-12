@@ -1,13 +1,21 @@
-name: Backup Daily
+name: Restore All
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      tag-suffix:
+        required: true
+        default: "backup-manual"
+        type: choice
+        options:
+          - backup-manual
+          - backup-daily
+          - backup-weekly
+          - backup-monthly
 
 jobs:
-  backup:
-    name: Backup ghcr.io/${{ github.repository }}:${{ matrix.tag }} to ghcr.io/vulsio/vuls-data-db-backup:${{ matrix.tag }}-backup-daily
+  restore-all:
+    name: Restore ${{ matrix.tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,7 +37,7 @@ jobs:
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
           - vuls-data-extracted-redhat-ovalv1
-          # - vuls-data-extracted-redhat-ovalv1-rhel
+          - vuls-data-extracted-redhat-ovalv1-rhel
           - vuls-data-extracted-redhat-ovalv2
           - vuls-data-extracted-redhat-ovalv2-rhel
           - vuls-data-extracted-redhat-vex
@@ -152,9 +160,8 @@ jobs:
           - vuls-data-raw-windows-msuc
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
-    uses: ./.github/workflows/backup.yml
+    uses: ./.github/workflows/restore.yml
     with:
-      src-repository: ${{ github.repository }}
-      dest-repository: vulsio/vuls-data-db-backup
+      repository: vulsio/vuls-data-db-backup
       tag: ${{ matrix.tag }}
-      tag-suffix: backup-daily
+      tag-suffix: ${{ inputs.tag-suffix }}
