@@ -80,6 +80,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-extracted-nvd-api-cve remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
           git -C vuls-data-extracted-nvd-api-cve config user.email "action@github.com"
           git -C vuls-data-extracted-nvd-api-cve config user.name "GitHub Action"
 

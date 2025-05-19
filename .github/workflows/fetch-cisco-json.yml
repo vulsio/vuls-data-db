@@ -59,6 +59,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-raw-cisco-json remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
           git -C vuls-data-raw-cisco-json config user.email "action@github.com"
           git -C vuls-data-raw-cisco-json config user.name "GitHub Action"
 

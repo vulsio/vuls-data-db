@@ -123,6 +123,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-raw-fedora remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
           git -C vuls-data-raw-fedora config user.email "action@github.com"
           git -C vuls-data-raw-fedora config user.name "GitHub Action"
 

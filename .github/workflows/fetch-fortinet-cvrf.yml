@@ -80,6 +80,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-raw-fortinet-cvrf remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
           git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
           git -C vuls-data-raw-fortinet-cvrf config user.name "GitHub Action"
 
