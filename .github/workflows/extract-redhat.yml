@@ -91,7 +91,11 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C vuls-data-extracted-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+          if git -C vuls-data-extracted-${{ inputs.target }} remote | grep -q "^origin$"; then
+            git -C vuls-data-extracted-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+          else
+            git -C vuls-data-extracted-${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+          fi
           git -C vuls-data-extracted-${{ inputs.target }} config user.email "action@github.com"
           git -C vuls-data-extracted-${{ inputs.target }} config user.name "GitHub Action"
 

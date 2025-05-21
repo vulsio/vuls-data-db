@@ -54,7 +54,11 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          if git -C vuls-data-raw-epss remote | grep -q "^origin$"; then
+            git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          else
+            git -C vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          fi
           git -C vuls-data-raw-epss config user.email "action@github.com"
           git -C vuls-data-raw-epss config user.name "GitHub Action"
 

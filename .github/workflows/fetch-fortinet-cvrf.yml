@@ -17,7 +17,7 @@ jobs:
     outputs:
       do_fetch_all: ${{ steps.check.outputs.fetch_all }}
     steps:
-      - name:
+      - name: Check if fetch_all
         id: check
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
@@ -80,7 +80,11 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C vuls-data-raw-fortinet-cvrf remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+          if git -C vuls-data-raw-fortinet-cvrf remote | grep -q "^origin$"; then
+            git -C vuls-data-raw-fortinet-cvrf remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+          else
+            git -C vuls-data-raw-fortinet-cvrf remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+          fi
           git -C vuls-data-raw-fortinet-cvrf config user.email "action@github.com"
           git -C vuls-data-raw-fortinet-cvrf config user.name "GitHub Action"
 
