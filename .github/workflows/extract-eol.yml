@@ -66,6 +66,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-extracted-eol remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
           git -C vuls-data-extracted-eol config user.email "action@github.com"
           git -C vuls-data-extracted-eol config user.name "GitHub Action"
 

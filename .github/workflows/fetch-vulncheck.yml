@@ -67,6 +67,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-raw-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
           git -C vuls-data-raw-${{ inputs.target }} config user.email "action@github.com"
           git -C vuls-data-raw-${{ inputs.target }} config user.name "GitHub Action"
 

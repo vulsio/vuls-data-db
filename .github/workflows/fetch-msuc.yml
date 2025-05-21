@@ -146,6 +146,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C vuls-data-raw-windows-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
           git -C vuls-data-raw-windows-msuc config user.email "action@github.com"
           git -C vuls-data-raw-windows-msuc config user.name "GitHub Action"
 
