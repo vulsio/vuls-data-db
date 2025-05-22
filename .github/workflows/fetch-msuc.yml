@@ -146,7 +146,11 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C vuls-data-raw-windows-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
+          if git -C vuls-data-raw-windows-msuc remote | grep -q "^origin$"; then
+            git -C vuls-data-raw-windows-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
+          else
+            git -C vuls-data-raw-windows-msuc remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
+          fi
           git -C vuls-data-raw-windows-msuc config user.email "action@github.com"
           git -C vuls-data-raw-windows-msuc config user.name "GitHub Action"
 

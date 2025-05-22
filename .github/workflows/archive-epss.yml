@@ -71,12 +71,20 @@ jobs:
 
           mkdir vuls-data-raw-epss/
           mv $(date "+%Y") vuls-data-raw-epss
+
           git -C vuls-data-raw-epss -c init.defaultBranch=main init .
-          git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          
+          if git -C vuls-data-raw-epss remote | grep -q "^origin$"; then
+            git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          else
+            git -C vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          fi
+          
           git -C vuls-data-raw-epss config user.email "action@github.com"
           git -C vuls-data-raw-epss config user.name "GitHub Action"
           git -C vuls-data-raw-epss add $(date "+%Y")
           git -C vuls-data-raw-epss commit -m "update"
+          
           rm -rf vuls-data-raw-epss/$(date "+%Y")
           tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
 

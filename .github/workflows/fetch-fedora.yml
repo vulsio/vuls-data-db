@@ -123,7 +123,11 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C vuls-data-raw-fedora remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
+          if git -C vuls-data-raw-fedora remote | grep -q "^origin$"; then
+            git -C vuls-data-raw-fedora remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
+          else
+            git -C vuls-data-raw-fedora remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
+          fi
           git -C vuls-data-raw-fedora config user.email "action@github.com"
           git -C vuls-data-raw-fedora config user.name "GitHub Action"
 

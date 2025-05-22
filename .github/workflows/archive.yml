@@ -231,7 +231,11 @@ jobs:
           echo "Create the latest repository..."
           git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.tmp ${{ inputs.tag }}
           rm -rf ${{ inputs.tag }}.tmp
-          git -C ${{ inputs.tag }} remote set-url origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+          if git -C ${{ inputs.tag }} remote | grep -q "^origin$"; then
+            git -C ${{ inputs.tag }} remote set-url origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+          else
+            git -C ${{ inputs.tag }} remote add origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+          fi
           git -C ${{ inputs.tag }} reset
           tar --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }} || [[ $? == 1 ]]
 
