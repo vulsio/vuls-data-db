@@ -137,6 +137,7 @@ jobs:
     name: Fetch vuls-data-raw-${{ matrix.target }}
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         target:
           - "nvd-api-cve"
