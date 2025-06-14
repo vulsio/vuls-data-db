@@ -9,7 +9,7 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alma-errata BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alma-osv BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alma-oval BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alpine-secdb BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alpine-secdb BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alpine-osv BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-amazon BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-arch BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
@@ -20,7 +20,7 @@ db-build:
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-freebsd BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-gentoo BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-netbsd BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-oracle BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-oracle BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-cve BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-csaf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-csaf-rhel BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
