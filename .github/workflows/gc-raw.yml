@@ -26,10 +26,16 @@ jobs:
           - tag: vuls-data-raw-alpine-secdb
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-alt-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-amazon
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-android-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-anolis-oval
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-arch
@@ -38,12 +44,18 @@ jobs:
           - tag: vuls-data-raw-attack
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-azure-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-bitnami-osv
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-capec
             pack-threads: 2
             pack-windowMemory: 4g
+          # - tag: vuls-data-raw-cargo-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-cargo-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
@@ -51,6 +63,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-chainguard-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-chainguard-secdb
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-cisco-csaf
@@ -62,6 +77,9 @@ jobs:
           - tag: vuls-data-raw-cisco-json
             pack-threads: 2
             pack-windowMemory: 4g
+          # - tag: vuls-data-raw-composer-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-composer-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
@@ -87,6 +105,15 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-debian-security-tracker-salsa
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-echo
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-endoflife-date-api
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-endoflife-date-products
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-epss
@@ -131,6 +158,9 @@ jobs:
           - tag: vuls-data-raw-git-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          # - tag: vuls-data-raw-golang-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-golang-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
@@ -140,6 +170,9 @@ jobs:
           - tag: vuls-data-raw-golang-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          # - tag: vuls-data-raw-golang-vulndb
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-haskell-osv
             pack-threads: 2
             pack-windowMemory: 4g
@@ -152,10 +185,19 @@ jobs:
           - tag: vuls-data-raw-jvn-feed-rss
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-k8s-json
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-k8s-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-kev
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-linux-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mageia-osv
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-maven-ghsa
@@ -165,6 +207,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-maven-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-minimos-secdb
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-mitre-cvrf
@@ -182,6 +227,9 @@ jobs:
           - tag: vuls-data-raw-netbsd
             pack-threads: 2
             pack-windowMemory: 4g
+          # - tag: vuls-data-raw-npm-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-npm-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
@@ -189,6 +237,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-npm-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nuclei-repository
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-nuget-ghsa
@@ -218,6 +269,12 @@ jobs:
           - tag: vuls-data-raw-nvd-feed-cve
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-openeuler-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-openeuler-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-oracle
             pack-threads: 2
             pack-windowMemory: 4g
@@ -233,6 +290,18 @@ jobs:
           - tag: vuls-data-raw-paloalto-list
             pack-threads: 2
             pack-windowMemory: 4g
+          # - tag: vuls-data-raw-perl-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
+          - tag: vuls-data-raw-photon-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-photon-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
+          # - tag: vuls-data-raw-pip-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-pip-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
@@ -246,6 +315,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-pub-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-r-osv
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-csaf
@@ -278,9 +350,9 @@ jobs:
           - tag: vuls-data-raw-rocky-osv
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-r-osv
-            pack-threads: 2
-            pack-windowMemory: 4g
+          # - tag: vuls-data-raw-rubygems-db
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-rubygems-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
@@ -317,7 +389,13 @@ jobs:
           - tag: vuls-data-raw-swift-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-ubuntu-cve-tracker
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-notice
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-ubuntu-osv
@@ -326,28 +404,25 @@ jobs:
           - tag: vuls-data-raw-ubuntu-oval
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-ubuntu-usndb
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-ubuntu-vex
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-vulncheck-kev
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-bulletin
+          - tag: vuls-data-raw-windows-advisory
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-cvrf
+          - tag: vuls-data-raw-windows-bulletin
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-windows-csaf
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-advisory
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-vulnerability
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-product
+          - tag: vuls-data-raw-windows-cvrf
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-windows-deployment
@@ -356,10 +431,22 @@ jobs:
           - tag: vuls-data-raw-windows-msuc
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-product
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-windows-vulnerability
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-windows-wsusscn2
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-wolfi-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-wolfi-secdb
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-wrlinux
             pack-threads: 2
             pack-windowMemory: 4g
     uses: ./.github/workflows/gc.yml

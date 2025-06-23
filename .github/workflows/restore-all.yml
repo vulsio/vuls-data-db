@@ -48,18 +48,24 @@ jobs:
           - vuls-data-raw-alma-oval
           - vuls-data-raw-alpine-osv
           - vuls-data-raw-alpine-secdb
+          - vuls-data-raw-alt-oval
           - vuls-data-raw-amazon
           - vuls-data-raw-android-osv
+          - vuls-data-raw-anolis-oval
           - vuls-data-raw-arch
           - vuls-data-raw-attack
+          - vuls-data-raw-azure-oval
           - vuls-data-raw-bitnami-osv
           - vuls-data-raw-capec
+          # - vuls-data-raw-cargo-db
           - vuls-data-raw-cargo-ghsa
           - vuls-data-raw-cargo-osv
           - vuls-data-raw-chainguard-osv
+          - vuls-data-raw-chainguard-secdb
           - vuls-data-raw-cisco-csaf
           - vuls-data-raw-cisco-cvrf
           - vuls-data-raw-cisco-json
+          # - vuls-data-raw-composer-db
           - vuls-data-raw-composer-ghsa
           - vuls-data-raw-composer-glsa
           - vuls-data-raw-composer-osv
@@ -69,6 +75,9 @@ jobs:
           - vuls-data-raw-debian-oval
           - vuls-data-raw-debian-security-tracker-api
           - vuls-data-raw-debian-security-tracker-salsa
+          - vuls-data-raw-echo
+          - vuls-data-raw-endoflife-date-api
+          - vuls-data-raw-endoflife-date-products
           - vuls-data-raw-epss
           - vuls-data-raw-erlang-ghsa
           - vuls-data-raw-erlang-osv
@@ -83,26 +92,34 @@ jobs:
           - vuls-data-raw-gentoo
           - vuls-data-raw-ghactions-osv
           - vuls-data-raw-git-osv
+          # - vuls-data-raw-golang-db
           - vuls-data-raw-golang-ghsa
           - vuls-data-raw-golang-glsa
           - vuls-data-raw-golang-osv
+          # - vuls-data-raw-golang-vulndb
           - vuls-data-raw-haskell-osv
           - vuls-data-raw-jvn-feed-detail
           - vuls-data-raw-jvn-feed-product
           - vuls-data-raw-jvn-feed-rss
+          - vuls-data-raw-k8s-json
+          - vuls-data-raw-k8s-osv
           - vuls-data-raw-kev
           - vuls-data-raw-linux-osv
+          - vuls-data-raw-mageia-osv
           - vuls-data-raw-maven-ghsa
           - vuls-data-raw-maven-glsa
           - vuls-data-raw-maven-osv
+          - vuls-data-raw-minimos-secdb
           - vuls-data-raw-mitre-cvrf
           - vuls-data-raw-mitre-v4
           - vuls-data-raw-mitre-v5
           - vuls-data-raw-msf
           - vuls-data-raw-netbsd
+          # - vuls-data-raw-npm-db
           - vuls-data-raw-npm-ghsa
           - vuls-data-raw-npm-glsa
           - vuls-data-raw-npm-osv
+          - vuls-data-raw-nuclei-repository
           - vuls-data-raw-nuget-ghsa
           - vuls-data-raw-nuget-glsa
           - vuls-data-raw-nuget-osv
@@ -112,16 +129,23 @@ jobs:
           - vuls-data-raw-nvd-feed-cpe
           - vuls-data-raw-nvd-feed-cpematch
           - vuls-data-raw-nvd-feed-cve
+          - vuls-data-raw-openeuler-csaf
+          - vuls-data-raw-openeuler-cvrf
           - vuls-data-raw-oracle
           - vuls-data-raw-oss-fuzz-osv
           - vuls-data-raw-paloalto-csaf
           - vuls-data-raw-paloalto-json
           - vuls-data-raw-paloalto-list
+          # - vuls-data-raw-perl-db
+          - vuls-data-raw-photon-cve
+          - vuls-data-raw-photon-oval
+          # - vuls-data-raw-pip-db
           - vuls-data-raw-pip-ghsa
           - vuls-data-raw-pip-glsa
           - vuls-data-raw-pip-osv
           - vuls-data-raw-pub-ghsa
           - vuls-data-raw-pub-osv
+          - vuls-data-raw-r-osv
           - vuls-data-raw-redhat-csaf
           - vuls-data-raw-redhat-cve
           - vuls-data-raw-redhat-cvrf
@@ -132,7 +156,7 @@ jobs:
           - vuls-data-raw-redhat-vex
           - vuls-data-raw-rocky-errata
           - vuls-data-raw-rocky-osv
-          - vuls-data-raw-r-osv
+          # - vuls-data-raw-rubygems-db
           - vuls-data-raw-rubygems-ghsa
           - vuls-data-raw-rubygems-glsa
           - vuls-data-raw-rubygems-osv
@@ -145,21 +169,26 @@ jobs:
           - vuls-data-raw-suse-oval
           - vuls-data-raw-swift-ghsa
           - vuls-data-raw-swift-osv
+          - vuls-data-raw-ubuntu-cve
           - vuls-data-raw-ubuntu-cve-tracker
+          - vuls-data-raw-ubuntu-notice
           - vuls-data-raw-ubuntu-osv
           - vuls-data-raw-ubuntu-oval
+          - vuls-data-raw-ubuntu-usndb
           - vuls-data-raw-ubuntu-vex
           - vuls-data-raw-vulncheck-kev
-          - vuls-data-raw-windows-bulletin
-          - vuls-data-raw-windows-cvrf
-          - vuls-data-raw-windows-csaf
           - vuls-data-raw-windows-advisory
-          - vuls-data-raw-windows-vulnerability
-          - vuls-data-raw-windows-product
+          - vuls-data-raw-windows-bulletin
+          - vuls-data-raw-windows-csaf
+          - vuls-data-raw-windows-cvrf
           - vuls-data-raw-windows-deployment
           - vuls-data-raw-windows-msuc
+          - vuls-data-raw-windows-product
+          - vuls-data-raw-windows-vulnerability
           - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
+          - vuls-data-raw-wolfi-secdb
+          - vuls-data-raw-wrlinux
     uses: ./.github/workflows/restore.yml
     with:
       repository: vulsio/vuls-data-db-backup
