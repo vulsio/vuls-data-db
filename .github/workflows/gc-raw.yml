@@ -389,15 +389,15 @@ jobs:
           - tag: vuls-data-raw-swift-osv
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-ubuntu-cve
-            pack-threads: 2
-            pack-windowMemory: 4g
+          # - tag: vuls-data-raw-ubuntu-cve
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-ubuntu-cve-tracker
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-ubuntu-notice
-            pack-threads: 2
-            pack-windowMemory: 4g
+          # - tag: vuls-data-raw-ubuntu-notice
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-ubuntu-osv
             pack-threads: 2
             pack-windowMemory: 4g
