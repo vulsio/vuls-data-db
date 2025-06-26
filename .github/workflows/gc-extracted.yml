@@ -32,6 +32,9 @@ jobs:
           - tag: vuls-data-extracted-cargo-ghsa
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-cisa-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-eol
             pack-threads: 2
             pack-windowMemory: 4g
@@ -39,9 +42,6 @@ jobs:
             pack-threads: 1
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-freebsd
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-extracted-kev
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-mitre-v5

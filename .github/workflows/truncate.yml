@@ -25,10 +25,10 @@ on:
           - vuls-data-extracted-amazon
           - vuls-data-extracted-arch
           - vuls-data-extracted-cargo-ghsa
+          - vuls-data-extracted-cisa-kev
           - vuls-data-extracted-eol
           - vuls-data-extracted-epss
           - vuls-data-extracted-freebsd
-          - vuls-data-extracted-kev
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-oracle

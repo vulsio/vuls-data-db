@@ -20,10 +20,10 @@ jobs:
           - amazon
           - arch
           - cargo-ghsa
+          - cisa-kev
           - eol
           - epss
           - freebsd
-          - kev
           - mitre-v5
           - nvd-api-cve
           - oracle

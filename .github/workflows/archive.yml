@@ -34,6 +34,7 @@ on:
           - vuls-data-raw-cargo-osv
           - vuls-data-raw-chainguard-osv
           - vuls-data-raw-chainguard-secdb
+          - vuls-data-raw-cisa-kev
           - vuls-data-raw-cisco-csaf
           - vuls-data-raw-cisco-cvrf
           - vuls-data-raw-cisco-json
@@ -74,7 +75,6 @@ on:
           - vuls-data-raw-jvn-feed-rss
           - vuls-data-raw-k8s-json
           - vuls-data-raw-k8s-osv
-          - vuls-data-raw-kev
           - vuls-data-raw-linux-osv
           - vuls-data-raw-mageia-osv
           - vuls-data-raw-maven-ghsa
