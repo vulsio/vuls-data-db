@@ -126,9 +126,12 @@ jobs:
           - vuls-data-raw-nvd-api-cpe
           - vuls-data-raw-nvd-api-cpematch
           - vuls-data-raw-nvd-api-cve
-          - vuls-data-raw-nvd-feed-cpe
-          - vuls-data-raw-nvd-feed-cpematch
-          - vuls-data-raw-nvd-feed-cve
+          - vuls-data-raw-nvd-feed-cpe-v1
+          - vuls-data-raw-nvd-feed-cpematch-v1
+          - vuls-data-raw-nvd-feed-cve-v1
+          - vuls-data-raw-nvd-feed-cpe-v2
+          - vuls-data-raw-nvd-feed-cpematch-v2
+          - vuls-data-raw-nvd-feed-cve-v2
           - vuls-data-raw-openeuler-csaf
           - vuls-data-raw-openeuler-cvrf
           - vuls-data-raw-oracle
