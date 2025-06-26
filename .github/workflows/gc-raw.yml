@@ -68,6 +68,9 @@ jobs:
           - tag: vuls-data-raw-chainguard-secdb
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-cisa-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-cisco-csaf
             pack-threads: 2
             pack-windowMemory: 4g
@@ -189,9 +192,6 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-k8s-osv
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-kev
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-linux-osv

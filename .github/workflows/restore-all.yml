@@ -27,10 +27,10 @@ jobs:
           - vuls-data-extracted-amazon
           - vuls-data-extracted-arch
           - vuls-data-extracted-cargo-ghsa
+          - vuls-data-extracted-cisa-kev
           - vuls-data-extracted-eol
           - vuls-data-extracted-epss
           - vuls-data-extracted-freebsd
-          - vuls-data-extracted-kev
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-oracle
@@ -62,6 +62,7 @@ jobs:
           - vuls-data-raw-cargo-osv
           - vuls-data-raw-chainguard-osv
           - vuls-data-raw-chainguard-secdb
+          - vuls-data-raw-cisa-kev
           - vuls-data-raw-cisco-csaf
           - vuls-data-raw-cisco-cvrf
           - vuls-data-raw-cisco-json
@@ -103,7 +104,6 @@ jobs:
           - vuls-data-raw-jvn-feed-rss
           - vuls-data-raw-k8s-json
           - vuls-data-raw-k8s-osv
-          - vuls-data-raw-kev
           - vuls-data-raw-linux-osv
           - vuls-data-raw-mageia-osv
           - vuls-data-raw-maven-ghsa

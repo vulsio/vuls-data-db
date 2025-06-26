@@ -30,6 +30,7 @@ on:
           # - cargo-osv
           # - cargo-db
           # - chainguard-osv
+          - cisa-kev
           # - composer-ghsa
           # - composer-glsa
           # - composer-osv
@@ -63,7 +64,6 @@ on:
           # - jvn-feed-detail
           # - jvn-feed-product
           # - jvn-feed-rss
-          - kev
           # - linux-osv
           # - maven-ghsa
           # - maven-glsa
