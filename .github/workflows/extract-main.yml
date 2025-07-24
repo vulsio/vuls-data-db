@@ -116,7 +116,7 @@ on:
           # - swift-ghsa
           # - swift-osv
           # - ubuntu-oval
-          # - ubuntu-cve-tracker
+          - ubuntu-cve-tracker
           # - ubuntu-osv
           # - ubuntu-vex
           # - vulncheck-kev

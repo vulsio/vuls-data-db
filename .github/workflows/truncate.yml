@@ -41,6 +41,7 @@ on:
           - vuls-data-extracted-redhat-vex
           - vuls-data-extracted-redhat-vex-rhel
           - vuls-data-extracted-rocky-errata
+          - vuls-data-extracted-ubuntu-cve-tracker
       threshold-mb:
         required: true
         type: number
