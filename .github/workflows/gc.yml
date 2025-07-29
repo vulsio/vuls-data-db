@@ -53,6 +53,7 @@ on:
           - vuls-data-extracted-redhat-vex
           - vuls-data-extracted-redhat-vex-rhel
           - vuls-data-extracted-rocky-errata
+          - vuls-data-extracted-ubuntu-cve-tracker
           - vuls-data-raw-alma-errata
           - vuls-data-raw-alma-osv
           - vuls-data-raw-alma-oval
