@@ -57,12 +57,16 @@ jobs:
           - vuls-data-raw-attack
           - vuls-data-raw-azure-oval
           - vuls-data-raw-bitnami-osv
+          - vuls-data-raw-bottlerocket
           - vuls-data-raw-capec
           # - vuls-data-raw-cargo-db
           - vuls-data-raw-cargo-ghsa
           - vuls-data-raw-cargo-osv
+          - vuls-data-raw-cert-bund-csaf
           - vuls-data-raw-chainguard-osv
           - vuls-data-raw-chainguard-secdb
+          - vuls-data-raw-cisa-coun7er
+          - vuls-data-raw-cisa-csaf
           - vuls-data-raw-cisa-kev
           - vuls-data-raw-cisco-csaf
           - vuls-data-raw-cisco-cvrf
@@ -78,6 +82,7 @@ jobs:
           - vuls-data-raw-debian-security-tracker-api
           - vuls-data-raw-debian-security-tracker-salsa
           - vuls-data-raw-echo
+          - vuls-data-raw-emb3d
           - vuls-data-raw-endoflife-date-api
           - vuls-data-raw-endoflife-date-products
           - vuls-data-raw-epss
@@ -110,12 +115,15 @@ jobs:
           - vuls-data-raw-maven-ghsa
           - vuls-data-raw-maven-glsa
           - vuls-data-raw-maven-osv
+          - vuls-data-raw-minimos-osv
           - vuls-data-raw-minimos-secdb
           - vuls-data-raw-mitre-cvrf
           - vuls-data-raw-mitre-v4
           - vuls-data-raw-mitre-v5
           - vuls-data-raw-msf
+          - vuls-data-raw-ncsc-csaf
           - vuls-data-raw-netbsd
+          - vuls-data-raw-nozominetworks-csaf
           # - vuls-data-raw-npm-db
           - vuls-data-raw-npm-ghsa
           - vuls-data-raw-npm-glsa
@@ -137,6 +145,7 @@ jobs:
           - vuls-data-raw-openeuler-cvrf
           - vuls-data-raw-oracle
           - vuls-data-raw-oss-fuzz-osv
+          - vuls-data-raw-ox-csaf
           - vuls-data-raw-paloalto-csaf
           - vuls-data-raw-paloalto-json
           - vuls-data-raw-paloalto-list
@@ -160,10 +169,13 @@ jobs:
           - vuls-data-raw-redhat-vex
           - vuls-data-raw-rocky-errata
           - vuls-data-raw-rocky-osv
+          - vuls-data-raw-rootio
           # - vuls-data-raw-rubygems-db
           - vuls-data-raw-rubygems-ghsa
           - vuls-data-raw-rubygems-glsa
           - vuls-data-raw-rubygems-osv
+          - vuls-data-raw-sick-csaf
+          - vuls-data-raw-siemens-csaf
           - vuls-data-raw-snort
           - vuls-data-raw-suse-csaf
           - vuls-data-raw-suse-csaf-vex
@@ -180,7 +192,11 @@ jobs:
           - vuls-data-raw-ubuntu-oval
           - vuls-data-raw-ubuntu-usndb
           - vuls-data-raw-ubuntu-vex
+          - vuls-data-raw-variot-exploits
+          - vuls-data-raw-variot-vulns
           - vuls-data-raw-vulncheck-kev
+          - vuls-data-raw-vulncheck-nist-nvd
+          - vuls-data-raw-vulncheck-nist-nvd2
           - vuls-data-raw-windows-advisory
           - vuls-data-raw-windows-bulletin
           - vuls-data-raw-windows-csaf
