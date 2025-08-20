@@ -50,7 +50,7 @@ jobs:
           rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: vulsio/filter-vuls-data-extracted-redhat
           ref: ${{ inputs.branch }}

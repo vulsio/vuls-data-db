@@ -30,7 +30,7 @@ jobs:
           rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: MaineK00n/vuls-data-update
           ref: main

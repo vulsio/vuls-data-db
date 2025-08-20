@@ -37,7 +37,7 @@ jobs:
           rm -rf oras_${VERSION}_*.tar.gz oras-install/
 
       - name: Check out ${{ inputs.owner }}/${{ inputs.target }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.owner }}/${{ inputs.target }}
           ref: main
