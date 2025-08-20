@@ -1,4 +1,4 @@
-name: Fetch VulnCheck
+name: Fetch VARIoT
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
         required: true
         type: string
     secrets:
-      VULNCHECK_API_KEY:
+      VARIOT_API_KEY:
         required: true
   workflow_dispatch:
     inputs:
@@ -15,9 +15,8 @@ on:
         required: true
         type: choice
         options:
-          - vulncheck-kev
-          - vulncheck-nist-nvd
-          - vulncheck-nist-nvd2
+          - variot-exploits
+          - variot-vulns
 
 jobs:
   fetch:
@@ -65,7 +64,7 @@ jobs:
           rm vuls-data-raw-${{ inputs.target }}.tar.zst
 
       - name: Fetch
-        run: vuls-data-update fetch ${{ inputs.target }} --dir vuls-data-raw-${{ inputs.target }} ${{ secrets.VULNCHECK_API_KEY }}
+        run: vuls-data-update fetch ${{ inputs.target }} --dir vuls-data-raw-${{ inputs.target }} ${{ secrets.VARIOT_API_KEY }}
 
       - name: Set Git config
         run: |

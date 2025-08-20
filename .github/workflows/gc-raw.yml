@@ -50,6 +50,9 @@ jobs:
           - tag: vuls-data-raw-bitnami-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-bottlerocket
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-capec
             pack-threads: 2
             pack-windowMemory: 4g
@@ -62,10 +65,19 @@ jobs:
           - tag: vuls-data-raw-cargo-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-cert-bund-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-chainguard-osv
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-chainguard-secdb
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cisa-coun7er
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-cisa-csaf
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-cisa-kev
@@ -111,6 +123,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-echo
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-emb3d
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-endoflife-date-api
@@ -209,6 +224,9 @@ jobs:
           - tag: vuls-data-raw-maven-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-minimos-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-minimos-secdb
             pack-threads: 2
             pack-windowMemory: 4g
@@ -224,7 +242,13 @@ jobs:
           - tag: vuls-data-raw-msf
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-ncsc-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-netbsd
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-nozominetworks-csaf
             pack-threads: 2
             pack-windowMemory: 4g
           # - tag: vuls-data-raw-npm-db
@@ -288,6 +312,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-oss-fuzz-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-ox-csaf
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-paloalto-csaf
@@ -359,6 +386,9 @@ jobs:
           - tag: vuls-data-raw-rocky-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-rootio
+            pack-threads: 2
+            pack-windowMemory: 4g
           # - tag: vuls-data-raw-rubygems-db
           #   pack-threads: 2
           #   pack-windowMemory: 4g
@@ -369,6 +399,12 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-rubygems-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-sick-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-siemens-csaf
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-snort
@@ -419,7 +455,19 @@ jobs:
           - tag: vuls-data-raw-ubuntu-vex
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-variot-exploits
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-variot-vulns
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-vulncheck-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-vulncheck-nist-nvd
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-vulncheck-nist-nvd2
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-windows-advisory
