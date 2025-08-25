@@ -284,15 +284,15 @@ jobs:
           - tag: vuls-data-raw-nvd-api-cve
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-nvd-feed-cpe-v1
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-nvd-feed-cpematch-v1
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-nvd-feed-cve-v1
-            pack-threads: 2
-            pack-windowMemory: 4g
+          # - tag: vuls-data-raw-nvd-feed-cpe-v1
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
+          # - tag: vuls-data-raw-nvd-feed-cpematch-v1
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
+          # - tag: vuls-data-raw-nvd-feed-cve-v1
+          #   pack-threads: 2
+          #   pack-windowMemory: 4g
           - tag: vuls-data-raw-nvd-feed-cpe-v2
             pack-threads: 2
             pack-windowMemory: 4g
