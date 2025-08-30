@@ -41,9 +41,6 @@ jobs:
           - tag: vuls-data-raw-arch
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-attack
-            pack-threads: 2
-            pack-windowMemory: 4g
           - tag: vuls-data-raw-azure-oval
             pack-threads: 2
             pack-windowMemory: 4g
@@ -53,9 +50,7 @@ jobs:
           - tag: vuls-data-raw-bottlerocket
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-capec
-            pack-threads: 2
-            pack-windowMemory: 4g
+
           # - tag: vuls-data-raw-cargo-db
           #   pack-threads: 2
           #   pack-windowMemory: 4g
@@ -107,9 +102,6 @@ jobs:
           - tag: vuls-data-raw-conan-glsa
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-cwe
-            pack-threads: 2
-            pack-windowMemory: 4g
           - tag: vuls-data-raw-debian-osv
             pack-threads: 2
             pack-windowMemory: 4g
@@ -123,9 +115,6 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-echo
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-emb3d
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-endoflife-date-api
@@ -230,7 +219,19 @@ jobs:
           - tag: vuls-data-raw-minimos-secdb
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-attack
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-capec
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-mitre-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-cwe
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-emb3d
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-mitre-v4
