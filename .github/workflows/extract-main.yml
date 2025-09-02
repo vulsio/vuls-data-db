@@ -23,9 +23,7 @@ on:
           - amazon
           # - android-osv
           - arch
-          # - attack
           # - bitnami-osv
-          # - capec
           # - cargo-ghsa
           # - cargo-osv
           # - cargo-db
@@ -36,7 +34,6 @@ on:
           # - composer-osv
           # - composer-db
           # - conan-glsa
-          # - cwe
           # - debian-osv
           # - debian-oval
           # - debian-security-tracker-api
@@ -68,7 +65,11 @@ on:
           # - maven-ghsa
           # - maven-glsa
           # - maven-osv
+          # - mitre-attack
+          # - mitre-capec
           # - mitre-cvrf
+          # - mitre-cwe
+          # - mitre-emb3d
           # - mitre-v4
           - mitre-v5
           # - msf

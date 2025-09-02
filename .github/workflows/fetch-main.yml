@@ -22,10 +22,8 @@ on:
           - android-osv
           - anolis-oval
           - arch
-          - attack
           - azure-oval
           - bitnami-osv
-          - capec
           # - cargo-db
           - cargo-ghsa
           - cargo-osv
@@ -37,7 +35,6 @@ on:
           - composer-glsa
           - composer-osv
           - conan-glsa
-          - cwe
           - debian-osv
           - debian-oval
           - debian-security-tracker-api
@@ -72,7 +69,11 @@ on:
           - maven-glsa
           - maven-osv
           - minimos-secdb
+          - mitre-attack
+          - mitre-capec
           - mitre-cvrf
+          - mitre-cwe
+          - mitre-emb3d
           - mitre-v4
           - mitre-v5
           - msf

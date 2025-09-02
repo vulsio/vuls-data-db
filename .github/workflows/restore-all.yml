@@ -54,11 +54,9 @@ jobs:
           - vuls-data-raw-android-osv
           - vuls-data-raw-anolis-oval
           - vuls-data-raw-arch
-          - vuls-data-raw-attack
           - vuls-data-raw-azure-oval
           - vuls-data-raw-bitnami-osv
           - vuls-data-raw-bottlerocket
-          - vuls-data-raw-capec
           # - vuls-data-raw-cargo-db
           - vuls-data-raw-cargo-ghsa
           - vuls-data-raw-cargo-osv
@@ -76,13 +74,11 @@ jobs:
           - vuls-data-raw-composer-glsa
           - vuls-data-raw-composer-osv
           - vuls-data-raw-conan-glsa
-          - vuls-data-raw-cwe
           - vuls-data-raw-debian-osv
           - vuls-data-raw-debian-oval
           - vuls-data-raw-debian-security-tracker-api
           - vuls-data-raw-debian-security-tracker-salsa
           - vuls-data-raw-echo
-          - vuls-data-raw-emb3d
           - vuls-data-raw-endoflife-date-api
           - vuls-data-raw-endoflife-date-products
           - vuls-data-raw-epss
@@ -117,7 +113,11 @@ jobs:
           - vuls-data-raw-maven-osv
           - vuls-data-raw-minimos-osv
           - vuls-data-raw-minimos-secdb
+          - vuls-data-raw-mitre-attack
+          - vuls-data-raw-mitre-capec
           - vuls-data-raw-mitre-cvrf
+          - vuls-data-raw-mitre-cwe
+          - vuls-data-raw-mitre-emb3d
           - vuls-data-raw-mitre-v4
           - vuls-data-raw-mitre-v5
           - vuls-data-raw-msf
