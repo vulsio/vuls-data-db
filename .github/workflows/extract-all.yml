@@ -50,7 +50,7 @@ jobs:
           # - "exploit-github"
           # - "exploit-inthewild"
           # - "exploit-trickest"
-          # - "fedora"
+          - "fedora"
           # - "fortinet-handmade"
           # - "fortinet-cvrf"
           - "freebsd"

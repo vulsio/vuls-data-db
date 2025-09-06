@@ -23,6 +23,7 @@ jobs:
           - cisa-kev
           - eol
           - epss
+          - fedora
           - freebsd
           - mitre-v5
           - nvd-api-cve
