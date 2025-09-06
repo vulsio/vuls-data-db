@@ -30,6 +30,7 @@ jobs:
           - vuls-data-extracted-cisa-kev
           - vuls-data-extracted-eol
           - vuls-data-extracted-epss
+          - vuls-data-extracted-fedora
           - vuls-data-extracted-freebsd
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-nvd-api-cve
