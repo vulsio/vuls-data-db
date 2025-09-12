@@ -32,7 +32,7 @@ on:
           - vuls-data-extracted-freebsd
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-nvd-api-cve
-          - vuls-data-extracted-oracle
+          - vuls-data-extracted-oracle-linux
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
           - vuls-data-extracted-redhat-ovalv1
