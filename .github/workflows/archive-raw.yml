@@ -110,7 +110,7 @@ jobs:
           - "nvd-feed-cve-v2"
           - "openeuler-csaf"
           - "openeuler-cvrf"
-          - "oracle"
+          - "oracle-linux"
           - "oss-fuzz-osv"
           - "ox-csaf"
           - "paloalto-csaf"

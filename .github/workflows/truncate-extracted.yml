@@ -27,7 +27,7 @@ jobs:
           - freebsd
           - mitre-v5
           - nvd-api-cve
-          - oracle
+          - oracle-linux
           - redhat-csaf
           - redhat-csaf-rhel
           - redhat-ovalv1

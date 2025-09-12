@@ -309,7 +309,7 @@ jobs:
           - tag: vuls-data-raw-openeuler-cvrf
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-oracle
+          - tag: vuls-data-raw-oracle-linux
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-oss-fuzz-osv
