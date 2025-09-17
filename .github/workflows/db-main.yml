@@ -41,6 +41,9 @@ jobs:
           sudo apt-get update && sudo apt-get install -y jq zstd
           go install go.etcd.io/bbolt/cmd/bbolt@latest
 
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
       - name: Install vuls
         run: go install github.com/MaineK00n/vuls2/cmd/vuls@main
 
