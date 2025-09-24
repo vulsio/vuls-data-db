@@ -185,6 +185,10 @@ jobs:
     secrets:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
+  fetch-redhat-packagemanifest:
+    name: Fetch vuls-data-raw-redhat-packagemanifest
+    uses: ./.github/workflows/fetch-redhat-packagemanifest.yml
+
   fetch-msuc:
     name: Fetch vuls-data-raw-windows-msuc
     uses: ./.github/workflows/fetch-msuc.yml

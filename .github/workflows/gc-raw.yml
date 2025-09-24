@@ -375,6 +375,9 @@ jobs:
           - tag: vuls-data-raw-redhat-ovalv2
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-packagemanifest
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-repository-to-cpe
             pack-threads: 2
             pack-windowMemory: 4g

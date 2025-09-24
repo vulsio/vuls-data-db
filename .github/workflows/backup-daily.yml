@@ -158,6 +158,7 @@ jobs:
           - vuls-data-raw-redhat-osv
           - vuls-data-raw-redhat-ovalv1
           - vuls-data-raw-redhat-ovalv2
+          - vuls-data-raw-redhat-packagemanifest
           - vuls-data-raw-redhat-repository-to-cpe
           - vuls-data-raw-redhat-vex
           - vuls-data-raw-rocky-errata
