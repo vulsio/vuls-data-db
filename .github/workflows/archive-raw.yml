@@ -132,7 +132,7 @@ jobs:
           - "redhat-osv"
           # - "redhat-ovalv1"
           - "redhat-ovalv2"
-          - "redhat-packagemanifest"
+          - "redhat-package-manifest"
           - "redhat-repository-to-cpe"
           - "redhat-vex"
           - "rocky-errata"
