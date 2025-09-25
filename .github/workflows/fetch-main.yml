@@ -107,12 +107,14 @@ on:
           - pub-ghsa
           - pub-osv
           - r-osv
+          - redhat-appstream-lifecycle
           - redhat-csaf
           - redhat-cve
           - redhat-cvrf
           - redhat-osv
           - redhat-ovalv1
           - redhat-ovalv2
+          - redhat-package-manifest
           - redhat-repository-to-cpe
           - redhat-vex
           - rocky-errata

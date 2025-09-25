@@ -160,6 +160,7 @@ jobs:
           - vuls-data-raw-pub-ghsa
           - vuls-data-raw-pub-osv
           - vuls-data-raw-r-osv
+          - vuls-data-raw-redhat-appstream-lifecycle
           - vuls-data-raw-redhat-csaf
           - vuls-data-raw-redhat-cve
           - vuls-data-raw-redhat-cvrf
