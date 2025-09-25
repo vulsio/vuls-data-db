@@ -357,6 +357,9 @@ jobs:
           - tag: vuls-data-raw-r-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-appstream-lifecycle
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-csaf
             pack-threads: 2
             pack-windowMemory: 4g

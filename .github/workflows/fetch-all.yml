@@ -121,6 +121,7 @@ jobs:
           - "pub-ghsa"
           - "pub-osv"
           - "r-osv"
+          - "redhat-appstream-lifecycle"
           - "redhat-csaf"
           - "redhat-cve"
           # - "redhat-cvrf"
