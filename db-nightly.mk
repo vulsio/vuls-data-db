@@ -16,9 +16,7 @@ db-build:
 
 .PHONY: db-add
 db-add: 
-	vuls-data-update dotgit pull --dir . ghcr.io/vulsio/vuls-data-db:${REPO}
-	git -C ghcr.io/vulsio/vuls-data-db/${REPO} switch ${BRANCH}
-	git -C ghcr.io/vulsio/vuls-data-db/${REPO} restore .
+	vuls-data-update dotgit pull --dir . --checkout ${BRANCH} --restore ghcr.io/vulsio/vuls-data-db:${REPO}
 
 	cat ghcr.io/vulsio/vuls-data-db/${REPO}/datasource.json | jq --arg hash $$(git -C ghcr.io/vulsio/vuls-data-db/${REPO} rev-parse HEAD) --arg date $$(git -C ghcr.io/vulsio/vuls-data-db/${REPO} show -s --format=%at | xargs -I{} date -d @{} --utc +%Y-%m-%dT%TZ) '.extracted.commit |= $$hash | .extracted.date |= $$date' > tmp
 	mv tmp ghcr.io/vulsio/vuls-data-db/${REPO}/datasource.json
