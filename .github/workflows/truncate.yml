@@ -101,41 +101,34 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
-          tar -xf ${{ inputs.tag }}.tar.zst
-          rm ${{ inputs.tag }}.tar.zst
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:${{ inputs.tag }}
 
       - name: Decide log length
         id: decide_log_length
         run: |
-          TOTAL=$(git -C ${{ inputs.tag }} log --oneline main | wc -l)
+          TOTAL=$(git -C ghcr.io/${{ github.repository }}/${{ inputs.tag }} log --oneline main | wc -l)
           LENGTH=$(echo "scale=0; ${TOTAL} * ${{ inputs.log-ratio }} / 1" | bc)
           echo "Will truncate log length ${TOTAL} -> ${LENGTH}"
           echo "length=${LENGTH}" >> ${GITHUB_OUTPUT}
 
       - name: Truncate dotgit
         run: |
-          mv ${{ inputs.tag }} ${{inputs.tag}}.full
-
           echo "Create the trucated repository..."
-          git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main file://${PWD}/${{ inputs.tag }}.full ${{ inputs.tag }}
+          git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
           git -C ${{ inputs.tag }} reset
           git -C ${{ inputs.tag }} branch nightly origin/nightly
 
-          rm -rf ${{ inputs.tag }}.full
-          tar --remove-files -acf ${{ inputs.tag }}.tar.zst ${{ inputs.tag }} || [[ $? == 1 ]]
+          rm -rf ghcr.io/${{ github.repository }}/${{ inputs.tag }}
+          vuls-data-update dotgit compress ${{ inputs.tag }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -145,5 +138,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push truncated dotgit
-        run: |
-          oras push ghcr.io/vulsio/vuls-data-db:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
