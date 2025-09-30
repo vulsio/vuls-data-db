@@ -19,16 +19,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
         with:
@@ -44,44 +34,37 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-          tar -xf vuls-data-raw-epss.tar.zst
-          rm vuls-data-raw-epss.tar.zst
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-epss
 
       - name: Fetch
-        run: vuls-data-update fetch epss --dir vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
+        run: vuls-data-update fetch epss --dir ghcr.io/${{ github.repository }}/vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
 
       - name: Set Git config
         run: |
-          if git -C vuls-data-raw-epss remote | grep -q "^origin$"; then
-            git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           else
-            git -C vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           fi
-          git -C vuls-data-raw-epss config user.email "action@github.com"
-          git -C vuls-data-raw-epss config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss config user.name "GitHub Action"
 
       - name: Restore
         run: |
-          deleted=$(git -C vuls-data-raw-epss ls-files --deleted | grep -v $(date --utc -d "-1 days" "+%Y-%m-%d").json || [[ $? == 1 ]])
+          deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss ls-files --deleted | grep -v $(date --utc -d "-1 days" "+%Y-%m-%d").json || [[ $? == 1 ]])
           if [[ -n ${deleted} ]]; then
-            git -C vuls-data-raw-epss restore ${deleted}
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss restore ${deleted}
           fi
 
       - name: Commit
         run: |
-          if [[ -n $(git -C vuls-data-raw-epss status --porcelain) ]]; then
-            git -C vuls-data-raw-epss add .
-            git -C vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")"
           fi
 
       - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-epss vuls-data-raw-epss.tmp
-          mkdir vuls-data-raw-epss
-          mv vuls-data-raw-epss.tmp/.git vuls-data-raw-epss
-          tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-epss
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -91,5 +74,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-        run: |
-          oras push ghcr.io/${{ github.repository }}:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-raw-epss vuls-data-raw-epss.tar.zst
