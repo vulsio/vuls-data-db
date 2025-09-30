@@ -148,16 +148,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
         with:
@@ -173,45 +163,33 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-          tar -xf vuls-data-raw-${{ inputs.target }}.tar.zst
-          rm vuls-data-raw-${{ inputs.target }}.tar.zst
-          git -C vuls-data-raw-${{ inputs.target }} restore .
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
-          tar -xf vuls-data-extracted-${{ inputs.target }}.tar.zst
-          rm vuls-data-extracted-${{ inputs.target }}.tar.zst
-          git -C vuls-data-extracted-${{ inputs.target }} switch ${{ inputs.branch }}
+        run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
 
       - name: Extract
-        run: vuls-data-update extract ${{ inputs.target }} --dir vuls-data-extracted-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}
+        run: vuls-data-update extract ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
 
       - name: Set Git config
         run: |
-          if git -C vuls-data-extracted-${{ inputs.target }} remote | grep -q "^origin$"; then
-            git -C vuls-data-extracted-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
           else
-            git -C vuls-data-extracted-${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
           fi
-          git -C vuls-data-extracted-${{ inputs.target }} config user.email "action@github.com"
-          git -C vuls-data-extracted-${{ inputs.target }} config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} config user.name "GitHub Action"
 
       - name: Commit
         run: |
-          if [[ -n $(git -C vuls-data-extracted-${{ inputs.target }} status --porcelain) ]]; then
-            git -C vuls-data-extracted-${{ inputs.target }} add .
-            git -C vuls-data-extracted-${{ inputs.target }} commit -m "update"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} commit -m "update"
           fi
 
       - name: Create dotgit tarball
-        run: |
-          mv vuls-data-extracted-${{ inputs.target }} vuls-data-extracted-${{ inputs.target }}.tmp
-          mkdir vuls-data-extracted-${{ inputs.target }}
-          mv vuls-data-extracted-${{ inputs.target }}.tmp/.git vuls-data-extracted-${{ inputs.target }}
-          tar --remove-files -acf vuls-data-extracted-${{ inputs.target }}.tar.zst vuls-data-extracted-${{ inputs.target }} || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -221,5 +199,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
-        run: |
-          oras push ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }} vuls-data-extracted-${{ inputs.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }} vuls-data-extracted-${{ inputs.target }}.tar.zst

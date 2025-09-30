@@ -30,16 +30,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
         with:
@@ -55,52 +45,36 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
-          tar -xf vuls-data-raw-nvd-api-cve.tar.zst
-          rm vuls-data-raw-nvd-api-cve.tar.zst
-          git -C vuls-data-raw-nvd-api-cve restore .
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cve
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
-          tar -xf vuls-data-raw-nvd-api-cpematch.tar.zst
-          rm vuls-data-raw-nvd-api-cpematch.tar.zst
-          git -C vuls-data-raw-nvd-api-cpematch restore .
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-nvd-api-cpematch
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
-          tar -xf vuls-data-extracted-nvd-api-cve.tar.zst
-          rm vuls-data-extracted-nvd-api-cve.tar.zst
-          git -C vuls-data-extracted-nvd-api-cve switch ${{ inputs.branch }}
+        run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
 
       - name: Extract
-        run: vuls-data-update extract nvd-api-cve --dir vuls-data-extracted-nvd-api-cve vuls-data-raw-nvd-api-cve vuls-data-raw-nvd-api-cpematch
+        run: vuls-data-update extract nvd-api-cve --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve ghcr.io/${{ github.repository }}/vuls-data-raw-nvd-api-cve ghcr.io/${{ github.repository }}/vuls-data-raw-nvd-api-cpematch
 
       - name: Set Git config
         run: |
-          if git -C vuls-data-extracted-nvd-api-cve remote | grep -q "^origin$"; then
-            git -C vuls-data-extracted-nvd-api-cve remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
           else
-            git -C vuls-data-extracted-nvd-api-cve remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
           fi
-          git -C vuls-data-extracted-nvd-api-cve config user.email "action@github.com"
-          git -C vuls-data-extracted-nvd-api-cve config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve config user.name "GitHub Action"
 
       - name: Commit
         run: |
-          if [[ -n $(git -C vuls-data-extracted-nvd-api-cve status --porcelain) ]]; then
-            git -C vuls-data-extracted-nvd-api-cve add .
-            git -C vuls-data-extracted-nvd-api-cve commit -m "update"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve commit -m "update"
           fi
 
       - name: Create dotgit tarball
-        run: |
-          mv vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tmp
-          mkdir vuls-data-extracted-nvd-api-cve
-          mv vuls-data-extracted-nvd-api-cve.tmp/.git vuls-data-extracted-nvd-api-cve
-          tar --remove-files -acf vuls-data-extracted-nvd-api-cve.tar.zst vuls-data-extracted-nvd-api-cve || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -110,5 +84,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve
-        run: |
-          oras push ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve vuls-data-extracted-nvd-api-cve.tar.zst

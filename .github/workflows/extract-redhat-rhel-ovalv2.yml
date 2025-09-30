@@ -30,16 +30,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
         with:
@@ -55,64 +45,48 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv2
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv2
-          tar -xf vuls-data-raw-redhat-ovalv2.tar.zst
-          rm vuls-data-raw-redhat-ovalv2.tar.zst
-          git -C vuls-data-raw-redhat-ovalv2 restore .
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv2
 
       - name: Remove unnecessary streams
         run: |
-          rm -rf vuls-data-raw-redhat-ovalv2/5
-          find vuls-data-raw-redhat-ovalv2/6 -mindepth 1 -maxdepth 1 ! -name 'rhel-6-including-unpatched' ! -name 'rhel-6-extras-including-unpatched' ! -name 'rhel-6-supplementary' ! -name 'rhel-6-els' | xargs rm -rf
-          find vuls-data-raw-redhat-ovalv2/7 -mindepth 1 -maxdepth 1 ! -name 'rhel-7-including-unpatched' ! -name 'rhel-7-extras-including-unpatched' ! -name 'rhel-7-supplementary' | xargs rm -rf
-          find vuls-data-raw-redhat-ovalv2/8 -mindepth 1 -maxdepth 1 ! -name 'rhel-8-including-unpatched' | xargs rm -rf
-          find vuls-data-raw-redhat-ovalv2/9 -mindepth 1 -maxdepth 1 ! -name 'rhel-9-including-unpatched' | xargs rm -rf
+          rm -rf ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2/5
+          find ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2/6 -mindepth 1 -maxdepth 1 ! -name 'rhel-6-including-unpatched' ! -name 'rhel-6-extras-including-unpatched' ! -name 'rhel-6-supplementary' ! -name 'rhel-6-els' | xargs rm -rf
+          find ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2/7 -mindepth 1 -maxdepth 1 ! -name 'rhel-7-including-unpatched' ! -name 'rhel-7-extras-including-unpatched' ! -name 'rhel-7-supplementary' | xargs rm -rf
+          find ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2/8 -mindepth 1 -maxdepth 1 ! -name 'rhel-8-including-unpatched' | xargs rm -rf
+          find ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2/9 -mindepth 1 -maxdepth 1 ! -name 'rhel-9-including-unpatched' | xargs rm -rf
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
-          tar -xf vuls-data-raw-redhat-repository-to-cpe.tar.zst
-          rm vuls-data-raw-redhat-repository-to-cpe.tar.zst
-          git -C vuls-data-raw-redhat-repository-to-cpe restore .
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
 
       - name: Replace empty repository-to-cpe data
         run: |
-          echo "{}" > vuls-data-raw-redhat-repository-to-cpe/repository-to-cpe.json
+          echo "{}" > ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe/repository-to-cpe.json
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
-          tar -xf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
-          rm vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
-          git -C vuls-data-extracted-redhat-ovalv2-rhel switch ${{ inputs.branch }}
+        run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
 
       - name: Extract
-        run: vuls-data-update extract redhat-ovalv2 --dir vuls-data-extracted-redhat-ovalv2-rhel vuls-data-raw-redhat-ovalv2 vuls-data-raw-redhat-repository-to-cpe
+        run: vuls-data-update extract redhat-ovalv2 --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2 ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe
 
       - name: Set Git config
         run: |
-          if git -C vuls-data-extracted-redhat-ovalv2-rhel remote | grep -q "^origin$"; then
-            git -C vuls-data-extracted-redhat-ovalv2-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           else
-            git -C vuls-data-extracted-redhat-ovalv2-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           fi
-          git -C vuls-data-extracted-redhat-ovalv2-rhel config user.email "action@github.com"
-          git -C vuls-data-extracted-redhat-ovalv2-rhel config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel config user.name "GitHub Action"
 
       - name: Commit
         run: |
-          if [[ -n $(git -C vuls-data-extracted-redhat-ovalv2-rhel status --porcelain) ]]; then
-            git -C vuls-data-extracted-redhat-ovalv2-rhel add .
-            git -C vuls-data-extracted-redhat-ovalv2-rhel commit -m "update"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel commit -m "update"
           fi
 
       - name: Create dotgit tarball
-        run: |
-          mv vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.tmp
-          mkdir vuls-data-extracted-redhat-ovalv2-rhel
-          mv vuls-data-extracted-redhat-ovalv2-rhel.tmp/.git vuls-data-extracted-redhat-ovalv2-rhel
-          tar --remove-files -acf vuls-data-extracted-redhat-ovalv2-rhel.tar.zst vuls-data-extracted-redhat-ovalv2-rhel || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -122,5 +96,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
-        run: |
-          oras push ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel vuls-data-extracted-redhat-ovalv2-rhel.tar.zst
