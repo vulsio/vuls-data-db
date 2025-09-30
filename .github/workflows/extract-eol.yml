@@ -30,16 +30,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
         with:
@@ -55,38 +45,30 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
-          tar -xf vuls-data-extracted-eol.tar.zst
-          rm vuls-data-extracted-eol.tar.zst
-          git -C vuls-data-extracted-eol switch ${{ inputs.branch }}
+        run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
 
       - name: Extract
-        run: vuls-data-update extract eol --dir vuls-data-extracted-eol
+        run: vuls-data-update extract eol --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-eol
 
       - name: Set Git config
         run: |
-          if git -C vuls-data-extracted-eol remote | grep -q "^origin$"; then
-            git -C vuls-data-extracted-eol remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
           else
-            git -C vuls-data-extracted-eol remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
           fi
-          git -C vuls-data-extracted-eol config user.email "action@github.com"
-          git -C vuls-data-extracted-eol config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol config user.name "GitHub Action"
 
       - name: Commit
         run: |
-          if [[ -n $(git -C vuls-data-extracted-eol status --porcelain) ]]; then
-            git -C vuls-data-extracted-eol add .
-            git -C vuls-data-extracted-eol commit -m "update"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-eol commit -m "update"
           fi
 
       - name: Create dotgit tarball
-        run: |
-          mv vuls-data-extracted-eol vuls-data-extracted-eol.tmp
-          mkdir vuls-data-extracted-eol
-          mv vuls-data-extracted-eol.tmp/.git vuls-data-extracted-eol
-          tar --remove-files -acf vuls-data-extracted-eol.tar.zst vuls-data-extracted-eol || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-eol
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -96,5 +78,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-eol
-        run: |
-          oras push ghcr.io/${{ github.repository }}:vuls-data-extracted-eol vuls-data-extracted-eol.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-extracted-eol vuls-data-extracted-eol.tar.zst
