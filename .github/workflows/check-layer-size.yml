@@ -46,20 +46,18 @@ jobs:
     outputs:
       exceeded: ${{ steps.check.outputs.exceeded }}
     steps:
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Check Layer Size
         id: check
         run: |
-          SIZE=$(oras manifest fetch ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} | jq '.layers.[] | select( .mediaType == "${{ inputs.media-type }}") | .size')
+          SIZE=$(vuls-data-update dotgit registry status ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} | jq '.layers[] | select( .mediaType == "${{ inputs.media-type }}") | .size')
           echo "repository size [KB]:" $(( ${SIZE} / 1024 ))
           echo "repository size [MB]:" $(( ${SIZE} / 1024 / 1024 ))
           if [ ${SIZE} -gt $((${{ inputs.threshold-mb }} * 1024 * 1024)) ]; then

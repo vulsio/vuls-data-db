@@ -245,62 +245,45 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Pull ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
-        id: pull
-        run: |
-          MANIFEST=$(oras manifest fetch ghcr.io/${{ inputs.repository }}:${{ inputs.tag }})
-          DIGEST=$(echo ${MANIFEST} | jq -r '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .digest')
-          TITLE=$(echo ${MANIFEST} | jq -r '.layers.[] | select( .mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .annotations."org.opencontainers.image.title"')
-
-          oras blob fetch --output ${TITLE} ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}@${DIGEST}
-          tar -xf ${TITLE}
-          rm ${TITLE}
-
-          BASENAME=$(basename "${TITLE}" .tar.zst)
-          echo "basename=${BASENAME}" >> ${GITHUB_OUTPUT}
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
 
       - name: Print git gc before .git size
         id: before
-        run: echo "size=$(du -sh ${{ steps.pull.outputs.basename }}/.git/ | cut -f1)" >> $GITHUB_OUTPUT
+        run: echo "size=$(du -sh ghcr.io/${{ inputs.repository }}/${{ inputs.tag }}/.git/ | cut -f1)" >> $GITHUB_OUTPUT
 
       - name: Set Git config
         run: |
-          git -C ${{ steps.pull.outputs.basename }} config gc.auto 0
-          git -C ${{ steps.pull.outputs.basename }} config pack.threads ${{ inputs.pack-threads }}
-          git -C ${{ steps.pull.outputs.basename }} config pack.windowMemory ${{ inputs.pack-windowMemory }}
+          git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} config gc.auto 0
+          git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} config pack.threads ${{ inputs.pack-threads }}
+          git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} config pack.windowMemory ${{ inputs.pack-windowMemory }}
 
       - name: Run git gc
-        run: /usr/bin/time -v git -C ${{ steps.pull.outputs.basename }} gc --aggressive --force
+        run: /usr/bin/time -v git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} gc --aggressive --force
 
       - name: Print git gc after .git size
         id: after
-        run: echo "size=$(du -sh ${{ steps.pull.outputs.basename }}/.git/ | cut -f1)" >> $GITHUB_OUTPUT
+        run: echo "size=$(du -sh ghcr.io/${{ inputs.repository }}/${{ inputs.tag }}/.git/ | cut -f1)" >> $GITHUB_OUTPUT
 
       - name: Summarize git gc
         run: |
           (
-            echo ### git gc --aggressize ${{ steps.pull.outputs.basename }}
+            echo ### git gc --aggressize ${{ inputs.tag }}
             echo "|      | before | after | "
             echo "| :--: | :----: | :---: | "
             echo "| size | ${{ steps.before.outputs.size }} | ${{ steps.after.outputs.size }} | "
           ) >> $GITHUB_STEP_SUMMARY
 
       - name: Create dotgit tarball
-        run: |
-          mv ${{ steps.pull.outputs.basename }} ${{ steps.pull.outputs.basename }}.tmp
-          mkdir ${{ steps.pull.outputs.basename }}
-          mv ${{ steps.pull.outputs.basename }}.tmp/.git ${{ steps.pull.outputs.basename }}
-          tar --remove-files -acf ${{ steps.pull.outputs.basename }}.tar.zst ${{ steps.pull.outputs.basename }} || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ inputs.repository }}/${{ inputs.tag }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -310,5 +293,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
-        run: |
-          oras push ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} ${{ steps.pull.outputs.basename }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
