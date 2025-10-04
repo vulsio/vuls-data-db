@@ -18,16 +18,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
 
@@ -37,9 +27,7 @@ jobs:
           go-version: "stable"
 
       - name: Install Dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq zstd
-          go install go.etcd.io/bbolt/cmd/bbolt@latest
+        run: sudo apt-get update && sudo apt-get install -y jq zstd
 
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
@@ -51,10 +39,7 @@ jobs:
         run: make -f db-nightly.mk db-build BRANCH=nightly DBPATH=./vuls.db
 
       - name: Compact vuls.db
-        run: |
-          bbolt compact -o ./vuls-compact.db ./vuls.db
-          mv ./vuls-compact.db ./vuls.db
-          zstd --ultra -22 -T4 --rm ./vuls.db -o ./vuls.db.zst
+        run: vuls db compress --dbpath ./vuls.db
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -64,5 +49,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload vuls.db to ghcr.io/vulsio/vuls-nightly-db
-        run: |
-          oras push ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst:application/vnd.vulsio.vuls.db.layer.v1+zstd
+        run: vuls db push ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst
