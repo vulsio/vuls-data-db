@@ -281,18 +281,11 @@ jobs:
 
           vuls-data-update dotgit compress ${{ inputs.tag }}
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Push archive dotgit
-        run: vuls-data-update dotgit registry cp ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }} 
+        run: vuls-data-update dotgit registry cp ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
 
       - name: Push latest dotgit
-        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
 
   gc-archive:
     name: GC vulsio/vuls-data-db-archive:${{ needs.archive.outputs.tag }}
