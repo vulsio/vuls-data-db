@@ -11,15 +11,13 @@ jobs:
     outputs:
       tags: ${{ steps.push_archive.outputs.tags }}
     steps:
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -29,16 +27,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
-          tar -xf vuls-data-raw-epss.tar.zst
-          rm vuls-data-raw-epss.tar.zst
-          git -C vuls-data-raw-epss restore .
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-epss
 
       - name: Push archive
         id: push_archive
         run: |
-          cd vuls-data-raw-epss/
+          cd ghcr.io/${{ github.repository }}/vuls-data-raw-epss/
 
           tags=()
           for y in *; do
@@ -53,13 +47,13 @@ jobs:
             git -C vuls-data-raw-epss config user.name "GitHub Action"
             git -C vuls-data-raw-epss add ${y}
             git -C vuls-data-raw-epss commit -m "update"
-            rm -rf vuls-data-raw-epss/${y}
-            tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
+
+            vuls-data-update dotgit compress vuls-data-raw-epss
+            vuls-data-update dotgit registry push --force ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst
+            rm -rf vuls-data-raw-epss/ vuls-data-raw-epss.tar.zst
             
-            oras push ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
             tags+=("\"vuls-data-raw-epss-archive-$(( ${y} - 2020 ))\"")
 
-            rm -rf vuls-data-raw-epss/ vuls-data-raw-epss.tar.zst
           done
 
           echo "tags=[$(IFS=,; echo "${tags[*]}")]" >> "$GITHUB_OUTPUT"
@@ -67,7 +61,7 @@ jobs:
       - name: Push latest
         if: ${{ steps.push_archive.outputs.tags != '[]' }}
         run: |
-          cd vuls-data-raw-epss/
+          cd ghcr.io/${{ github.repository }}/vuls-data-raw-epss/
 
           mkdir vuls-data-raw-epss/
           mv $(date "+%Y") vuls-data-raw-epss
@@ -85,10 +79,8 @@ jobs:
           git -C vuls-data-raw-epss add $(date "+%Y")
           git -C vuls-data-raw-epss commit -m "update"
           
-          rm -rf vuls-data-raw-epss/$(date "+%Y")
-          tar --remove-files -acf vuls-data-raw-epss.tar.zst vuls-data-raw-epss || [[ $? == 1 ]]
-
-          oras push ghcr.io/${{ github.repository }}:vuls-data-raw-epss vuls-data-raw-epss.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+          vuls-data-update dotgit compress vuls-data-raw-epss
+          vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-raw-epss vuls-data-raw-epss.tar.zst
 
   gc:
     name: GC vulsio/vuls-data-db-archive:${{ matrix.tag }}
