@@ -49,4 +49,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload vuls.db to ghcr.io/vulsio/vuls-nightly-db
-        run: vuls db push ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst
+        run: vuls db push --force ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst
