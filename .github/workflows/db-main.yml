@@ -45,14 +45,7 @@ jobs:
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload vuls.db to ghcr.io/vulsio/vuls-nightly-db
         run: |
-          vuls db push --force ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_scheme_version.outputs.schema_version }} ./vuls.db.zst
-          vuls db push --force ghcr.io/vulsio/vuls-nightly-db:latest ./vuls.db.zst
+          vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_scheme_version.outputs.schema_version }} ./vuls.db.zst
+          vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:latest ./vuls.db.zst

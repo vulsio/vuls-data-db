@@ -54,12 +54,5 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Copy ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} to ghcr.io/${{ github.repository }}:${{ inputs.tag }}
-        run: vuls-data-update dotgit registry cp --force ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+        run: vuls-data-update dotgit registry cp --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} ghcr.io/${{ github.repository }}:${{ inputs.tag }}

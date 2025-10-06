@@ -79,12 +79,5 @@ jobs:
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel
 
-      - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
-        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel vuls-data-extracted-${{ inputs.target }}-rhel.tar.zst
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel vuls-data-extracted-${{ inputs.target }}-rhel.tar.zst
