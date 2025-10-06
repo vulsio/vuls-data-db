@@ -34,16 +34,6 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
-      - name: Install Oras
-        run: |
-          # https://oras.land/docs/installation/#linux
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v5
         with:
@@ -59,47 +49,40 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-        run: |
-          oras pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-          tar -xf vuls-data-raw-${{ inputs.target }}.tar.zst
-          rm vuls-data-raw-${{ inputs.target }}.tar.zst
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
       - name: Fetch all
-        run: vuls-data-update fetch ${{ inputs.target }} --dir vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5
+        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5
 
       # - name: Fetch modified for last 3 days
-      #   run: vuls-data-update fetch ${{ inputs.target }} --dir vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5 --last-mod-start-date $(git -C vuls-data-raw-${{ inputs.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
+      #   run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5 --last-mod-start-date $(git -C vuls-data-raw-${{ inputs.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
 
       - name: Set Git config
         run: |
-          if git -C vuls-data-raw-${{ inputs.target }} remote | grep -q "^origin$"; then
-            git -C vuls-data-raw-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
           else
-            git -C vuls-data-raw-${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
           fi
-          git -C vuls-data-raw-${{ inputs.target }} config user.email "action@github.com"
-          git -C vuls-data-raw-${{ inputs.target }} config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} config user.name "GitHub Action"
 
       # - name: Restore
       #   run: |
-      #     deleted=$(git -C vuls-data-raw-${{ inputs.target }} ls-files --deleted)
+      #     deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} ls-files --deleted)
       #     if [[ -n ${deleted} ]]; then
-      #       git -C vuls-data-raw-${{ inputs.target }} restore ${deleted}
+      #       git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} restore ${deleted}
       #     fi
 
       - name: Commit
         run: |
-          if [[ -n $(git -C vuls-data-raw-${{ inputs.target }} status --porcelain) ]]; then
-            git -C vuls-data-raw-${{ inputs.target }} add .
-            git -C vuls-data-raw-${{ inputs.target }} commit -m "update"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} commit -m "update"
           fi
 
       - name: Create dotgit tarball
-        run: |
-          mv vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tmp
-          mkdir vuls-data-raw-${{ inputs.target }}
-          mv vuls-data-raw-${{ inputs.target }}.tmp/.git vuls-data-raw-${{ inputs.target }}
-          tar --remove-files -acf vuls-data-raw-${{ inputs.target }}.tar.zst vuls-data-raw-${{ inputs.target }} || [[ $? == 1 ]]
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v3
@@ -109,5 +92,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-        run: |
-          oras push ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tar.zst:application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
+        run: vuls-data-update dotgit registry push --force ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tar.zst
