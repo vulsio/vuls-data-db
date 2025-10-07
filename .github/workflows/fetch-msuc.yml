@@ -104,6 +104,14 @@ jobs:
           remove-codeql: "true"
           remove-docker-images: "true"
 
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
         run: vuls-data-update dotgit registry pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
 
