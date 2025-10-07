@@ -22,7 +22,6 @@ on:
           - android-osv
           - anolis-oval
           - arch
-          - azure-oval
           - bitnami-osv
           # - cargo-db
           - cargo-ghsa
@@ -68,6 +67,15 @@ on:
           - maven-ghsa
           - maven-glsa
           - maven-osv
+          - microsoft-advisory
+          - microsoft-azure-oval
+          - microsoft-bulletin
+          - microsoft-csaf
+          - microsoft-cvrf
+          - microsoft-deployment
+          - microsoft-product
+          - microsoft-vulnerability
+          - microsoft-wsusscn2
           - minimos-secdb
           - mitre-attack
           - mitre-capec
@@ -139,14 +147,6 @@ on:
           - ubuntu-oval
           - ubuntu-usndb
           - ubuntu-vex
-          - windows-advisory
-          - windows-bulletin
-          - windows-csaf
-          - windows-cvrf
-          - windows-deployment
-          - windows-product
-          - windows-vulnerability
-          - windows-wsusscn2
           - wolfi-osv
           - wolfi-secdb
           - wrlinux
@@ -183,8 +183,8 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
-      - name: install cabextract for windows-wsusscn2
-        if: ${{ inputs.target == 'windows-wsusscn2' }}
+      - name: install cabextract for microsoft-wsusscn2
+        if: ${{ inputs.target == 'microsoft-wsusscn2' }}
         run: sudo apt-get update && sudo apt-get install -y cabextract
 
       - name: Fetch

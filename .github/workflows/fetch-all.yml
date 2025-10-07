@@ -28,7 +28,6 @@ jobs:
           - "android-osv"
           - "anolis-oval"
           - "arch"
-          - "azure-oval"
           - "bitnami-osv"
           - "bottlerocket"
           # - "cargo-db"
@@ -78,6 +77,15 @@ jobs:
           - "maven-ghsa"
           - "maven-glsa"
           - "maven-osv"
+          - "microsoft-advisory"
+          - "microsoft-azure-oval"
+          # - "microsoft-bulletin"
+          - "microsoft-csaf"
+          - "microsoft-cvrf"
+          - "microsoft-deployment"
+          - "microsoft-product"
+          - "microsoft-vulnerability"
+          - "microsoft-wsusscn2"
           - "minimos-osv"
           - "minimos-secdb"
           - "mitre-attack"
@@ -155,14 +163,6 @@ jobs:
           - "ubuntu-oval"
           - "ubuntu-usndb"
           - "ubuntu-vex"
-          - "windows-advisory"
-          # - "windows-bulletin"
-          - "windows-csaf"
-          - "windows-cvrf"
-          - "windows-deployment"
-          - "windows-product"
-          - "windows-vulnerability"
-          - "windows-wsusscn2"
           - "wolfi-osv"
           - "wolfi-secdb"
           - "wrlinux"
@@ -191,7 +191,7 @@ jobs:
     uses: ./.github/workflows/fetch-redhat-package-manifest.yml
 
   fetch-msuc:
-    name: Fetch vuls-data-raw-windows-msuc
+    name: Fetch vuls-data-raw-microsoft-msuc
     uses: ./.github/workflows/fetch-msuc.yml
 
   fetch-fedora:
