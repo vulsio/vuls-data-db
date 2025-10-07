@@ -255,8 +255,7 @@ jobs:
           ARCHIVE_MAX=$(
               (
                 echo "${{ inputs.tag }}-archive-0" ;
-                gh api --paginate /orgs/vulsio/packages/container/vuls-data-db-archive/versions |
-                  jq -r '.[] | .metadata.container.tags[0] | select(. // "" | startswith("${{ inputs.tag }}-archive-"))'
+                vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/vuls-data-db-archive" --token ${{ secrets.GITHUB_TOKEN }} | jq -r '.[] | select(.name | startswith("ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-archive-")) | .name' | sed 's/^ghcr.io\/vulsio\/vuls-data-db-archive://g'
               ) |
               sed -e 's/${{ inputs.tag }}-archive-//' |
               sort -rn |
@@ -264,8 +263,6 @@ jobs:
           )
           ARCHIVE_SUFFIX=archive-$(( ${ARCHIVE_MAX} + 1 ))
           echo "archive_suffix=${ARCHIVE_SUFFIX}" | tee ${GITHUB_OUTPUT}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Split archive
         id: split_archive

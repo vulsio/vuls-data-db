@@ -22,8 +22,13 @@ jobs:
     name: Cleanup untagged images in ${{ inputs.package }}
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
       - name: Cleanup untagged images
-        run: |
-          gh api --paginate /orgs/vulsio/packages/container/${{ inputs.package }}/versions --jq '.[] | select(.metadata.container.tags | length == 0) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/${{ inputs.package }}/versions/{}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/${{ inputs.package }}" --token ${{  secrets.GITHUB_TOKEN }} | jq -r '.[] | select(.name == "") | .digest' | xargs -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/${{ inputs.package }}@{}
