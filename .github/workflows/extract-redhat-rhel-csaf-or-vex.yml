@@ -48,7 +48,10 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6
         with:
-          go-version-file: "go.mod"
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} --restore ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
