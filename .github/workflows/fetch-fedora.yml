@@ -127,8 +127,13 @@ jobs:
     if: ${{ always() }}
     needs: [commit]
     steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
       - name: Cleanup fedora-data-* images
-        run: |
-          gh api --paginate /orgs/vulsio/packages/container/vuls-data-db/versions --jq '.[] | select(.metadata.container.tags[] | startswith("fedora-data-")) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/vuls-data-db/versions/{}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/vuls-data-db" --tagged-only --token ${{ secrets.GITHUB_TOKEN }} jq -r '.[] | select(.name | startswith("ghcr.io/vulsio/vuls-data-db:fedora-data-")) | .digest' | xargs -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db@{}
