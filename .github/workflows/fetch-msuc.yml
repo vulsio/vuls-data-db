@@ -6,7 +6,7 @@ on:
 
 jobs:
   fetch:
-    name: Fetch vuls-data-raw-windows-msuc
+    name: Fetch vuls-data-raw-microsoft-msuc
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -79,17 +79,17 @@ jobs:
 
       - name: Fetch
         run: |
-          mkdir vuls-data-raw-windows-msuc
-          vuls-data-update fetch windows-msuc --dir vuls-data-raw-windows-msuc ${{ matrix.target }}
+          mkdir vuls-data-raw-microsoft-msuc
+          vuls-data-update fetch microsoft-msuc --dir vuls-data-raw-microsoft-msuc ${{ matrix.target }}
 
       - name: Create tarball
-        run: tar --remove-files -acf vuls-data-raw-windows-msuc.tar.zst vuls-data-raw-windows-msuc || [[ $? == 1 ]]
+        run: tar --remove-files -acf vuls-data-raw-microsoft-msuc.tar.zst vuls-data-raw-microsoft-msuc || [[ $? == 1 ]]
 
-      - name: Push ghcr.io/vulsio/vuls-data-db:windows-msuc-data-${{ strategy.job-index }}
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:windows-msuc-data-${{ strategy.job-index }} vuls-data-raw-windows-msuc.tar.zst
+      - name: Push ghcr.io/vulsio/vuls-data-db:microsoft-msuc-data-${{ strategy.job-index }}
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:microsoft-msuc-data-${{ strategy.job-index }} vuls-data-raw-microsoft-msuc.tar.zst
 
   commit:
-    name: Commit vuls-data-raw-windows-msuc
+    name: Commit vuls-data-raw-microsoft-msuc
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [fetch]
@@ -112,48 +112,48 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
-      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
-        run: vuls-data-update dotgit registry pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
+        run: vuls-data-update dotgit registry pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
 
-      - name: Aggregate windows-msuc-data-*
+      - name: Aggregate microsoft-msuc-data-*
         run: |
           for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
-            vuls-data-update dotgit registry pull --dir . --checkout "" ghcr.io/${{ github.repository }}:windows-msuc-data-${index}
-            mv ghcr.io/${{ github.repository }}/windows-msuc-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc/
-            rmdir ghcr.io/${{ github.repository }}/windows-msuc-data-${index}
+            vuls-data-update dotgit registry pull --dir . --checkout "" ghcr.io/${{ github.repository }}:microsoft-msuc-data-${index}
+            mv ghcr.io/${{ github.repository }}/microsoft-msuc-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc/
+            rmdir ghcr.io/${{ github.repository }}/microsoft-msuc-data-${index}
           done
 
       - name: Set Git config
         run: |
-          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc remote | grep -q "^origin$"; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
           else
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc config user.name "GitHub Action"
 
       - name: Commit
         run: |
-          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc status --porcelain) ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc commit -m "update"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc commit -m "update"
           fi
 
       - name: Create dotgit tarball
-        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-windows-msuc
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc
 
-      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-windows-msuc vuls-data-raw-windows-msuc.tar.zst
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc vuls-data-raw-microsoft-msuc.tar.zst
 
   cleanup:
-    name: Cleanup windows-msuc-data-*
+    name: Cleanup microsoft-msuc-data-*
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs: [commit]
     steps:
-      - name: Cleanup windows-msuc-data-* images
+      - name: Cleanup microsoft-msuc-data-* images
         run: |
-          gh api --paginate /orgs/vulsio/packages/container/vuls-data-db/versions --jq '.[] | select(.metadata.container.tags[] | startswith("windows-msuc-data-")) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/vuls-data-db/versions/{}
+          gh api --paginate /orgs/vulsio/packages/container/vuls-data-db/versions --jq '.[] | select(.metadata.container.tags[] | startswith("microsoft-msuc-data-")) | .id' | xargs -I {} gh api --method DELETE /orgs/vulsio/packages/container/vuls-data-db/versions/{}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

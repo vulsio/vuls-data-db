@@ -64,7 +64,6 @@ on:
           - vuls-data-raw-android-osv
           - vuls-data-raw-anolis-oval
           - vuls-data-raw-arch
-          - vuls-data-raw-azure-oval
           - vuls-data-raw-bitnami-osv
           - vuls-data-raw-bottlerocket
           # - vuls-data-raw-cargo-db
@@ -121,6 +120,16 @@ on:
           - vuls-data-raw-maven-ghsa
           - vuls-data-raw-maven-glsa
           - vuls-data-raw-maven-osv
+          - vuls-data-raw-microsoft-advisory
+          - vuls-data-raw-microsoft-azure-oval
+          - vuls-data-raw-microsoft-bulletin
+          - vuls-data-raw-microsoft-csaf
+          - vuls-data-raw-microsoft-cvrf
+          - vuls-data-raw-microsoft-deployment
+          - vuls-data-raw-microsoft-msuc
+          - vuls-data-raw-microsoft-product
+          - vuls-data-raw-microsoft-vulnerability
+          - vuls-data-raw-microsoft-wsusscn2
           - vuls-data-raw-minimos-osv
           - vuls-data-raw-minimos-secdb
           - vuls-data-raw-mitre-attack
@@ -209,15 +218,6 @@ on:
           - vuls-data-raw-vulncheck-kev
           - vuls-data-raw-vulncheck-nist-nvd
           - vuls-data-raw-vulncheck-nist-nvd2
-          - vuls-data-raw-windows-advisory
-          - vuls-data-raw-windows-bulletin
-          - vuls-data-raw-windows-csaf
-          - vuls-data-raw-windows-cvrf
-          - vuls-data-raw-windows-deployment
-          - vuls-data-raw-windows-msuc
-          - vuls-data-raw-windows-product
-          - vuls-data-raw-windows-vulnerability
-          - vuls-data-raw-windows-wsusscn2
           - vuls-data-raw-wolfi-osv
           - vuls-data-raw-wolfi-secdb
           - vuls-data-raw-wrlinux

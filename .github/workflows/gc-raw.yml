@@ -41,9 +41,6 @@ jobs:
           - tag: vuls-data-raw-arch
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-azure-oval
-            pack-threads: 2
-            pack-windowMemory: 4g
           - tag: vuls-data-raw-bitnami-osv
             pack-threads: 2
             pack-windowMemory: 4g
@@ -211,6 +208,36 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-maven-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-advisory
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-azure-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-bulletin
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-deployment
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-msuc
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-product
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-vulnerability
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-wsusscn2
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-minimos-osv
@@ -475,33 +502,6 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-vulncheck-nist-nvd2
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-advisory
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-bulletin
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-csaf
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-cvrf
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-deployment
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-msuc
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-product
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-vulnerability
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-windows-wsusscn2
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-wolfi-osv

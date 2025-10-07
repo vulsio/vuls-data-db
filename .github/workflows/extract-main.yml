@@ -65,6 +65,10 @@ on:
           # - maven-ghsa
           # - maven-glsa
           # - maven-osv
+          # - microsoft-bulletin
+          # - microsoft-cvrf
+          # - microsoft-msuc
+          # - microsoft-wsusscn2
           # - mitre-attack
           # - mitre-capec
           # - mitre-cvrf
@@ -121,10 +125,6 @@ on:
           # - ubuntu-osv
           # - ubuntu-vex
           # - vulncheck-kev
-          # - windows-bulletin
-          # - windows-cvrf
-          # - windows-msuc
-          # - windows-wsusscn2
           # - wolfi-osv
       branch:
         required: true
