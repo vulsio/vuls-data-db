@@ -93,7 +93,7 @@ jobs:
       - name: Aggregate fedora-data-*
         run: |
           for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
-            vuls-data-update dotgit registry pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${index}
+            vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${index}
             mv ghcr.io/${{ github.repository }}/fedora-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
             rmdir ghcr.io/${{ github.repository }}/fedora-data-${index}
           done
