@@ -119,7 +119,9 @@ jobs:
         run: |
           for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
             vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:microsoft-msuc-data-${index}
-            mv ghcr.io/${{ github.repository }}/microsoft-msuc-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc/
+            if ls ghcr.io/${{ github.repository }}/microsoft-msuc-data-${index}/* >/dev/null 2>&1; then
+              mv ghcr.io/${{ github.repository }}/microsoft-msuc-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc/
+            fi
             rmdir ghcr.io/${{ github.repository }}/microsoft-msuc-data-${index}
           done
 

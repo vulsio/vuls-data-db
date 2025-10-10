@@ -94,7 +94,9 @@ jobs:
         run: |
           for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
             vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${index}
-            mv ghcr.io/${{ github.repository }}/fedora-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
+            if ls ghcr.io/${{ github.repository }}/fedora-data-${index}/* >/dev/null 2>&1; then
+              mv ghcr.io/${{ github.repository }}/fedora-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
+            fi
             rmdir ghcr.io/${{ github.repository }}/fedora-data-${index}
           done
 
