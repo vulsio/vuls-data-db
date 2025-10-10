@@ -279,7 +279,7 @@ jobs:
           vuls-data-update dotgit compress ${{ inputs.tag }}
 
       - name: Push archive dotgit
-        run: vuls-data-update dotgit registry cp ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
+        run: vuls-data-update dotgit registry cp --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
 
       - name: Push latest dotgit
         run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
