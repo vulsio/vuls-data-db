@@ -62,7 +62,7 @@ jobs:
         run: go install github.com/sibprogrammer/xq@latest
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
-        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
 
       - name: Fetch All
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
