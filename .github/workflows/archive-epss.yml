@@ -39,7 +39,7 @@ jobs:
             git -C vuls-data-raw-epss config user.email "action@github.com"
             git -C vuls-data-raw-epss config user.name "GitHub Action"
             git -C vuls-data-raw-epss add ${y}
-            git -C vuls-data-raw-epss commit -m "update"
+            git -C vuls-data-raw-epss commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ job.check_run_id }}"
 
             vuls-data-update dotgit compress vuls-data-raw-epss
             vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst
@@ -70,7 +70,7 @@ jobs:
           git -C vuls-data-raw-epss config user.email "action@github.com"
           git -C vuls-data-raw-epss config user.name "GitHub Action"
           git -C vuls-data-raw-epss add $(date "+%Y")
-          git -C vuls-data-raw-epss commit -m "update"
+          git -C vuls-data-raw-epss commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ job.check_run_id }}"
           
           vuls-data-update dotgit compress vuls-data-raw-epss
           vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-epss vuls-data-raw-epss.tar.zst

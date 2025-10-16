@@ -58,7 +58,7 @@ jobs:
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json commit -m "update"
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ job.check_run_id }}"
           fi
 
       - name: Create dotgit tarball
