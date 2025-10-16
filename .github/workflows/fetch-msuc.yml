@@ -163,4 +163,4 @@ jobs:
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Cleanup microsoft-msuc-data-* images
-        run: vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/vuls-data-db" --tagged-only --token ${{ secrets.GITHUB_TOKEN }} jq -r '.[] | select(.name | startswith("ghcr.io/vulsio/vuls-data-db:microsoft-msuc-data-")) | .digest' | xargs -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db@{}
+        run: vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/vuls-data-db" --tagged-only --token ${{ secrets.GITHUB_TOKEN }} | jq -r '.[] | select(.name | startswith("ghcr.io/vulsio/vuls-data-db:microsoft-msuc-data-")) | .digest' | xargs -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db@{}
