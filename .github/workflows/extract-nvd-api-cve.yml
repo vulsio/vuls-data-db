@@ -70,7 +70,7 @@ jobs:
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ job.check_run_id }}"
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
 
       - name: Create dotgit tarball
