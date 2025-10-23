@@ -60,7 +60,7 @@ jobs:
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ job.check_run_id }}"
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss commit -m "update $(date --utc -d "-1 days" "+%Y-%m-%d")" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
 
       - name: Create dotgit tarball
