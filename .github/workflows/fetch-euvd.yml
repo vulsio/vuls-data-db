@@ -1,0 +1,137 @@
+name: Fetch EUVD
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  generate-year-month:
+    name: Generate year-month
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.generate.outputs.matrix }}
+    steps:
+      - name: Generate Year-Month
+        id: generate
+        run: |
+          json="{\"include\":["
+
+          for year in $(seq 1999 $(date +%Y)); do
+            for month in $(seq -w 1 12); do
+              if [ "$year$month" -gt "$(date +%Y%m)" ]; then
+                break
+              fi
+              json="$json{\"year\":\"$year\",\"month\":\"$month\"},"
+            done
+          done
+
+          json="${json%,}]}"
+          echo "matrix=$json" >> $GITHUB_OUTPUT
+
+  fetch:
+    name: Fetch vuls-data-raw-euvd ${{ matrix.year }}-${{ matrix.month }}
+    runs-on: ubuntu-latest
+    needs: generate-year-month
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate-year-month.outputs.matrix) }}
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v5
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Fetch
+        run: |
+          mkdir vuls-data-raw-euvd
+          vuls-data-update fetch euvd --dir vuls-data-raw-euvd ${{ matrix.year }}-${{ matrix.month }} --retry 10
+
+      - name: Create tarball
+        run: tar --remove-files -acf vuls-data-raw-euvd.tar.zst vuls-data-raw-euvd || [[ $? == 1 ]]
+
+      - name: Push ghcr.io/vulsio/vuls-data-db:euvd-data-${{ matrix.year }}-${{ matrix.month }}
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:euvd-data-${{ matrix.year }}-${{ matrix.month }} vuls-data-raw-euvd.tar.zst
+
+  commit:
+    name: Commit vuls-data-raw-euvd
+    runs-on: ubuntu-latest
+    if: ${{ success() || failure() }}
+    needs: [fetch]
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-euvd
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-euvd
+
+      - name: Aggregate EUVD data
+        run: |
+          for year in $(seq 1999 $(date +%Y)); do
+            for month in $(seq -w 1 12); do
+              if [ "$year$month" -gt "$(date +%Y%m)" ]; then
+                break
+              fi
+              vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:euvd-data-${year}-${month}
+              if ls ghcr.io/${{ github.repository }}/euvd-data-${year}-${month}/* >/dev/null 2>&1; then
+                mv ghcr.io/${{ github.repository }}/euvd-data-${year}-${month}/* ghcr.io/${{ github.repository }}/vuls-data-raw-euvd/
+              fi
+              rmdir ghcr.io/${{ github.repository }}/euvd-data-${year}-${month}
+            done
+          done
+
+      - name: Set Git config
+        run: |
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-euvd
+          else
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-euvd
+          fi
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-euvd commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          fi
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-euvd
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-euvd
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-euvd vuls-data-raw-euvd.tar.zst

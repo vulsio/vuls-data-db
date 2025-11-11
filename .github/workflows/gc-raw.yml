@@ -129,6 +129,9 @@ jobs:
           - tag: vuls-data-raw-erlang-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-euvd
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-exploit-exploitdb
             pack-threads: 2
             pack-windowMemory: 4g
