@@ -25,8 +25,6 @@ jobs:
       fail-fast: false
       matrix:
         release: ${{ fromJson(needs.fedora-release.outputs.release) }}
-    outputs:
-      total: ${{ strategy.job-total }}
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -60,14 +58,14 @@ jobs:
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-fedora.tar.zst vuls-data-raw-fedora || [[ $? == 1 ]]
 
-      - name: Push ghcr.io/vulsio/vuls-data-db:fedora-data-${{ strategy.job-index }}
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:fedora-data-${{ strategy.job-index }} vuls-data-raw-fedora.tar.zst
+      - name: Push ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }}
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }} vuls-data-raw-fedora.tar.zst
 
   commit:
     name: Commit vuls-data-raw-fedora
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
-    needs: [fetch]
+    needs: [fedora-release, fetch]
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -92,12 +90,12 @@ jobs:
 
       - name: Aggregate fedora-data-*
         run: |
-          for index in $(seq 0 $((${{ needs.fetch.outputs.total }}-1))); do
-            vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${index}
-            if ls ghcr.io/${{ github.repository }}/fedora-data-${index}/* >/dev/null 2>&1; then
-              mv ghcr.io/${{ github.repository }}/fedora-data-${index}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
+          for release in $(echo "${{ needs.fedora-release.outputs.release }}" | jq -r '.[]'); do
+            vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${release}
+            if ls ghcr.io/${{ github.repository }}/fedora-data-${release}/* >/dev/null 2>&1; then
+              mv ghcr.io/${{ github.repository }}/fedora-data-${release}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
             fi
-            rmdir ghcr.io/${{ github.repository }}/fedora-data-${index}
+            rmdir ghcr.io/${{ github.repository }}/fedora-data-${release}
           done
 
       - name: Set Git config
@@ -122,20 +120,3 @@ jobs:
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
         run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-fedora vuls-data-raw-fedora.tar.zst
-
-  cleanup:
-    name: Cleanup fedora-data-*
-    runs-on: ubuntu-latest
-    if: ${{ always() }}
-    needs: [commit]
-    steps:
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v6
-        with:
-          go-version: "stable"
-
-      - name: Install vuls-data-update
-        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
-
-      - name: Cleanup fedora-data-* images
-        run: vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/vuls-data-db" --tagged-only --token ${{ secrets.GITHUB_TOKEN }} | jq -r '.[] | select(.name | startswith("ghcr.io/vulsio/vuls-data-db:fedora-data-")) | .digest' | xargs -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db@{}
