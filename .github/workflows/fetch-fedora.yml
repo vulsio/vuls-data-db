@@ -90,7 +90,7 @@ jobs:
 
       - name: Aggregate fedora-data-*
         run: |
-          for release in $(echo "${{ needs.fedora-release.outputs.release }}" | jq -r '.[]'); do
+          for release in $(echo '${{ needs.fedora-release.outputs.release }}' | jq -r '.[]'); do
             vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${release}
             if ls ghcr.io/${{ github.repository }}/fedora-data-${release}/* >/dev/null 2>&1; then
               mv ghcr.io/${{ github.repository }}/fedora-data-${release}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
