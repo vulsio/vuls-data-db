@@ -52,10 +52,10 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
       - name: Fetch all
-        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5
+        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5s
 
       # - name: Fetch modified for last 3 days
-      #   run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5 --last-mod-start-date $(git -C vuls-data-raw-${{ inputs.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
+      #   run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} --api-key ${{ secrets.NVD_API_KEY }} --concurrency 8 --wait 5s --last-mod-start-date $(git -C vuls-data-raw-${{ inputs.target }} log -1 --format='%ad' --date=format-local:'%Y-%m-%dT%H:%M:%S.000%z' | xargs -I{} date +'%Y-%m-%dT%T.%3N%:z' -d '{} -3 days') --last-mod-end-date $(date +'%Y-%m-%dT%T.%3N%:z')
 
       - name: Set Git config
         run: |
