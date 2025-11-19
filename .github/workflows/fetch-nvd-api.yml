@@ -19,6 +19,9 @@ on:
           - nvd-api-cpe
           - nvd-api-cpematch
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-${{ inputs.target }}

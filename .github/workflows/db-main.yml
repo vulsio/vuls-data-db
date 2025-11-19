@@ -1,8 +1,13 @@
 name: DB
+
 on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   build:
     name: build vuls.db

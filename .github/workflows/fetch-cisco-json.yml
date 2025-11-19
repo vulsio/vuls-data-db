@@ -9,6 +9,9 @@ on:
         required: true
   workflow_dispatch:
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-cisco-json

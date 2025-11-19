@@ -15,6 +15,9 @@ on:
           - cisco-cvrf
           - cisco-csaf
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-${{ inputs.target }}

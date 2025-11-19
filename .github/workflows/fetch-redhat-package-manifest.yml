@@ -4,6 +4,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-redhat-package-manifest
