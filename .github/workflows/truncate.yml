@@ -54,6 +54,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   check-before-gc:
     name: Check Layer Size before Git GC

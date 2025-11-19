@@ -230,6 +230,9 @@ on:
         default: 4g
         type: string
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   gc:
     name: Git GC ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}

@@ -39,6 +39,9 @@ on:
         required: true
         type: number
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   check:
     name: Check if ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} exceeds ${{ inputs.threshold-mb }}MB

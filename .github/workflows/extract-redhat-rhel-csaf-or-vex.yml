@@ -24,6 +24,9 @@ on:
           - main
           - nightly
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   extract:
     name: Extract vuls-data-extracted-${{ inputs.target }}-rhel@${{ inputs.branch }}

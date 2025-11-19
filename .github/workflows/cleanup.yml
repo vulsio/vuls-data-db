@@ -17,6 +17,9 @@ on:
           - vuls-data-db-archive
           - vuls-data-db-backup
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   cleanup:
     name: Cleanup untagged images in ${{ inputs.package }}

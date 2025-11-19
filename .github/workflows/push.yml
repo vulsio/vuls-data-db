@@ -11,6 +11,9 @@ on:
         required: true
         type: string
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   push:
     name: Push ${{ inputs.owner }}/${{ inputs.target }}/.git to ghcr.io/${{ github.repository }}:${{ inputs.target }}

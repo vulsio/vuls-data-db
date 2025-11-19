@@ -15,6 +15,9 @@ on:
           - main
           - nightly
 
+env:
+  GOEXPERIMENT: jsonv2
+
 jobs:
   extract:
     name: Extract vuls-data-extracted-redhat-ovalv1-rhel@${{ inputs.branch }}
