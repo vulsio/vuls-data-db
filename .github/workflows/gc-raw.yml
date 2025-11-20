@@ -147,6 +147,9 @@ jobs:
           - tag: vuls-data-raw-fortinet
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-fortinet-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-fortinet-cvrf
             pack-threads: 2
             pack-windowMemory: 4g

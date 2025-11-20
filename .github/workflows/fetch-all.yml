@@ -202,6 +202,10 @@ jobs:
     name: Fetch vuls-data-raw-epss
     uses: ./.github/workflows/fetch-epss.yml
 
+  fetch-fortinet-csaf:
+    name: Fetch vuls-data-raw-fortinet-csaf
+    uses: ./.github/workflows/fetch-fortinet-csaf.yml
+
   fetch-fortinet-cvrf:
     name: Fetch vuls-data-raw-fortinet-cvrf
     uses: ./.github/workflows/fetch-fortinet-cvrf.yml
@@ -280,6 +284,7 @@ jobs:
         fetch-msuc,
         fetch-fedora,
         fetch-epss,
+        fetch-fortinet-csaf,
         fetch-fortinet-cvrf,
         fetch-vulncheck,
         fetch-cisco-json,
