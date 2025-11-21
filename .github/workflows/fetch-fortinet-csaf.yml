@@ -1,0 +1,105 @@
+name: Fetch Fortinet CSAF
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      fetch_all:
+        description: "Fetch all Fortinet CSAF"
+        required: true
+        default: false
+        type: boolean
+
+env:
+  GOEXPERIMENT: jsonv2
+
+jobs:
+  check:
+    name: Decide whether to fetch all
+    runs-on: ubuntu-latest
+    outputs:
+      do_fetch_all: ${{ steps.check.outputs.fetch_all }}
+    steps:
+      - name: Check if fetch_all
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "fetch_all=${{ inputs.fetch_all }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [[ $(( ${{ github.run_number }} % 15 )) -eq 0 ]]; then
+            echo "fetch_all=true" >> $GITHUB_OUTPUT
+          fi
+
+  fetch:
+    name: Fetch vuls-data-raw-fortinet-csaf
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v5
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Install xq
+        run: go install github.com/sibprogrammer/xq@latest
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
+
+      - name: Fetch All
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+        run: vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | tr '\n' ' ')
+
+      - name: Fetch RSS
+        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
+        run: |
+          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | tr '\n' ' ')
+
+      - name: Restore all deleted files
+        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
+        run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf restore $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files --deleted)
+
+      - name: Set Git config
+        run: |
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
+          else
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
+          fi
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          fi
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf vuls-data-raw-fortinet-csaf.tar.zst
