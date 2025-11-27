@@ -70,7 +70,8 @@ jobs:
           - vuls-data-raw-debian-oval
           - vuls-data-raw-debian-security-tracker-api
           - vuls-data-raw-debian-security-tracker-salsa
-          - vuls-data-raw-echo
+          - vuls-data-raw-echo-data
+          - vuls-data-raw-echo-osv
           - vuls-data-raw-endoflife-date-api
           - vuls-data-raw-endoflife-date-products
           - vuls-data-raw-epss
@@ -93,7 +94,8 @@ jobs:
           - vuls-data-raw-golang-glsa
           - vuls-data-raw-golang-osv
           # - vuls-data-raw-golang-vulndb
-          - vuls-data-raw-haskell-osv
+          - vuls-data-raw-haskell-ghc-osv
+          - vuls-data-raw-haskell-hackage-osv
           - vuls-data-raw-jvn-feed-detail
           - vuls-data-raw-jvn-feed-product
           - vuls-data-raw-jvn-feed-rss

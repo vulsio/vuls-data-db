@@ -38,7 +38,8 @@ on:
           - debian-oval
           - debian-security-tracker-api
           - debian-security-tracker-salsa
-          - echo
+          - echo-data
+          - echo-osv
           - endoflife-date-api
           - endoflife-date-products
           - erlang-ghsa
@@ -56,7 +57,8 @@ on:
           - golang-glsa
           - golang-osv
           # - golang-vulndb
-          - haskell-osv
+          - haskell-ghc-osv
+          - haskell-hackage-osv
           - jvn-feed-detail
           - jvn-feed-product
           - jvn-feed-rss

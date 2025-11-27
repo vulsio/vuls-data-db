@@ -58,7 +58,8 @@ on:
           # - golang-osv
           # - golang-db
           # - golang-vulndb
-          # - haskell-osv
+          # - haskell-ghc-osv
+          # - haskell-hackage-osv
           # - jvn-feed-detail
           # - jvn-feed-product
           # - jvn-feed-rss

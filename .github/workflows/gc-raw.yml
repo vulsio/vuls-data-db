@@ -111,7 +111,10 @@ jobs:
           - tag: vuls-data-raw-debian-security-tracker-salsa
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-echo
+          - tag: vuls-data-raw-echo-data
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-echo-osv
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-endoflife-date-api
@@ -180,7 +183,10 @@ jobs:
           # - tag: vuls-data-raw-golang-vulndb
           #   pack-threads: 2
           #   pack-windowMemory: 4g
-          - tag: vuls-data-raw-haskell-osv
+          - tag: vuls-data-raw-haskell-ghc-osv
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-haskell-hackage-osv
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-jvn-feed-detail
