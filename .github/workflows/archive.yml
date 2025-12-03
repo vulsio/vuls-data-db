@@ -54,6 +54,8 @@ on:
           - vuls-data-raw-endoflife-date-products
           - vuls-data-raw-erlang-ghsa
           - vuls-data-raw-erlang-osv
+          # - vuls-data-raw-enisa-euvd-detail
+          - vuls-data-raw-enisa-euvd-list
           - vuls-data-raw-exploit-exploitdb
           - vuls-data-raw-exploit-github
           - vuls-data-raw-exploit-inthewild

@@ -52,6 +52,8 @@ jobs:
           - "endoflife-date-products"
           - "erlang-ghsa"
           - "erlang-osv"
+          # - "enisa-euvd-detail"
+          - "enisa-euvd-list"
           - "exploit-exploitdb"
           - "exploit-github"
           - "exploit-inthewild"

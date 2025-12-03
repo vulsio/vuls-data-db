@@ -172,61 +172,6 @@ jobs:
     with:
       target: ${{ matrix.target }}
 
-  fetch-nvd-api:
-    name: Fetch vuls-data-raw-${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        target:
-          - "nvd-api-cve"
-          - "nvd-api-cpe"
-          - "nvd-api-cpematch"
-    uses: ./.github/workflows/fetch-nvd-api.yml
-    with:
-      target: ${{ matrix.target }}
-    secrets:
-      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-
-  fetch-redhat-package-manifest:
-    name: Fetch vuls-data-raw-redhat-package-manifest
-    uses: ./.github/workflows/fetch-redhat-package-manifest.yml
-
-  fetch-msuc:
-    name: Fetch vuls-data-raw-microsoft-msuc
-    uses: ./.github/workflows/fetch-msuc.yml
-
-  fetch-fedora:
-    name: Fetch vuls-data-raw-fedora
-    uses: ./.github/workflows/fetch-fedora.yml
-
-  fetch-epss:
-    name: Fetch vuls-data-raw-epss
-    uses: ./.github/workflows/fetch-epss.yml
-
-  fetch-fortinet-csaf:
-    name: Fetch vuls-data-raw-fortinet-csaf
-    uses: ./.github/workflows/fetch-fortinet-csaf.yml
-
-  fetch-fortinet-cvrf:
-    name: Fetch vuls-data-raw-fortinet-cvrf
-    uses: ./.github/workflows/fetch-fortinet-cvrf.yml
-
-  fetch-vulncheck:
-    name: Fetch vuls-data-raw-${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - "vulncheck-kev"
-          - "vulncheck-nist-nvd"
-          - "vulncheck-nist-nvd2"
-    uses: ./.github/workflows/fetch-vulncheck.yml
-    with:
-      target: ${{ matrix.target }}
-    secrets:
-      VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
-
   fetch-cisco-json:
     name: Fetch vuls-data-raw-cisco-json
     uses: ./.github/workflows/fetch-cisco-json.yml
@@ -248,6 +193,46 @@ jobs:
     with:
       target: ${{ matrix.target }}
 
+  fetch-enisa-euvd-list:
+    name: Fetch vuls-data-raw-enisa-euvd-list
+    uses: ./.github/workflows/fetch-enisa-euvd-list.yml
+
+  fetch-epss:
+    name: Fetch vuls-data-raw-epss
+    uses: ./.github/workflows/fetch-epss.yml
+
+  fetch-fedora:
+    name: Fetch vuls-data-raw-fedora
+    uses: ./.github/workflows/fetch-fedora.yml
+
+  fetch-fortinet-csaf:
+    name: Fetch vuls-data-raw-fortinet-csaf
+    uses: ./.github/workflows/fetch-fortinet-csaf.yml
+
+  fetch-fortinet-cvrf:
+    name: Fetch vuls-data-raw-fortinet-cvrf
+    uses: ./.github/workflows/fetch-fortinet-cvrf.yml
+
+  fetch-msuc:
+    name: Fetch vuls-data-raw-microsoft-msuc
+    uses: ./.github/workflows/fetch-msuc.yml
+
+  fetch-nvd-api:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        target:
+          - "nvd-api-cve"
+          - "nvd-api-cpe"
+          - "nvd-api-cpematch"
+    uses: ./.github/workflows/fetch-nvd-api.yml
+    with:
+      target: ${{ matrix.target }}
+    secrets:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
   fetch-paloalto-json-or-csaf:
     name: Fetch vuls-data-raw-${{ matrix.target }}
     if: ${{ success() || failure() }}
@@ -261,6 +246,10 @@ jobs:
     uses: ./.github/workflows/fetch-paloalto-json-or-csaf.yml
     with:
       target: ${{ matrix.target }}
+
+  fetch-redhat-package-manifest:
+    name: Fetch vuls-data-raw-redhat-package-manifest
+    uses: ./.github/workflows/fetch-redhat-package-manifest.yml
 
   fetch-variot:
     name: Fetch vuls-data-raw-${{ matrix.target }}
@@ -276,23 +265,40 @@ jobs:
     secrets:
       VARIOT_API_KEY: ${{ secrets.VARIOT_API_KEY }}
 
+  fetch-vulncheck:
+    name: Fetch vuls-data-raw-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "vulncheck-kev"
+          - "vulncheck-nist-nvd"
+          - "vulncheck-nist-nvd2"
+    uses: ./.github/workflows/fetch-vulncheck.yml
+    with:
+      target: ${{ matrix.target }}
+    secrets:
+      VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
+
   check:
     name: Decide whether to Git GC
     if: ${{ success() || failure() }}
     needs:
       [
         fetch-main,
-        fetch-nvd-api,
-        fetch-msuc,
-        fetch-fedora,
-        fetch-epss,
-        fetch-fortinet-csaf,
-        fetch-fortinet-cvrf,
-        fetch-vulncheck,
         fetch-cisco-json,
         fetch-cisco-cvrf-or-csaf,
+        fetch-enisa-euvd-list,
+        fetch-epss,
+        fetch-fedora,
+        fetch-fortinet-csaf,
+        fetch-fortinet-cvrf,
+        fetch-nvd-api,
+        fetch-msuc,
         fetch-paloalto-json-or-csaf,
+        fetch-redhat-package-manifest,
         fetch-variot,
+        fetch-vulncheck,
       ]
     runs-on: ubuntu-latest
     outputs:

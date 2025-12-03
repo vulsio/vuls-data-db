@@ -1,0 +1,101 @@
+name: Fetch EUVD List
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      fetch_signle:
+        description: "Fetch EUVD list with signle thread"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  check:
+    name: Decide whether to fetch signle
+    runs-on: ubuntu-latest
+    outputs:
+      do_fetch_signle: ${{ steps.check.outputs.fetch_signle }}
+    steps:
+      - name: Check if fetch_signle
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "fetch_signle=${{ inputs.fetch_signle }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [[ $(( ${{ github.run_number }} % 15 )) -eq 0 ]]; then
+            echo "fetch_signle=true" >> $GITHUB_OUTPUT
+          fi
+
+  fetch:
+    name: Fetch vuls-data-raw-enisa-euvd-list
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v5
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
+
+      - name: Fetch with single thread
+        if: ${{ needs.check.outputs.do_fetch_signle == 'true' }}
+        run: vuls-data-update fetch enisa-euvd-list --dir ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list --concurrency 1
+
+      - name: Fetch
+        if: ${{ needs.check.outputs.do_fetch_signle != 'true' }}
+        run: vuls-data-update fetch enisa-euvd-list --dir ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list
+
+      - name: Restore
+        if: ${{ needs.check.outputs.do_fetch_signle != 'true' }}
+        run: |
+          deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list ls-files --deleted)
+          if [[ -n ${deleted} ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list restore ${deleted}
+          fi
+
+      - name: Set Git config
+        run: |
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
+          else
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
+          fi
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list config user.name "GitHub Action"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          fi
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list vuls-data-raw-enisa-euvd-list.tar.zst
