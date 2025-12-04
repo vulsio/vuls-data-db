@@ -38,7 +38,7 @@ jobs:
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Check out ${{ inputs.owner }}/${{ inputs.target }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.owner }}/${{ inputs.target }}
           ref: main

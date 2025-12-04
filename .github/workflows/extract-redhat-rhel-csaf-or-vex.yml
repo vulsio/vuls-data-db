@@ -43,7 +43,7 @@ jobs:
           remove-docker-images: "true"
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: vulsio/filter-vuls-data-extracted-redhat
           ref: ${{ inputs.branch }}
