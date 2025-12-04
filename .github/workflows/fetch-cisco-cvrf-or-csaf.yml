@@ -54,7 +54,7 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
       - name: Fetch
-        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} $(find ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json/ -name "*.json" | xargs jq -r --arg target ${{ inputs.target }} 'select(($target == "cisco-cvrf" and .cvrfURL != "NA") or ($target == "cisco-csaf" and .csafURL != "NA")) | .advisoryID' | tr '\n' ' ')
+        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} $(find ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json/ -name "*.json" | xargs jq -r --arg target ${{ inputs.target }} 'select(($target == "cisco-cvrf" and .cvrfUrl != "NA") or ($target == "cisco-csaf" and .csafUrl != "NA")) | .advisoryID' | tr '\n' ' ')
 
       - name: Set Git config
         run: |
