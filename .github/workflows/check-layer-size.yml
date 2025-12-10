@@ -53,6 +53,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: "stable"
+          cache: false
 
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
