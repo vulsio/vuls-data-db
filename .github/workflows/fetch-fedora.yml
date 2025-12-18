@@ -104,6 +104,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
           else

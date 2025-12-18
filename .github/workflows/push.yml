@@ -46,6 +46,17 @@ jobs:
           path: ${{ inputs.target }}
           fetch-depth: "0"
 
+      - name: Set Git config
+        run: |
+          git -C ${{ inputs.target }} config gc.auto 0
+          if git -C ${{ inputs.target }} remote | grep -q "^origin$"; then
+            git -C ${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:${{ inputs.target }}
+          else
+            git -C ${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:${{ inputs.target }}
+          fi
+          git -C ${{ inputs.target }} config user.email "action@github.com"
+          git -C ${{ inputs.target }} config user.name "GitHub Action"
+
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ${{ inputs.target }}
 

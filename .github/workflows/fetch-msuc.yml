@@ -131,6 +131,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
           else

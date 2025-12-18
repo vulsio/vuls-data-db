@@ -44,6 +44,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest
           else
