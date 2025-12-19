@@ -82,6 +82,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
           else

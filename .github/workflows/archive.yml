@@ -277,7 +277,7 @@ jobs:
         id: split_archive
         run: |
           echo "Create the latest repository..."
-          git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
+          git clone --depth 1 --no-single-branch --no-checkout --branch main --config gc.auto=0 file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
           if git -C ${{ inputs.tag }} remote | grep -q "^origin$"; then
             git -C ${{ inputs.tag }} remote set-url origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
           else

@@ -65,6 +65,7 @@ jobs:
 
       - name: Set Git config
         run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel
           else

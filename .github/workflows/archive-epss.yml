@@ -40,6 +40,7 @@ jobs:
             mkdir vuls-data-raw-epss/
             mv ${y} vuls-data-raw-epss
             git -C vuls-data-raw-epss -c init.defaultBranch=main init .
+            git -C vuls-data-raw-epss config gc.auto 0
             git -C vuls-data-raw-epss config user.email "action@github.com"
             git -C vuls-data-raw-epss config user.name "GitHub Action"
             git -C vuls-data-raw-epss add ${y}
@@ -48,7 +49,7 @@ jobs:
             vuls-data-update dotgit compress vuls-data-raw-epss
             vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db-archive:vuls-data-raw-epss-archive-$(( ${y} - 2020 )) vuls-data-raw-epss.tar.zst
             rm -rf vuls-data-raw-epss/ vuls-data-raw-epss.tar.zst
-            
+
             tags+=("\"vuls-data-raw-epss-archive-$(( ${y} - 2020 ))\"")
 
           done
@@ -64,6 +65,7 @@ jobs:
           mv $(date "+%Y") vuls-data-raw-epss
 
           git -C vuls-data-raw-epss -c init.defaultBranch=main init .
+          git -C vuls-data-raw-epss config gc.auto 0
           
           if git -C vuls-data-raw-epss remote | grep -q "^origin$"; then
             git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
