@@ -127,7 +127,7 @@ jobs:
       - name: Truncate dotgit
         run: |
           echo "Create the trucated repository..."
-          git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main --config gc.auto 0 file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
+          git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main --config gc.auto=0 file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
           git -C ${{ inputs.tag }} reset
           git -C ${{ inputs.tag }} branch nightly origin/nightly
 
