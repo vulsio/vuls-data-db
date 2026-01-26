@@ -114,7 +114,7 @@ on:
           # - rubygems-osv
           # - rubygems-db
           # - snort
-          # - suse-oval
+          - suse-oval
           # - suse-cvrf
           # - suse-cvrf-cve
           # - suse-csaf

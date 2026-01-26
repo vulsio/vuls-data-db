@@ -37,6 +37,7 @@ jobs:
           - redhat-vex
           - redhat-vex-rhel
           - rocky-errata
+          - suse-oval
           - ubuntu-cve-tracker
     uses: ./.github/workflows/truncate.yml
     with:
