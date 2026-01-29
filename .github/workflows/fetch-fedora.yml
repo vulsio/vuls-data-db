@@ -4,9 +4,6 @@ on:
   workflow_call:
   workflow_dispatch:
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   fedora-release:
     name: Fetch fedora release
@@ -28,6 +25,9 @@ jobs:
       fail-fast: false
       matrix:
         release: ${{ fromJson(needs.fedora-release.outputs.release) }}
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -70,6 +70,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [fedora-release, fetch]
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

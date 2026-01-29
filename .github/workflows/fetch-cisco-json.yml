@@ -9,13 +9,13 @@ on:
         required: true
   workflow_dispatch:
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   fetch:
     name: Fetch vuls-data-raw-cisco-json
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

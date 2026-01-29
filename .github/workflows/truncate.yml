@@ -54,9 +54,6 @@ defaults:
   run:
     shell: bash
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   check-before-gc:
     name: Check Layer Size before Git GC
@@ -93,6 +90,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-after-gc]
     if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

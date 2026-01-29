@@ -235,13 +235,13 @@ on:
         default: 4g
         type: string
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   gc:
     name: Git GC ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

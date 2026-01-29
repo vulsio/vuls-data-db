@@ -46,13 +46,12 @@ on:
           - backup-weekly
           - backup-monthly
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   backup:
     name: Backup ghcr.io/${{ inputs.src-repository }}:${{ inputs.tag }} to ghcr.io/${{ inputs.dest-repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }}
     runs-on: ubuntu-latest
+    env:
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6

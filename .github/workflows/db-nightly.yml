@@ -5,13 +5,13 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   build:
     name: build vuls.db
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

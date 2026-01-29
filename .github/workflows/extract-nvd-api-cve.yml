@@ -15,13 +15,13 @@ on:
           - main
           - nightly
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   extract:
     name: Extract vuls-data-extracted-nvd-api-cve@${{ inputs.branch }}
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

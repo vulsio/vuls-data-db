@@ -17,13 +17,12 @@ on:
           - vuls-data-db-archive
           - vuls-data-db-backup
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   cleanup:
     name: Cleanup untagged images in ${{ inputs.package }}
     runs-on: ubuntu-latest
+    env:
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6

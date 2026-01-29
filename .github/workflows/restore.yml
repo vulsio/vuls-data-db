@@ -31,13 +31,13 @@ on:
           - backup-weekly
           - backup-monthly
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   restore:
     name: Restore ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} to ghcr.io/${{ github.repository }}:${{ inputs.tag }}
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10

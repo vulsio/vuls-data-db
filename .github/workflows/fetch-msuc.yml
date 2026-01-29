@@ -4,9 +4,6 @@ on:
   workflow_call:
   workflow_dispatch:
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   fetch:
     name: Fetch vuls-data-raw-microsoft-msuc
@@ -55,6 +52,9 @@ jobs:
           - '"KB5044284", "KB5044384", "KB5046617", "KB5046740", "KB5048667", "KB5050009", "KB5050094", "KB5051987", "KB5052093", "KB5053598", "KB5053656", "KB5055523", "KB5055627", "KB5058411", "KB5058499", "KB5059087", "KB5060829", "KB5060842", "KB5061977", "KB5062553", "KB5062660", "KB5063060", "KB5063878", "KB5064081", "KB5064489", "KB5065426"'
     outputs:
       total: ${{ strategy.job-total }}
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -97,6 +97,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [fetch]
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
@@ -159,6 +162,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs: [commit]
+    env:
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6
