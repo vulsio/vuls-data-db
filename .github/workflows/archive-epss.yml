@@ -4,15 +4,14 @@ on:
   workflow_call:
   workflow_dispatch:
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   archive:
     name: Archive vuls-data-raw-epss
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.push_archive.outputs.tags }}
+    env:
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6

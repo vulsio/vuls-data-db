@@ -39,15 +39,14 @@ on:
         required: true
         type: number
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   check:
     name: Check if ghcr.io/${{ inputs.repository }}:${{ inputs.tag }} exceeds ${{ inputs.threshold-mb }}MB
     runs-on: ubuntu-latest
     outputs:
       exceeded: ${{ steps.check.outputs.exceeded }}
+    env:
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6

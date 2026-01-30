@@ -10,9 +10,6 @@ on:
         default: false
         type: boolean
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   check:
     name: Decide whether to fetch all
@@ -36,11 +33,14 @@ jobs:
     name: Fetch vuls-data-raw-fortinet-csaf
     needs: check
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
         with:
-          root-reserve-mb: 32768
+          root-reserve-mb: 5120
           remove-dotnet: "true"
           remove-android: "true"
           remove-haskell: "true"
