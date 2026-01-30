@@ -23,7 +23,7 @@ jobs:
           - vuls-data-extracted-eol
           - vuls-data-extracted-epss
           - vuls-data-extracted-freebsd
-          - vuls-data-extracted-fedora
+          - vuls-data-extracted-fedora-api
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-oracle-linux
@@ -84,7 +84,8 @@ jobs:
           - vuls-data-raw-exploit-github
           - vuls-data-raw-exploit-inthewild
           - vuls-data-raw-exploit-trickest
-          - vuls-data-raw-fedora
+          - vuls-data-raw-fedora-api
+          - vuls-data-raw-fedora-updateinfo
           - vuls-data-raw-fortinet
           - vuls-data-raw-fortinet-csaf
           - vuls-data-raw-fortinet-cvrf

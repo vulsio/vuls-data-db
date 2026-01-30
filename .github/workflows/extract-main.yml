@@ -45,7 +45,8 @@ on:
           # - exploit-github
           # - exploit-inthewild
           # - exploit-trickest
-          - fedora
+          - fedora-api
+          # - fedora-updateinfo
           # - fortinet-handmade
           # - fortinet-csaf
           # - fortinet-cvrf

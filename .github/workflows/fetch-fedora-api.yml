@@ -18,7 +18,7 @@ jobs:
           echo "release=$(cat *.json | jq -r '.releases[].name' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
   fetch:
-    name: Fetch vuls-data-raw-fedora ${{ matrix.release }}
+    name: Fetch vuls-data-raw-fedora-api ${{ matrix.release }}
     runs-on: ubuntu-latest
     needs: fedora-release
     strategy:
@@ -56,17 +56,16 @@ jobs:
 
       - name: Fetch
         run: |
-          mkdir vuls-data-raw-fedora
-          vuls-data-update fetch fedora --dir vuls-data-raw-fedora ${{ matrix.release }} --retry 10
+          mkdir vuls-data-raw-fedora-api
+          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api ${{ matrix.release }} --retry 10
 
       - name: Create tarball
-        run: tar --remove-files -acf vuls-data-raw-fedora.tar.zst vuls-data-raw-fedora || [[ $? == 1 ]]
-
+        run: tar --remove-files -acf vuls-data-raw-fedora-api.tar.zst vuls-data-raw-fedora-api || [[ $? == 1 ]]
       - name: Push ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }}
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }} vuls-data-raw-fedora.tar.zst
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }} vuls-data-raw-fedora-api.tar.zst
 
   commit:
-    name: Commit vuls-data-raw-fedora
+    name: Commit vuls-data-raw-fedora-api
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [fedora-release, fetch]
@@ -93,39 +92,39 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
-      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
-        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
 
       - name: Aggregate fedora-data-*
         run: |
           for release in $(echo '${{ needs.fedora-release.outputs.release }}' | jq -r '.[]'); do
             vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${release}
             if ls ghcr.io/${{ github.repository }}/fedora-data-${release}/* >/dev/null 2>&1; then
-              mv ghcr.io/${{ github.repository }}/fedora-data-${release}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora/ 
+              mv ghcr.io/${{ github.repository }}/fedora-data-${release}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api/ 
             fi
             rmdir ghcr.io/${{ github.repository }}/fedora-data-${release}
           done
 
       - name: Set Git config
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora config gc.auto 0
-          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora remote | grep -q "^origin$"; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api config gc.auto 0
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
           else
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora config user.name "GitHub Action"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api config user.email "action@github.com"
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api config user.name "GitHub Action"
 
       - name: Commit
         run: |
-          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora status --porcelain) ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
 
       - name: Create dotgit tarball
-        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-fedora
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api
 
-      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-fedora
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-fedora vuls-data-raw-fedora.tar.zst
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api vuls-data-raw-fedora-api.tar.zst
