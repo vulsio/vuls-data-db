@@ -83,6 +83,9 @@ jobs:
           - tag: vuls-data-extracted-rocky-errata
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-suse-oval
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-ubuntu-cve-tracker
             pack-threads: 2
             pack-windowMemory: 4g
