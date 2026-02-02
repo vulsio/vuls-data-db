@@ -150,7 +150,10 @@ jobs:
           - tag: vuls-data-raw-exploit-trickest
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-fedora
+          - tag: vuls-data-raw-fedora-api
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-fedora-updateinfo
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-fortinet

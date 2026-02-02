@@ -58,6 +58,7 @@ jobs:
           - "exploit-github"
           - "exploit-inthewild"
           - "exploit-trickest"
+          - "fedora-updateinfo"
           - "freebsd"
           - "gentoo"
           - "ghactions-osv"
@@ -201,9 +202,9 @@ jobs:
     name: Fetch vuls-data-raw-epss
     uses: ./.github/workflows/fetch-epss.yml
 
-  fetch-fedora:
-    name: Fetch vuls-data-raw-fedora
-    uses: ./.github/workflows/fetch-fedora.yml
+  fetch-fedora-api:
+    name: Fetch vuls-data-raw-fedora-api
+    uses: ./.github/workflows/fetch-fedora-api.yml
 
   fetch-fortinet-csaf:
     name: Fetch vuls-data-raw-fortinet-csaf
@@ -290,7 +291,7 @@ jobs:
         fetch-cisco-cvrf-or-csaf,
         fetch-enisa-euvd-list,
         fetch-epss,
-        fetch-fedora,
+        fetch-fedora-api,
         fetch-fortinet-csaf,
         fetch-fortinet-cvrf,
         fetch-nvd-api,
