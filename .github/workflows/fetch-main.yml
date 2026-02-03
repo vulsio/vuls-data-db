@@ -194,8 +194,13 @@ jobs:
         if: ${{ inputs.target == 'microsoft-wsusscn2' }}
         run: sudo apt-get update && sudo apt-get install -y cabextract
 
+      - name: Mkdir temp directory
+        run: mkdir -p ${{ github.workspace }}/tmp
+
       - name: Fetch
         run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
+        env:
+          TMPDIR: ${{ github.workspace }}/tmp
 
       - name: Set Git config
         run: |
