@@ -92,18 +92,19 @@ jobs:
     needs: [check-after-gc]
     if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
     env:
-      GOPATH: ${{ github.workspace }}/go
       GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
+        uses: AdityaGarg8/remove-unwanted-software@v5
         with:
-          root-reserve-mb: 5120
           remove-dotnet: "true"
           remove-android: "true"
           remove-haskell: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
+          remove-large-packages: "true"
+          remove-cached-tools: "true"
+          remove-swapfile: "true"
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v6
