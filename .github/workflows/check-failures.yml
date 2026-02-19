@@ -22,13 +22,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
         run: |
           set -euo pipefail
 
-          RUN_ID="${{ inputs.run_id || github.run_id }}"
+          RUN_ID="${INPUT_RUN_ID:-$GITHUB_RUN_ID}"
 
           # --- fetch run metadata -----------------------------------------------
-          run_json=$(gh run view "$RUN_ID" --json 'databaseId,createdAt,url,jobs,name')
+          run_json=$(gh run view "$RUN_ID" --json 'createdAt,url,jobs,name')
 
           wf_name=$(echo "$run_json" | jq -r '.name // "Unknown"')
           url=$(echo "$run_json" | jq -r '.url')
@@ -52,52 +53,174 @@ jobs:
             exit 0
           fi
 
-          {
-            echo "### ❌ Failed jobs (${n_failed})"
-            echo ""
-            echo "| Job | Error snippet |"
-            echo "|-----|---------------|"
-          } >> "$GITHUB_STEP_SUMMARY"
+          echo "### ❌ Failed jobs (${n_failed})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
           # --- get failed logs ----------------------------------------------------
           log_file=$(mktemp)
-          gh run view "$RUN_ID" --log-failed > "$log_file" 2>/dev/null || true
+          log_err=$(mktemp)
+          gh run view "$RUN_ID" --log-failed > "$log_file" 2> "$log_err" || true
+
+          # If --log-failed returned empty or failed, try the REST API fallback
+          if [[ ! -s "$log_file" ]]; then
+            if [[ -s "$log_err" ]]; then
+              echo "::warning::gh run view --log-failed produced no output: $(cat "$log_err")"
+            else
+              echo "::warning::gh run view --log-failed produced no output (no stderr either)"
+            fi
+            # Fallback: download log archive via REST API and extract
+            log_zip=$(mktemp -u).zip
+            if gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}/logs" > "$log_zip" 2>> "$log_err"; then
+              # The zip contains per-job directories with log files.
+              # Reconstruct the same TSV format: <job>\t<step>\t<message>
+              log_dir=$(mktemp -d)
+              unzip -q -o "$log_zip" -d "$log_dir" 2>/dev/null || true
+              : > "$log_file"
+              for job_dir in "$log_dir"/*/; do
+                [[ -d "$job_dir" ]] || continue
+                job_base=$(basename "$job_dir")
+                for step_file in "$job_dir"*.txt; do
+                  [[ -f "$step_file" ]] || continue
+                  step_base=$(basename "$step_file" .txt)
+                  while IFS= read -r line; do
+                    printf '%s\t%s\t%s\n' "$job_base" "$step_base" "$line"
+                  done < "$step_file"
+                done
+              done >> "$log_file"
+              rm -rf "$log_dir" "$log_zip"
+              echo "::notice::Fetched logs via REST API fallback ($(wc -l < "$log_file") lines)"
+            else
+              echo "::warning::REST API log download also failed: $(cat "$log_err")"
+            fi
+          fi
+          rm -f "$log_err"
 
           while IFS= read -r job_name; do
-            snippet=""
-            if [[ -s "$log_file" ]]; then
-              # gh --log-failed format: "<job_name>\t<step>\t<message>"
-              # Filter lines belonging to this job, then extract error-related lines
-              snippet=$(awk -F'\t' -v job="$job_name" '$1 == job { print $3 }' "$log_file" \
-                | grep -iE "error[^s_-]|error$|panic|fatal|exception|timed? ?out|: fail|exit (code|status)" \
-                | tail -20 \
-                | head -c 3000 || true)
+            echo "---" >> "$GITHUB_STEP_SUMMARY"
+            echo "#### ${job_name}" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+
+            if [[ ! -s "$log_file" ]]; then
+              echo "(no log available)" >> "$GITHUB_STEP_SUMMARY"
+              continue
             fi
 
-            if [[ -z "$snippet" ]]; then
-              snippet="(no recognisable error lines captured)"
+            ################################################################
+            # 1) Error snippet: matching lines with ±3 lines of context
+            ################################################################
+            # Extract message column only for this job (for line-number-based context)
+            msg_file=$(mktemp)
+            awk -F'\t' -v job="$job_name" '$1 == job { print $3 }' "$log_file" \
+              | { grep -vE '[0-9]+% *\|[█▓▒░ ]*\||^\s*$|^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z\s*$' || true; } > "$msg_file"
+
+            # Collect line numbers of error-matching lines, then extract ±3 context
+            error_lines_file=$(mktemp)
+            grep -n -iE \
+              "error[^s_-]|error$|panic|fatal|exception|timed? ?out|: fail|exit (code|status)" \
+              "$msg_file" > "$error_lines_file" || true
+
+            # Also detect Go stack traces: find the first stack frame line
+            # (github.com/... or qualified package path) and add the line
+            # immediately before it (the actual error message) so the ±3
+            # context window covers both the message and the trace.
+            # Note: section 2 uses a different heuristic (goroutine/panic/runtime)
+            # to find the trace boundary for the detailed log.
+            first_frame=$(grep -n -E 'Z (github\.com|[a-z0-9_]+(\.[a-z0-9_]+)+/)' "$msg_file" \
+              | head -1 | cut -d: -f1 || true)
+            if [[ -n "$first_frame" && "$first_frame" -gt 1 ]]; then
+              err_line=$((first_frame - 1))
+              # Append only if this line number isn't already captured
+              if ! grep -q "^${err_line}:" "$error_lines_file" 2>/dev/null; then
+                echo "${err_line}:$(sed -n "${err_line}p" "$msg_file")" >> "$error_lines_file"
+              fi
             fi
 
-            # Escape HTML special chars, then convert newlines to <br> so the
-            # Markdown table row stays on a single line.
-            snippet=$(echo "$snippet" \
-              | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/|/｜/g; s/`/｀/g' \
-              | tr '\n' '\r' \
-              | sed 's/\r/<br>/g')
+            error_snippet=""
+            if [[ -s "$error_lines_file" ]]; then
+              sed_expr=$(head -20 "$error_lines_file" \
+                | cut -d: -f1 \
+                | awk '
+                  { lines[NR] = $1 }
+                  END {
+                    for (i = 1; i <= NR; i++) {
+                      lo = lines[i] - 3; if (lo < 1) lo = 1
+                      hi = lines[i] + 3
+                      printf "%d,%dp\n", lo, hi
+                    }
+                  }
+                ' \
+                | sort -t, -k1,1n -u \
+                | paste -sd';')
 
-            echo "| ${job_name} | <details><summary>show</summary><pre>${snippet}</pre></details> |" >> "$GITHUB_STEP_SUMMARY"
+              if [[ -n "$sed_expr" ]]; then
+                error_snippet=$(sed -n "$sed_expr" "$msg_file" | head -c 4000 || true)
+              fi
+            fi
+            rm -f "$error_lines_file"
+
+            if [[ -n "$error_snippet" ]]; then
+              {
+                echo '```'
+                echo "$error_snippet"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "(no recognisable error lines captured)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            ################################################################
+            # 2) Detailed log: Go stack trace with preceding context,
+            #    or last 200 lines if no trace is found.
+            ################################################################
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+
+            # Get the failed step name from run metadata (for display only)
+            failed_step=$(echo "$run_json" \
+              | jq -r --arg job "$job_name" '
+                .jobs[]
+                | select(.name == $job)
+                | .steps[]
+                | select(.conclusion == "failure")
+                | .name
+              ' | head -1)
+            : "${failed_step:=unknown}"
+
+            msg_line_count=$(wc -l < "$msg_file")
+
+            # Heuristic: find the first goroutine/panic/runtime line as the
+            # start of a Go stack trace.  Show up to 5 lines before that
+            # boundary, then up to 200 lines of the trace.
+            trace_start=$(grep -n -E "Z (goroutine [0-9]|panic[:(]|runtime[./])" "$msg_file" \
+              | head -1 | cut -d: -f1 || true)
+
+            step_extract=$(mktemp)
+            if [[ -n "$trace_start" && "$trace_start" -gt 1 ]]; then
+              # Up to 5 non-trace lines before the boundary
+              info_start=$((trace_start > 5 ? trace_start - 5 : 1))
+              sed -n "${info_start},$((trace_start - 1))p" "$msg_file" >> "$step_extract"
+              echo "--- (stack trace starts here) ---" >> "$step_extract"
+              # Up to 200 lines of stack trace
+              tail -n +"$trace_start" "$msg_file" | head -200 >> "$step_extract"
+            else
+              # No obvious Go stack trace — just show last 200 lines
+              tail -200 "$msg_file" >> "$step_extract"
+            fi
+
+            if [[ -s "$step_extract" ]]; then
+              {
+                echo "<details><summary>Log: ${failed_step} (${msg_line_count} lines total)</summary>"
+                echo ""
+                echo '```'
+                head -c 65000 "$step_extract"
+                echo '```'
+                echo ""
+                echo "</details>"
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            rm -f "$step_extract"
+
+            rm -f "$msg_file"
           done <<< "$failed_jobs"
-
-          # --- full context -------------------------------------------------------
-          {
-            echo ""
-            echo "<details><summary>Full failed-log extract (up to 200 lines)</summary>"
-            echo ""
-            echo '```'
-            head -200 "$log_file" || true
-            echo '```'
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"
 
           rm -f "$log_file"
