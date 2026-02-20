@@ -56,3 +56,12 @@ jobs:
         run: |
           vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_scheme_version.outputs.schema_version }} ./vuls.db.zst
           vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:latest ./vuls.db.zst
+
+  check-failures:
+    name: Failure summary
+    if: ${{ success() || failure() }}
+    needs: [build]
+    uses: ./.github/workflows/check-failures.yml
+    permissions:
+      contents: read
+      actions: read
