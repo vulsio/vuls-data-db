@@ -70,7 +70,7 @@ jobs:
 
       - name: Fetch All
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
-        run: vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename) <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
+        run: vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
 
       - name: Restore FG-IR-012-00[1-8]|FG-IR-013-001
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
@@ -80,7 +80,7 @@ jobs:
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
         run: |
-          vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | tr '\n' ' ')
+          vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-' | tr '\n' ' ')
 
       - name: Restore all deleted files
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
