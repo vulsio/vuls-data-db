@@ -51,11 +51,11 @@ jobs:
       - name: Upload vuls.db to ghcr.io/vulsio/vuls-nightly-db
         run: vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst
 
-  check-failures:
-    name: Failure summary
+  action-run-summary:
+    name: Action run summary
     if: ${{ success() || failure() }}
     needs: [build]
-    uses: ./.github/workflows/check-failures.yml
+    uses: ./.github/workflows/action-run-summary.yml
     permissions:
       contents: read
       actions: read
