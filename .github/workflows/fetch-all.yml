@@ -323,11 +323,11 @@ jobs:
     if: ${{ ( success() || failure() ) && needs.check.outputs.do_gc == 'true' }}
     uses: ./.github/workflows/gc-raw.yml
 
-  check-failures:
-    name: Failure summary
+  summary-action-run:
+    name: Action run summary
     if: ${{ success() || failure() }}
     needs: [check]
-    uses: ./.github/workflows/check-failures.yml
+    uses: ./.github/workflows/summary-action-run.yml
     permissions:
       contents: read
       actions: read
