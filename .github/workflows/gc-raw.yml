@@ -406,7 +406,7 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-csaf
-            pack-threads: 2
+            pack-threads: 1
             pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-cve
             pack-threads: 2
