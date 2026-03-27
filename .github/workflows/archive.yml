@@ -213,7 +213,7 @@ jobs:
     with:
       repository: ${{ github.repository }}
       tag: ${{ inputs.tag }}
-      pack-threads: 2
+      pack-threads: 1
       pack-windowMemory: 4g
 
   check-after-gc:
@@ -302,5 +302,5 @@ jobs:
     with:
       repository: vulsio/vuls-data-db-archive
       tag: ${{ needs.archive.outputs.tag }}
-      pack-threads: 2
+      pack-threads: 1
       pack-windowMemory: 4g
