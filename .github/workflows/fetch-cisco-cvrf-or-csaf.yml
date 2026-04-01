@@ -15,9 +15,15 @@ on:
           - cisco-cvrf
           - cisco-csaf
 
+permissions:
+  contents: read
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-${{ inputs.target }}
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

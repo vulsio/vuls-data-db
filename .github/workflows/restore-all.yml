@@ -13,6 +13,9 @@ on:
           - backup-weekly
           - backup-monthly
 
+permissions:
+  contents: read
+
 jobs:
   restore-all:
     name: Restore ${{ matrix.tag }}
@@ -221,6 +224,9 @@ jobs:
           - vuls-data-raw-wolfi-secdb
           - vuls-data-raw-wrlinux
     uses: ./.github/workflows/restore.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       repository: vulsio/vuls-data-db-backup
       tag: ${{ matrix.tag }}

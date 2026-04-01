@@ -4,6 +4,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   gc:
     name: Git GC ${{ matrix.tag }}
@@ -532,6 +535,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
     uses: ./.github/workflows/gc.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       repository: ${{ github.repository }}
       tag: ${{ matrix.tag }}

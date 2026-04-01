@@ -9,9 +9,15 @@ on:
         required: true
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-cisco-json
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

@@ -7,6 +7,9 @@ on:
       - completed
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   truncate-extracted:
     strategy:
@@ -41,6 +44,9 @@ jobs:
           - suse-oval
           - ubuntu-cve-tracker
     uses: ./.github/workflows/truncate.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       tag: vuls-data-extracted-${{ matrix.target }}
       threshold-mb: 1024

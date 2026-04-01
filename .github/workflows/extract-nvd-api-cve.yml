@@ -15,9 +15,15 @@ on:
           - main
           - nightly
 
+permissions:
+  contents: read
+
 jobs:
   extract:
     name: Extract vuls-data-extracted-nvd-api-cve@${{ inputs.branch }}
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

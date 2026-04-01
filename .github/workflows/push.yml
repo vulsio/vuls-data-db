@@ -11,9 +11,15 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   push:
     name: Push ${{ inputs.owner }}/${{ inputs.target }}/.git to ghcr.io/${{ github.repository }}:${{ inputs.target }}
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

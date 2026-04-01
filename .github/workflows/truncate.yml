@@ -52,6 +52,9 @@ on:
         required: true
         type: number
 
+permissions:
+  contents: read
+
 defaults:
   run:
     shell: bash
@@ -71,6 +74,9 @@ jobs:
     needs: [check-before-gc]
     if: ${{ needs.check-before-gc.outputs.exceeded == 'true' }}
     uses: ./.github/workflows/gc.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       repository: ${{ github.repository }}
       tag: ${{ inputs.tag }}
@@ -89,6 +95,9 @@ jobs:
 
   truncate:
     name: Truncate ${{ inputs.tag }}
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     needs: [check-after-gc]
     if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}

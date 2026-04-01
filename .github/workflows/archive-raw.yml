@@ -7,6 +7,9 @@ on:
       - completed
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   archive-raw:
     strategy:
@@ -185,6 +188,9 @@ jobs:
           - "wolfi-secdb"
           - "wrlinux"
     uses: ./.github/workflows/archive.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       tag: vuls-data-raw-${{ matrix.target }}
       threshold-mb: 1024
@@ -206,3 +212,6 @@ jobs:
     if: ${{ ( success() || failure() ) && needs.check-archive-epss.outputs.do_archive == 'true' }}
     needs: [check-archive-epss]
     uses: ./.github/workflows/archive-epss.yml
+    permissions:
+      contents: read
+      packages: write

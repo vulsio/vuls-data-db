@@ -46,9 +46,15 @@ on:
           - backup-weekly
           - backup-monthly
 
+permissions:
+  contents: read
+
 jobs:
   backup:
     name: Backup ghcr.io/${{ inputs.src-repository }}:${{ inputs.tag }} to ghcr.io/${{ inputs.dest-repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }}
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

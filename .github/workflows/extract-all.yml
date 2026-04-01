@@ -13,6 +13,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   extract-main:
     name: Extract vuls-data-extracted-${{ matrix.target }}
@@ -135,6 +138,9 @@ jobs:
           # - "vulncheck-kev"
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       target: ${{ matrix.target }}
       branch: main
@@ -261,6 +267,9 @@ jobs:
           # - "microsoft-wsusscn2"
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       target: ${{ matrix.target }}
       branch: nightly
@@ -276,6 +285,9 @@ jobs:
           - "redhat-csaf"
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       target: ${{ matrix.target }}
       branch: main
@@ -293,6 +305,9 @@ jobs:
           - "redhat-csaf"
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       target: ${{ matrix.target }}
       branch: nightly
@@ -314,6 +329,9 @@ jobs:
   extract-redhat-rhel-ovalv2:
     name: Extract vuls-data-extracted-redhat-ovalv2-rhel
     uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       branch: main
 
@@ -322,6 +340,9 @@ jobs:
     if: ${{ success() || failure() }}
     needs: [extract-redhat-rhel-ovalv2]
     uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       branch: nightly
 
@@ -336,6 +357,9 @@ jobs:
           - "redhat-csaf"
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       target: ${{ matrix.target }}
       branch: main
@@ -351,6 +375,9 @@ jobs:
           - "redhat-csaf"
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       target: ${{ matrix.target }}
       branch: nightly
@@ -358,6 +385,9 @@ jobs:
   extract-nvd-api-cve:
     name: Extract vuls-data-extracted-nvd-api-cve
     uses: ./.github/workflows/extract-nvd-api-cve.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       branch: main
 
@@ -366,12 +396,18 @@ jobs:
     if: ${{ success() || failure() }}
     needs: [extract-nvd-api-cve]
     uses: ./.github/workflows/extract-nvd-api-cve.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       branch: nightly
 
   extract-eol:
     name: Extract vuls-data-extracted-eol
     uses: ./.github/workflows/extract-eol.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       branch: main
 
@@ -380,6 +416,9 @@ jobs:
     if: ${{ success() || failure() }}
     needs: [extract-eol]
     uses: ./.github/workflows/extract-eol.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       branch: nightly
 
@@ -420,6 +459,9 @@ jobs:
     needs: check
     if: ${{ ( success() || failure() ) && needs.check.outputs.do_gc == 'true' }}
     uses: ./.github/workflows/gc-extracted.yml
+    permissions:
+      contents: read
+      packages: write
 
   action-run-summary:
     name: Action run summary

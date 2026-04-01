@@ -8,9 +8,15 @@ on:
       - completed
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   cleanup:
     name: Cleanup untagged images in vulsio/vuls-data-db
     uses: ./.github/workflows/cleanup.yml
+    permissions:
+      contents: read
+      packages: write
     with:
       package: vuls-data-db
