@@ -36,7 +36,6 @@ jobs:
     name: Fetch vuls-data-raw-fortinet-cvrf
     needs: check
     permissions:
-      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

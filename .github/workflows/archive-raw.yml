@@ -189,7 +189,6 @@ jobs:
           - "wrlinux"
     uses: ./.github/workflows/archive.yml
     permissions:
-      contents: read
       packages: write
     with:
       tag: vuls-data-raw-${{ matrix.target }}
@@ -213,5 +212,4 @@ jobs:
     needs: [check-archive-epss]
     uses: ./.github/workflows/archive-epss.yml
     permissions:
-      contents: read
       packages: write

@@ -143,7 +143,6 @@ jobs:
   extract:
     name: Extract vuls-data-extracted-${{ inputs.target }}@${{ inputs.branch }}
     permissions:
-      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

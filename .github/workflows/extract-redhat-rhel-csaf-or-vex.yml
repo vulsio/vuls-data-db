@@ -31,7 +31,6 @@ jobs:
   extract:
     name: Extract vuls-data-extracted-${{ inputs.target }}-rhel@${{ inputs.branch }}
     permissions:
-      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

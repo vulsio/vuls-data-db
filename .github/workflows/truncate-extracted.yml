@@ -45,7 +45,6 @@ jobs:
           - ubuntu-cve-tracker
     uses: ./.github/workflows/truncate.yml
     permissions:
-      contents: read
       packages: write
     with:
       tag: vuls-data-extracted-${{ matrix.target }}

@@ -24,7 +24,6 @@ jobs:
   cleanup:
     name: Cleanup untagged images in ${{ inputs.package }}
     permissions:
-      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

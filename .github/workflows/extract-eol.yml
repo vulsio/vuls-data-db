@@ -22,7 +22,6 @@ jobs:
   extract:
     name: Extract vuls-data-extracted-eol@${{ inputs.branch }}
     permissions:
-      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:
