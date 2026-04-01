@@ -68,7 +68,7 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Install xq
-        run: go install github.com/sibprogrammer/xq@latest
+        run: go install github.com/sibprogrammer/xq@v1.4.0
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
