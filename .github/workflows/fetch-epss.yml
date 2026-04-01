@@ -11,6 +11,7 @@ jobs:
   fetch:
     name: Fetch vuls-data-raw-epss
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

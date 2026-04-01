@@ -11,6 +11,7 @@ jobs:
   fetch:
     name: Fetch vuls-data-raw-microsoft-msuc
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     strategy:
@@ -100,6 +101,7 @@ jobs:
   commit:
     name: Commit vuls-data-raw-microsoft-msuc
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
@@ -168,6 +170,7 @@ jobs:
   cleanup:
     name: Cleanup microsoft-msuc-data-*
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     if: ${{ always() }}

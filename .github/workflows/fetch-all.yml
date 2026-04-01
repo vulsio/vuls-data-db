@@ -174,6 +174,7 @@ jobs:
           - "wrlinux"
     uses: ./.github/workflows/fetch-main.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -182,6 +183,7 @@ jobs:
     name: Fetch vuls-data-raw-cisco-json
     uses: ./.github/workflows/fetch-cisco-json.yml
     permissions:
+      contents: read
       packages: write
     secrets:
       CISCO_CLIENT_KEY: ${{ secrets.CISCO_CLIENT_KEY }}
@@ -199,6 +201,7 @@ jobs:
           - "cisco-csaf"
     uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -207,36 +210,42 @@ jobs:
     name: Fetch vuls-data-raw-enisa-euvd-list
     uses: ./.github/workflows/fetch-enisa-euvd-list.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-epss:
     name: Fetch vuls-data-raw-epss
     uses: ./.github/workflows/fetch-epss.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-fedora-api:
     name: Fetch vuls-data-raw-fedora-api
     uses: ./.github/workflows/fetch-fedora-api.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-fortinet-csaf:
     name: Fetch vuls-data-raw-fortinet-csaf
     uses: ./.github/workflows/fetch-fortinet-csaf.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-fortinet-cvrf:
     name: Fetch vuls-data-raw-fortinet-cvrf
     uses: ./.github/workflows/fetch-fortinet-cvrf.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-msuc:
     name: Fetch vuls-data-raw-microsoft-msuc
     uses: ./.github/workflows/fetch-msuc.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-nvd-api:
@@ -251,6 +260,7 @@ jobs:
           - "nvd-api-cpematch"
     uses: ./.github/workflows/fetch-nvd-api.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -269,6 +279,7 @@ jobs:
           - "paloalto-csaf"
     uses: ./.github/workflows/fetch-paloalto-json-or-csaf.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -277,6 +288,7 @@ jobs:
     name: Fetch vuls-data-raw-redhat-package-manifest
     uses: ./.github/workflows/fetch-redhat-package-manifest.yml
     permissions:
+      contents: read
       packages: write
 
   fetch-variot:
@@ -289,6 +301,7 @@ jobs:
           - "variot-vulns"
     uses: ./.github/workflows/fetch-variot.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -306,6 +319,7 @@ jobs:
           - "vulncheck-nist-nvd2"
     uses: ./.github/workflows/fetch-vulncheck.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -354,6 +368,7 @@ jobs:
     if: ${{ ( success() || failure() ) && needs.check.outputs.do_gc == 'true' }}
     uses: ./.github/workflows/gc-raw.yml
     permissions:
+      contents: read
       packages: write
 
   action-run-summary:

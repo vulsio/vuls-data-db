@@ -139,6 +139,7 @@ jobs:
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -267,6 +268,7 @@ jobs:
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -284,6 +286,7 @@ jobs:
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -303,6 +306,7 @@ jobs:
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -326,6 +330,7 @@ jobs:
     name: Extract vuls-data-extracted-redhat-ovalv2-rhel
     uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
     permissions:
+      contents: read
       packages: write
     with:
       branch: main
@@ -336,6 +341,7 @@ jobs:
     needs: [extract-redhat-rhel-ovalv2]
     uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
     permissions:
+      contents: read
       packages: write
     with:
       branch: nightly
@@ -352,6 +358,7 @@ jobs:
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -369,6 +376,7 @@ jobs:
           - "redhat-vex"
     uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
     permissions:
+      contents: read
       packages: write
     with:
       target: ${{ matrix.target }}
@@ -378,6 +386,7 @@ jobs:
     name: Extract vuls-data-extracted-nvd-api-cve
     uses: ./.github/workflows/extract-nvd-api-cve.yml
     permissions:
+      contents: read
       packages: write
     with:
       branch: main
@@ -388,6 +397,7 @@ jobs:
     needs: [extract-nvd-api-cve]
     uses: ./.github/workflows/extract-nvd-api-cve.yml
     permissions:
+      contents: read
       packages: write
     with:
       branch: nightly
@@ -396,6 +406,7 @@ jobs:
     name: Extract vuls-data-extracted-eol
     uses: ./.github/workflows/extract-eol.yml
     permissions:
+      contents: read
       packages: write
     with:
       branch: main
@@ -406,6 +417,7 @@ jobs:
     needs: [extract-eol]
     uses: ./.github/workflows/extract-eol.yml
     permissions:
+      contents: read
       packages: write
     with:
       branch: nightly
@@ -448,6 +460,7 @@ jobs:
     if: ${{ ( success() || failure() ) && needs.check.outputs.do_gc == 'true' }}
     uses: ./.github/workflows/gc-extracted.yml
     permissions:
+      contents: read
       packages: write
 
   action-run-summary:
