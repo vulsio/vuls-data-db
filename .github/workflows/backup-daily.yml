@@ -25,6 +25,10 @@ jobs:
           - vuls-data-extracted-epss
           - vuls-data-extracted-fedora-api
           - vuls-data-extracted-freebsd
+          - vuls-data-extracted-microsoft-bulletin
+          - vuls-data-extracted-microsoft-cvrf
+          - vuls-data-extracted-microsoft-msuc
+          - vuls-data-extracted-microsoft-wsusscn2
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-oracle-linux

@@ -26,6 +26,10 @@ jobs:
           - epss
           - fedora-api
           - freebsd
+          - microsoft-bulletin
+          - microsoft-cvrf
+          - microsoft-msuc
+          - microsoft-wsusscn2
           - mitre-v5
           - nvd-api-cve
           - oracle-linux
