@@ -38,6 +38,7 @@ jobs:
   restore:
     name: Restore ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} to ghcr.io/${{ github.repository }}:${{ inputs.tag }}
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

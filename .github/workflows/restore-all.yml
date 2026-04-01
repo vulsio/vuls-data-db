@@ -225,6 +225,7 @@ jobs:
           - vuls-data-raw-wrlinux
     uses: ./.github/workflows/restore.yml
     permissions:
+      contents: read
       packages: write
     with:
       repository: vulsio/vuls-data-db-backup

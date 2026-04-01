@@ -217,6 +217,7 @@ jobs:
           - vuls-data-raw-wrlinux
     uses: ./.github/workflows/backup.yml
     permissions:
+      contents: read
       packages: write
     with:
       src-repository: ${{ github.repository }}

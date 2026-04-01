@@ -22,6 +22,7 @@ jobs:
   extract:
     name: Extract vuls-data-extracted-redhat-ovalv2-rhel@${{ inputs.branch }}
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     env:

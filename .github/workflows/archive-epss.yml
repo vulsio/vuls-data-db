@@ -11,6 +11,7 @@ jobs:
   archive:
     name: Archive vuls-data-raw-epss
     permissions:
+      contents: read
       packages: write
     runs-on: ubuntu-latest
     outputs:
@@ -95,6 +96,7 @@ jobs:
         tag: ${{ fromJson(needs.archive.outputs.tags) }}
     uses: ./.github/workflows/gc.yml
     permissions:
+      contents: read
       packages: write
     with:
       repository: vulsio/vuls-data-db-archive
