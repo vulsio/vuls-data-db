@@ -4,9 +4,14 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   archive:
     name: Archive vuls-data-raw-epss
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.push_archive.outputs.tags }}
@@ -89,6 +94,8 @@ jobs:
       matrix:
         tag: ${{ fromJson(needs.archive.outputs.tags) }}
     uses: ./.github/workflows/gc.yml
+    permissions:
+      packages: write
     with:
       repository: vulsio/vuls-data-db-archive
       tag: ${{ matrix.tag }}

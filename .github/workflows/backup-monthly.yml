@@ -5,6 +5,9 @@ on:
     - cron: "0 0 1 * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backup:
     name: Backup ghcr.io/${{ github.repository }}:${{ matrix.tag }} to ghcr.io/vulsio/vuls-data-db-backup:${{ matrix.tag }}-backup-monthly
@@ -213,6 +216,8 @@ jobs:
           - vuls-data-raw-wolfi-secdb
           - vuls-data-raw-wrlinux
     uses: ./.github/workflows/backup.yml
+    permissions:
+      packages: write
     with:
       src-repository: ${{ github.repository }}
       dest-repository: vulsio/vuls-data-db-backup

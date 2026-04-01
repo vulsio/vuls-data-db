@@ -4,6 +4,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   fedora-release:
     name: Fetch fedora release
@@ -19,6 +22,8 @@ jobs:
 
   fetch:
     name: Fetch vuls-data-raw-fedora-api ${{ matrix.release }}
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     needs: fedora-release
     strategy:
@@ -66,6 +71,8 @@ jobs:
 
   commit:
     name: Commit vuls-data-raw-fedora-api
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [fedora-release, fetch]

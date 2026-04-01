@@ -15,9 +15,14 @@ on:
           - paloalto-json
           - paloalto-csaf
 
+permissions:
+  contents: read
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-${{ inputs.target }}
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

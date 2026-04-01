@@ -10,6 +10,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   check:
     name: Decide whether to fetch all
@@ -32,6 +35,8 @@ jobs:
   fetch:
     name: Fetch vuls-data-raw-fortinet-cvrf
     needs: check
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

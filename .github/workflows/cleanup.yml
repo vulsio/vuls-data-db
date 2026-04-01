@@ -17,9 +17,14 @@ on:
           - vuls-data-db-archive
           - vuls-data-db-backup
 
+permissions:
+  contents: read
+
 jobs:
   cleanup:
     name: Cleanup untagged images in ${{ inputs.package }}
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

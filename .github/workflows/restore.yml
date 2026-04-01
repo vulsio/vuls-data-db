@@ -31,9 +31,14 @@ on:
           - backup-weekly
           - backup-monthly
 
+permissions:
+  contents: read
+
 jobs:
   restore:
     name: Restore ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} to ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

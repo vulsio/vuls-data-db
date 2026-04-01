@@ -239,9 +239,14 @@ on:
         default: 4g
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   gc:
     name: Git GC ghcr.io/${{ inputs.repository }}:${{ inputs.tag }}
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2

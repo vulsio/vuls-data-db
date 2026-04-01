@@ -4,9 +4,14 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   fetch:
     name: Fetch vuls-data-raw-microsoft-msuc
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -94,6 +99,8 @@ jobs:
 
   commit:
     name: Commit vuls-data-raw-microsoft-msuc
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [fetch]
@@ -160,6 +167,8 @@ jobs:
 
   cleanup:
     name: Cleanup microsoft-msuc-data-*
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs: [commit]
