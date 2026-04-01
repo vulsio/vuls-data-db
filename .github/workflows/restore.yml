@@ -44,7 +44,7 @@ jobs:
       GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@v5
+        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
         with:
           remove-dotnet: "true"
           remove-android: "true"
@@ -56,7 +56,7 @@ jobs:
           remove-swapfile: "true"
 
       - name: Set up Go 1.x
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version: "stable"
           cache: false
