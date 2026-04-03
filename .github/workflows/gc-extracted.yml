@@ -62,6 +62,9 @@ jobs:
           - tag: vuls-data-extracted-oracle-linux
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-redhat-cve
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-redhat-csaf
             pack-threads: 4
             pack-windowMemory: 2g

@@ -32,6 +32,7 @@ jobs:
           - mitre-v5
           - nvd-api-cve
           - oracle-linux
+          - redhat-cve
           - redhat-csaf
           - redhat-csaf-rhel
           - redhat-ovalv1

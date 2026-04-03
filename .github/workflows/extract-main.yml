@@ -105,7 +105,7 @@ on:
           # - pub-ghsa
           # - pub-osv
           # - r-osv
-          # - redhat-cve
+          - redhat-cve
           # - redhat-cvrf
           # - redhat-osv
           - rocky-errata
