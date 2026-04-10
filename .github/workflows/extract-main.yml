@@ -68,10 +68,10 @@ on:
           # - maven-ghsa
           # - maven-glsa
           # - maven-osv
-          # - microsoft-bulletin
-          # - microsoft-cvrf
-          # - microsoft-msuc
-          # - microsoft-wsusscn2
+          - microsoft-bulletin
+          - microsoft-cvrf
+          - microsoft-msuc
+          - microsoft-wsusscn2
           # - mitre-attack
           # - mitre-capec
           # - mitre-cvrf

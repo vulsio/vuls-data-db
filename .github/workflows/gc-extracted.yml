@@ -53,6 +53,18 @@ jobs:
           - tag: vuls-data-extracted-freebsd
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-microsoft-bulletin
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-microsoft-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-microsoft-msuc
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-microsoft-wsusscn2
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-mitre-v5
             pack-threads: 2
             pack-windowMemory: 4g
