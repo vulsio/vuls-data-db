@@ -16,7 +16,7 @@ db-build:
 # 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-msuc BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 # 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-wsusscn2 BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-oracle-linux BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-cve BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-cve BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-vex-rhel BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-rocky-errata BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-suse-oval BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
