@@ -127,7 +127,7 @@ on:
           - ubuntu-cve-tracker
           # - ubuntu-osv
           # - ubuntu-vex
-          # - vulncheck-kev
+          - vulncheck-kev
           # - wolfi-osv
       branch:
         required: true

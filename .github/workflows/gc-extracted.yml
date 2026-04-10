@@ -110,6 +110,9 @@ jobs:
           - tag: vuls-data-extracted-ubuntu-cve-tracker
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-vulncheck-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
     uses: ./.github/workflows/gc.yml
     permissions:
       contents: read

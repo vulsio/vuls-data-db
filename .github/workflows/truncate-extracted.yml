@@ -48,6 +48,7 @@ jobs:
           - rocky-errata
           - suse-oval
           - ubuntu-cve-tracker
+          - vulncheck-kev
     uses: ./.github/workflows/truncate.yml
     permissions:
       contents: read
