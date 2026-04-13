@@ -44,6 +44,9 @@ jobs:
           - tag: vuls-data-extracted-eol
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-enisa-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-epss
             pack-threads: 1
             pack-windowMemory: 4g

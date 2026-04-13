@@ -38,6 +38,7 @@ on:
           # - debian-oval
           # - debian-security-tracker-api
           - debian-security-tracker-salsa
+          - enisa-kev
           - epss
           # - erlang-ghsa
           # - erlang-osv

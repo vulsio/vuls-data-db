@@ -53,6 +53,7 @@ jobs:
           - "echo-osv"
           - "endoflife-date-api"
           - "endoflife-date-products"
+          - "enisa-kev"
           - "erlang-ghsa"
           - "erlang-osv"
           # - "enisa-euvd-detail"
