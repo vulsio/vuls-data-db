@@ -135,7 +135,7 @@ jobs:
           - "ubuntu-cve-tracker"
           # - "ubuntu-osv"
           # - "ubuntu-vex"
-          # - "vulncheck-kev"
+          - "vulncheck-kev"
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
     permissions:
@@ -264,7 +264,7 @@ jobs:
           - "ubuntu-cve-tracker"
           # - "ubuntu-osv"
           # - "ubuntu-vex"
-          # - "vulncheck-kev"
+          - "vulncheck-kev"
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
     permissions:

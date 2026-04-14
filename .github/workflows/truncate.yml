@@ -50,6 +50,7 @@ on:
           - vuls-data-extracted-rocky-errata
           - vuls-data-extracted-suse-oval
           - vuls-data-extracted-ubuntu-cve-tracker
+          - vuls-data-extracted-vulncheck-kev
       threshold-mb:
         required: true
         type: number
