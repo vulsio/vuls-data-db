@@ -126,6 +126,9 @@ jobs:
           - tag: vuls-data-raw-endoflife-date-products
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-enisa-kev
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-epss
             pack-threads: 2
             pack-windowMemory: 4g
