@@ -71,6 +71,9 @@ jobs:
           - tag: vuls-data-extracted-mitre-v5
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-msf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-nvd-api-cve
             pack-threads: 2
             pack-windowMemory: 4g

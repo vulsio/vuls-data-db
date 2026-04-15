@@ -49,6 +49,7 @@ on:
           - vuls-data-extracted-microsoft-msuc
           - vuls-data-extracted-microsoft-wsusscn2
           - vuls-data-extracted-mitre-v5
+          - vuls-data-extracted-msf
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-oracle-linux
           - vuls-data-extracted-redhat-cve

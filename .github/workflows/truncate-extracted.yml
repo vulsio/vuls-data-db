@@ -35,6 +35,7 @@ jobs:
           - microsoft-msuc
           - microsoft-wsusscn2
           - mitre-v5
+          - msf
           - nvd-api-cve
           - oracle-linux
           - redhat-cve
