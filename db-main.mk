@@ -9,9 +9,9 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alma-errata BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alpine-secdb BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-amazon BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-# 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-cisa-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-cisa-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-debian-security-tracker-salsa BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-# 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-enisa-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-enisa-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-fedora-api BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 # 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-bulletin BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 # 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-cvrf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
@@ -24,7 +24,7 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-rocky-errata BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-suse-oval BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-ubuntu-cve-tracker BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-# 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-vulncheck-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-vulncheck-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 
 .PHONY: db-add
 db-add:
