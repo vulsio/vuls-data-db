@@ -42,10 +42,10 @@ on:
           - epss
           # - erlang-ghsa
           # - erlang-osv
-          # - exploit-exploitdb
-          # - exploit-github
-          # - exploit-inthewild
-          # - exploit-trickest
+          - exploit-exploitdb
+          - exploit-github
+          - exploit-inthewild
+          - exploit-trickest
           - fedora-api
           # - fedora-updateinfo
           # - fortinet-handmade
@@ -89,6 +89,7 @@ on:
           # - nuget-ghsa
           # - nuget-glsa
           # - nuget-osv
+          - nuclei-repository
           # - nvd-api-cpe
           # - nvd-feed-cve-v1
           # - nvd-feed-cpe-v1
