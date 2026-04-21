@@ -4,6 +4,20 @@ on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+    inputs:
+      db_change_rate_threshold:
+        description: "`vuls diff db` change rate (%) threshold per ecosystem; diff fails if exceeded"
+        required: false
+        default: "10"
+      detection_change_rate_threshold:
+        description: "`vuls diff detection` change rate (%) threshold per scan result; diff fails if exceeded"
+        required: false
+        default: "5"
+      force:
+        description: "**DANGER** Skip diff checks and proceed regardless"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -17,6 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2
+      # Publish target. Production: ghcr.io/vulsio/vuls-nightly-db:nightly.
+      PUBLISH_REPO: ghcr.io/vulsio/vuls-nightly-db
+      PROMOTE_TAG: nightly
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -54,8 +71,62 @@ jobs:
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
 
-      - name: Upload vuls.db to ghcr.io/vulsio/vuls-nightly-db
-        run: vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst
+      # Design: "always push tagless, operate by digest, promote to :nightly only on pass".
+      # The candidate manifest is pushed BEFORE the guard runs so that a
+      # failing build remains pullable by digest for investigation; the
+      # :nightly tag is moved onto the verified digest only when the guard
+      # step below passes.
+      - name: Push vuls.db to GHCR (tagless, digest-only)
+        id: push
+        run: |
+          set -euo pipefail
+          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" "${PUBLISH_REPO}" ./vuls.db.zst)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Pushed candidate image (untagged, digest-only)"
+            echo '```text'
+            echo "digest ref : ${PUBLISH_REPO}@${digest}"
+            echo '```'
+            echo "Image is always pushed before the diff guard runs; a failing"
+            echo "build stays pullable by digest for investigation."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Runs on every scheduled invocation. If a legitimate change trips the
+      # guard and blocking the publish is not desired, this step can be
+      # bypassed by manually dispatching the workflow with `force=true` —
+      # see `.github/actions/diff-guard` for the check strategy and when
+      # that escape hatch is appropriate.
+      - name: Run diff guard
+        # On scheduled runs, github.event.inputs.* is typically unset/null
+        # rather than an empty string. The `!= 'true'` comparison and the
+        # `|| 'default'` fallbacks below let this workflow run without
+        # workflow_dispatch inputs.
+        if: ${{ github.event.inputs.force != 'true' }}
+        uses: ./.github/actions/diff-guard
+        with:
+          target-db: ./vuls.db
+          baseline-repository: ghcr.io/vulsio/vuls-nightly-db:nightly
+          db-change-rate-threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
+          detection-change-rate-threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
+
+      # Guard passed (or was skipped via force=true): attach :nightly to the
+      # verified digest. If the guard fails this step is skipped and
+      # :nightly stays pointing at the previous verified digest.
+      - name: Promote digest to :nightly
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          vuls-data-update dotgit registry tag \
+            --token "${{ secrets.GITHUB_TOKEN }}" \
+            "${PUBLISH_REPO}@${DIGEST}" "${PROMOTE_TAG}"
+          {
+            echo "## Promoted to :${PROMOTE_TAG}"
+            echo '```text'
+            echo "ref        : ${PUBLISH_REPO}:${PROMOTE_TAG}"
+            echo "digest ref : ${PUBLISH_REPO}@${DIGEST}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   action-run-summary:
     name: Action run summary
