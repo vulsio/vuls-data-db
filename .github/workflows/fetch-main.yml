@@ -195,16 +195,14 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{
-          github.repository }}:vuls-data-raw-${{ inputs.target }}
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
       - name: install cabextract for microsoft-wsusscn2
         if: ${{ inputs.target == 'microsoft-wsusscn2' }}
         run: sudo apt-get update && sudo apt-get install -y cabextract
 
       - name: Fetch
-        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{
-          github.repository }}/vuls-data-raw-${{ inputs.target }}
+        run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
 
       - name: Set Git config
         run: |
@@ -225,11 +223,7 @@ jobs:
           fi
 
       - name: Create dotgit tarball
-        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository
-          }}/vuls-data-raw-${{ inputs.target }}
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
-        run: vuls-data-update dotgit registry push --force --token ${{
-          secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository
-          }}:vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target
-          }}.tar.zst
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }} vuls-data-raw-${{ inputs.target }}.tar.zst
