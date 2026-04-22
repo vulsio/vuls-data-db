@@ -150,6 +150,7 @@ jobs:
           - vuls-data-raw-npm-ghsa
           - vuls-data-raw-npm-glsa
           - vuls-data-raw-npm-osv
+          - vuls-data-raw-nuclei-api
           - vuls-data-raw-nuclei-repository
           - vuls-data-raw-nuget-ghsa
           - vuls-data-raw-nuget-glsa

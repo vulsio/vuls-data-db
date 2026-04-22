@@ -315,6 +315,9 @@ jobs:
           - tag: vuls-data-raw-npm-osv
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-nuclei-api
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-nuclei-repository
             pack-threads: 2
             pack-windowMemory: 4g

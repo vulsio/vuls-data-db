@@ -114,6 +114,7 @@ jobs:
           - "npm-ghsa"
           - "npm-glsa"
           - "npm-osv"
+          - "nuclei-api"
           - "nuclei-repository"
           - "nuget-ghsa"
           - "nuget-glsa"
