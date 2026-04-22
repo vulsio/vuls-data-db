@@ -351,6 +351,7 @@ jobs:
         fetch-fortinet-cvrf,
         fetch-nvd-api,
         fetch-msuc,
+        fetch-nuclei-api,
         fetch-paloalto-json-or-csaf,
         fetch-redhat-package-manifest,
         fetch-variot,
