@@ -1,0 +1,207 @@
+name: diff-guard
+description: |
+  Compare a freshly built vuls.db against a baseline pulled from a container
+  registry. Runs `vuls diff detection` (against two vuls0 binaries: master HEAD
+  and a pinned older commit) and `vuls diff db`, emitting step summaries and
+  failing the job if any check exceeds its configured threshold.
+
+  All guard steps are kept inside this composite action so the caller only
+  needs a single `uses:` step to run the whole gate.
+
+  Sanity-check strategy (the order steps run in):
+    1. Detection against vuls0 master HEAD — a large detection gap almost
+       always means the DB should not ship.
+    2. Detection against a slightly older pinned vuls0 binary — catches
+       regressions that only surface against past vuls0 versions.
+    3. `vuls diff db` last — structural changes to the extracted data can
+       legitimately inflate the raw DB diff even when detection is stable.
+       If detection shows near-zero change but only `diff db` fails, the
+       failure is easier to interpret because the earlier detection checks
+       already established detection stability.
+
+inputs:
+  target_db:
+    description: Path to the freshly built vuls.db to validate.
+    required: true
+  baseline_repository:
+    description: OCI reference (repo:tag) to fetch the baseline vuls.db from.
+    required: true
+  db_change_rate_threshold:
+    description: "`vuls diff db` change rate (%) threshold per ecosystem."
+    required: true
+  detection_change_rate_threshold:
+    description: "`vuls diff detection` change rate (%) threshold per scan result."
+    required: true
+  integration_ref:
+    description: vulsio/integration commit SHA to pin scan-result fixtures to.
+    required: false
+    default: 24c96d27ea0ead49ad8311d8c92d204fef5c58b4
+  vuls0_old_ref:
+    description: future-architect/vuls commit SHA for the older-binary detection check.
+    required: false
+    default: 4cc910824a2880fbfb322dd4e9d94b68558bed57
+
+runs:
+  using: composite
+  steps:
+    - name: Record vuls (vuls2) binary metadata
+      shell: bash
+      run: |
+        # Diff behavior (thresholds, output format) can change across vuls2
+        # nightlies, so capture the exact binary being used to drive
+        # `vuls diff ...` alongside the vuls0 binaries recorded below.
+        {
+          echo "## vuls (vuls2) driving diff checks"
+          echo '```text'
+          go version -m "$(command -v vuls)" 2>&1 | awk '$1=="mod" && $2=="github.com/MaineK00n/vuls2"' || true
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Fetch baseline vuls.db
+      shell: bash
+      run: vuls db fetch --dbpath ./baseline.db --repository "${{ inputs.baseline_repository }}" --no-progress
+
+    - name: Install vuls0 (future-architect/vuls master)
+      shell: bash
+      run: |
+        mkdir -p /tmp/vuls0-bin
+        GOBIN=/tmp/vuls0-bin go install github.com/future-architect/vuls/cmd/vuls@master
+        mv /tmp/vuls0-bin/vuls /tmp/vuls0-bin/vuls0
+        echo "VULS0=/tmp/vuls0-bin/vuls0" >> "$GITHUB_ENV"
+
+        # `go version -m` reads the module metadata Go embeds into every
+        # binary; the `mod` line's pseudo-version carries both the build
+        # timestamp and short commit hash
+        # (e.g. `v0.38.7-0.YYYYMMDDHHMMSS-<shorthash>`).
+        {
+          echo "## vuls0 under test (master HEAD)"
+          echo '```text'
+          go version -m /tmp/vuls0-bin/vuls0 2>&1 | awk '$1=="mod" && $2=="github.com/future-architect/vuls"' || true
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    # Pin vulsio/integration to a specific commit so scan-result fixtures used
+    # by `vuls diff detection` do not change independently of this repo.
+    - name: Check out vulsio/integration (pinned) for scan-result fixtures
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        repository: vulsio/integration
+        ref: ${{ inputs.integration_ref }}
+        path: integration
+
+    - name: Prepare scan results (vuls2-supported families only)
+      shell: bash
+      run: |
+        mkdir -p ./scan-results
+        # Copy all scan results then drop the ones excluded from this vuls2
+        # detection diff: Windows (handled by gost) and CentOS — see
+        # vuls/detector/detector.go DetectPkgCves switch.
+        cp ./integration/data/results/*.json ./scan-results/
+        rm -f ./scan-results/windows_*.json ./scan-results/centos_*.json
+        ls -1 ./scan-results
+
+        integration_sha=$(git -C ./integration rev-parse HEAD)
+        echo "## Scan-result fixtures source" >> "$GITHUB_STEP_SUMMARY"
+        echo "- vulsio/integration @ \`${integration_sha}\`" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Diff detection between baseline and target DBs
+      shell: bash
+      env:
+        TARGET_DB: ${{ inputs.target_db }}
+        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
+      run: |
+        set +e
+        set -o pipefail
+        vuls diff detection \
+          ./scan-results \
+          ./baseline.db "$VULS0" \
+          "$TARGET_DB" "$VULS0" \
+          --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
+          | tee ./diff-detection-report.md
+        rc=$?
+        set -e
+
+        echo "---" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (vuls0 master HEAD)" >> "$GITHUB_STEP_SUMMARY"
+        head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
+        exit "$rc"
+
+    # Additional check with a slightly older vuls0 binary (pinned commit) to
+    # catch regressions that only surface against past vuls0 versions.
+    - name: Install vuls0 for older-binary check (pinned commit)
+      shell: bash
+      env:
+        VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
+      run: |
+        mkdir -p /tmp/vuls0-old-bin
+        GOBIN=/tmp/vuls0-old-bin go install "github.com/future-architect/vuls/cmd/vuls@${VULS0_OLD_REF}"
+        mv /tmp/vuls0-old-bin/vuls /tmp/vuls0-old-bin/vuls0-old
+        echo "VULS0_OLD=/tmp/vuls0-old-bin/vuls0-old" >> "$GITHUB_ENV"
+
+        {
+          echo "## vuls0 under test (older pinned @${VULS0_OLD_REF:0:7})"
+          echo '```text'
+          go version -m /tmp/vuls0-old-bin/vuls0-old 2>&1 | awk '$1=="mod" && $2=="github.com/future-architect/vuls"' || true
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Prepare scan results for older-binary check (drop families unsupported by older vuls0)
+      shell: bash
+      run: |
+        # Start from the already-filtered master-HEAD set (windows/centos gone)
+        # and additionally remove families the pinned older vuls0 cannot
+        # process. This is expressed as a *blacklist* so new families added
+        # upstream are retained automatically; only known-broken ones need
+        # listing here. Update this set when bumping `vuls0_old_ref`.
+        mkdir -p ./scan-results-old
+        cp ./scan-results/*.json ./scan-results-old/
+        rm -f \
+          ./scan-results-old/amazon_*.json \
+          ./scan-results-old/debian_*.json \
+          ./scan-results-old/leap.json \
+          ./scan-results-old/opensuse_*.json \
+          ./scan-results-old/sles*.json \
+          ./scan-results-old/suse_*.json
+        ls -1 ./scan-results-old
+
+    - name: Diff detection with older vuls0 binary (baseline vs target DB)
+      shell: bash
+      env:
+        TARGET_DB: ${{ inputs.target_db }}
+        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
+        VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
+      run: |
+        set +e
+        set -o pipefail
+        vuls diff detection \
+          ./scan-results-old \
+          ./baseline.db "$VULS0_OLD" \
+          "$TARGET_DB" "$VULS0_OLD" \
+          --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
+          | tee ./diff-detection-old-report.md
+        rc=$?
+        set -e
+
+        echo "---" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7})" >> "$GITHUB_STEP_SUMMARY"
+        head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
+        exit "$rc"
+
+    - name: Diff vuls.db against baseline
+      shell: bash
+      env:
+        TARGET_DB: ${{ inputs.target_db }}
+        DB_CHANGE_RATE_THRESHOLD: ${{ inputs.db_change_rate_threshold }}
+      run: |
+        set +e
+        set -o pipefail
+        vuls diff db ./baseline.db "$TARGET_DB" \
+          --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
+          | tee ./diff-report.md
+        rc=$?
+        set -e
+
+        echo "---" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff vuls.db" >> "$GITHUB_STEP_SUMMARY"
+        head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
+        exit "$rc"

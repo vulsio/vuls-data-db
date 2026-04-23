@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+    inputs:
+      db_change_rate_threshold:
+        description: "`vuls diff db` change rate (%) threshold per ecosystem; diff fails if exceeded"
+        required: false
+        default: "10"
+      detection_change_rate_threshold:
+        description: "`vuls diff detection` change rate (%) threshold per scan result; diff fails if exceeded"
+        required: false
+        default: "5"
 
 permissions:
   contents: read
@@ -54,8 +63,56 @@ jobs:
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
 
-      - name: Upload vuls.db to ghcr.io/vulsio/vuls-nightly-db
-        run: vuls db push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-nightly-db:nightly ./vuls.db.zst
+      # Design: "always push tagless, operate by digest, promote to :nightly only on pass".
+      # The candidate manifest is pushed BEFORE the guard runs so that a
+      # failing build remains pullable by digest for investigation; the
+      # :nightly tag is moved onto the verified digest only when the guard
+      # step below passes.
+      - name: Push vuls.db to GHCR (tagless, digest-only)
+        id: push
+        run: |
+          set -euo pipefail
+          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Pushed candidate image (untagged, digest-only)"
+            echo '```text'
+            echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${digest}"
+            echo '```'
+            echo "Image is always pushed before the diff guard runs; a failing"
+            echo "build stays pullable by digest for investigation."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Runs on every scheduled and manually dispatched invocation.
+      - name: Run diff guard
+        # On scheduled runs, github.event.inputs.* is typically unset/null
+        # rather than an empty string. The `|| 'default'` fallbacks below
+        # let this workflow run without workflow_dispatch inputs.
+        uses: ./.github/actions/diff-guard
+        with:
+          target_db: ./vuls.db
+          baseline_repository: ghcr.io/vulsio/vuls-nightly-db:nightly
+          db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
+          detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
+
+      # Guard passed: attach :nightly to the verified digest. If the guard
+      # fails this step is skipped and
+      # :nightly stays pointing at the previous verified digest.
+      - name: Promote digest to :nightly
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          vuls-data-update dotgit registry tag \
+            --token "${{ secrets.GITHUB_TOKEN }}" \
+            "ghcr.io/vulsio/vuls-nightly-db@${DIGEST}" nightly
+          {
+            echo "## Promoted to :nightly"
+            echo '```text'
+            echo "ref        : ghcr.io/vulsio/vuls-nightly-db:nightly"
+            echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${DIGEST}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   action-run-summary:
     name: Action run summary
