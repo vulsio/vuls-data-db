@@ -20,23 +20,23 @@ description: |
        skip this guard entirely and proceed with the publish.
 
 inputs:
-  target-db:
+  target_db:
     description: Path to the freshly built vuls.db to validate.
     required: true
-  baseline-repository:
+  baseline_repository:
     description: OCI reference (repo:tag) to fetch the baseline vuls.db from.
     required: true
-  db-change-rate-threshold:
+  db_change_rate_threshold:
     description: "`vuls diff db` change rate (%) threshold per ecosystem."
     required: true
-  detection-change-rate-threshold:
+  detection_change_rate_threshold:
     description: "`vuls diff detection` change rate (%) threshold per scan result."
     required: true
-  integration-ref:
+  integration_ref:
     description: vulsio/integration commit SHA to pin scan-result fixtures to.
     required: false
     default: 24c96d27ea0ead49ad8311d8c92d204fef5c58b4
-  vuls0-old-ref:
+  vuls0_old_ref:
     description: future-architect/vuls commit SHA for the older-binary detection check.
     required: false
     default: 4cc910824a2880fbfb322dd4e9d94b68558bed57
@@ -50,18 +50,16 @@ runs:
         # Diff behavior (thresholds, output format) can change across vuls2
         # nightlies, so capture the exact binary being used to drive
         # `vuls diff ...` alongside the vuls0 binaries recorded below.
-        vuls_bin=$(command -v vuls)
         {
           echo "## vuls (vuls2) driving diff checks"
           echo '```text'
-          echo "path: ${vuls_bin}"
-          go version -m "${vuls_bin}" 2>&1 | awk '$1=="mod" && $2=="github.com/MaineK00n/vuls2"' || true
+          go version -m "$(command -v vuls)" 2>&1 | awk '$1=="mod" && $2=="github.com/MaineK00n/vuls2"' || true
           echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Fetch baseline vuls.db
       shell: bash
-      run: vuls db fetch --dbpath ./baseline.db --repository "${{ inputs.baseline-repository }}" --no-progress
+      run: vuls db fetch --dbpath ./baseline.db --repository "${{ inputs.baseline_repository }}" --no-progress
 
     - name: Install vuls0 (future-architect/vuls master)
       shell: bash
@@ -88,7 +86,7 @@ runs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         repository: vulsio/integration
-        ref: ${{ inputs.integration-ref }}
+        ref: ${{ inputs.integration_ref }}
         path: integration
 
     - name: Prepare scan results (vuls2-supported families only)
@@ -109,8 +107,8 @@ runs:
     - name: Diff detection between baseline and target DBs
       shell: bash
       env:
-        TARGET_DB: ${{ inputs.target-db }}
-        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection-change-rate-threshold }}
+        TARGET_DB: ${{ inputs.target_db }}
+        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
       run: |
         set +e
         set -o pipefail
@@ -133,7 +131,7 @@ runs:
     - name: Install vuls0 for older-binary check (pinned commit)
       shell: bash
       env:
-        VULS0_OLD_REF: ${{ inputs.vuls0-old-ref }}
+        VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
         mkdir -p /tmp/vuls0-old-bin
         GOBIN=/tmp/vuls0-old-bin go install "github.com/future-architect/vuls/cmd/vuls@${VULS0_OLD_REF}"
@@ -154,7 +152,7 @@ runs:
         # and additionally remove families the pinned older vuls0 cannot
         # process. This is expressed as a *blacklist* so new families added
         # upstream are retained automatically; only known-broken ones need
-        # listing here. Update this set when bumping `vuls0-old-ref`.
+        # listing here. Update this set when bumping `vuls0_old_ref`.
         mkdir -p ./scan-results-old
         cp ./scan-results/*.json ./scan-results-old/
         rm -f \
@@ -169,9 +167,9 @@ runs:
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
       shell: bash
       env:
-        TARGET_DB: ${{ inputs.target-db }}
-        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection-change-rate-threshold }}
-        VULS0_OLD_REF: ${{ inputs.vuls0-old-ref }}
+        TARGET_DB: ${{ inputs.target_db }}
+        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
+        VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
         set +e
         set -o pipefail
@@ -192,8 +190,8 @@ runs:
     - name: Diff vuls.db against baseline
       shell: bash
       env:
-        TARGET_DB: ${{ inputs.target-db }}
-        DB_CHANGE_RATE_THRESHOLD: ${{ inputs.db-change-rate-threshold }}
+        TARGET_DB: ${{ inputs.target_db }}
+        DB_CHANGE_RATE_THRESHOLD: ${{ inputs.db_change_rate_threshold }}
       run: |
         set +e
         set -o pipefail

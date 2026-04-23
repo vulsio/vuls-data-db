@@ -31,9 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2
-      # Publish target. Production: ghcr.io/vulsio/vuls-nightly-db:nightly.
-      PUBLISH_REPO: ghcr.io/vulsio/vuls-nightly-db
-      PROMOTE_TAG: nightly
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -80,12 +77,12 @@ jobs:
         id: push
         run: |
           set -euo pipefail
-          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" "${PUBLISH_REPO}" ./vuls.db.zst)
+          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
           {
             echo "## Pushed candidate image (untagged, digest-only)"
             echo '```text'
-            echo "digest ref : ${PUBLISH_REPO}@${digest}"
+            echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${digest}"
             echo '```'
             echo "Image is always pushed before the diff guard runs; a failing"
             echo "build stays pullable by digest for investigation."
@@ -104,10 +101,10 @@ jobs:
         if: ${{ github.event.inputs.force != 'true' }}
         uses: ./.github/actions/diff-guard
         with:
-          target-db: ./vuls.db
-          baseline-repository: ghcr.io/vulsio/vuls-nightly-db:nightly
-          db-change-rate-threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
-          detection-change-rate-threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
+          target_db: ./vuls.db
+          baseline_repository: ghcr.io/vulsio/vuls-nightly-db:nightly
+          db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
+          detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
 
       # Guard passed (or was skipped via force=true): attach :nightly to the
       # verified digest. If the guard fails this step is skipped and
@@ -119,12 +116,12 @@ jobs:
           set -euo pipefail
           vuls-data-update dotgit registry tag \
             --token "${{ secrets.GITHUB_TOKEN }}" \
-            "${PUBLISH_REPO}@${DIGEST}" "${PROMOTE_TAG}"
+            "ghcr.io/vulsio/vuls-nightly-db@${DIGEST}" nightly
           {
-            echo "## Promoted to :${PROMOTE_TAG}"
+            echo "## Promoted to :nightly"
             echo '```text'
-            echo "ref        : ${PUBLISH_REPO}:${PROMOTE_TAG}"
-            echo "digest ref : ${PUBLISH_REPO}@${DIGEST}"
+            echo "ref        : ghcr.io/vulsio/vuls-nightly-db:nightly"
+            echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${DIGEST}"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
