@@ -27,6 +27,10 @@ jobs:
           - vuls-data-extracted-eol
           - vuls-data-extracted-enisa-kev
           - vuls-data-extracted-epss
+          - vuls-data-extracted-exploit-exploitdb
+          - vuls-data-extracted-exploit-github
+          - vuls-data-extracted-exploit-inthewild
+          - vuls-data-extracted-exploit-trickest
           - vuls-data-extracted-fedora-api
           - vuls-data-extracted-freebsd
           - vuls-data-extracted-microsoft-bulletin
@@ -35,6 +39,7 @@ jobs:
           - vuls-data-extracted-microsoft-wsusscn2
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-msf
+          - vuls-data-extracted-nuclei-repository
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-oracle-linux
           - vuls-data-extracted-redhat-cve

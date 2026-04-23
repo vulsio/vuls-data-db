@@ -50,6 +50,18 @@ jobs:
           - tag: vuls-data-extracted-epss
             pack-threads: 1
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-exploit-exploitdb
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-exploit-github
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-exploit-inthewild
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-exploit-trickest
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-fedora-api
             pack-threads: 2
             pack-windowMemory: 4g
@@ -72,6 +84,9 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-msf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-nuclei-repository
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-nvd-api-cve

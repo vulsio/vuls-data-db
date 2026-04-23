@@ -28,6 +28,10 @@ jobs:
           - eol
           - enisa-kev
           - epss
+          - exploit-exploitdb
+          - exploit-github
+          - exploit-inthewild
+          - exploit-trickest
           - fedora-api
           - freebsd
           - microsoft-bulletin
@@ -36,6 +40,7 @@ jobs:
           - microsoft-wsusscn2
           - mitre-v5
           - msf
+          - nuclei-repository
           - nvd-api-cve
           - oracle-linux
           - redhat-cve
