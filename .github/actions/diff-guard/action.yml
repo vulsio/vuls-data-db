@@ -6,7 +6,7 @@ description: |
   failing the job if any check exceeds its configured threshold.
 
   All guard steps are kept inside this composite action so the caller only
-  needs a single `if:` to skip the whole gate (e.g. `force=true`).
+  needs a single `uses:` step to run the whole gate.
 
   Sanity-check strategy (the order steps run in):
     1. Detection against vuls0 master HEAD — a large detection gap almost
@@ -15,9 +15,9 @@ description: |
        regressions that only surface against past vuls0 versions.
     3. `vuls diff db` last — structural changes to the extracted data can
        legitimately inflate the raw DB diff even when detection is stable.
-       If detection shows near-zero change but only `diff db` fails and the
-       cause is well understood, the caller can re-run with `force=true` to
-       skip this guard entirely and proceed with the publish.
+       If detection shows near-zero change but only `diff db` fails, the
+       failure is easier to interpret because the earlier detection checks
+       already established detection stability.
 
 inputs:
   target_db:

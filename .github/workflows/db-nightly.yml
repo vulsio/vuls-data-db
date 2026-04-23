@@ -13,11 +13,6 @@ on:
         description: "`vuls diff detection` change rate (%) threshold per scan result; diff fails if exceeded"
         required: false
         default: "5"
-      force:
-        description: "**DANGER** Skip diff checks and proceed regardless"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -88,17 +83,11 @@ jobs:
             echo "build stays pullable by digest for investigation."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Runs on every scheduled invocation. If a legitimate change trips the
-      # guard and blocking the publish is not desired, this step can be
-      # bypassed by manually dispatching the workflow with `force=true` —
-      # see `.github/actions/diff-guard` for the check strategy and when
-      # that escape hatch is appropriate.
+      # Runs on every scheduled and manually dispatched invocation.
       - name: Run diff guard
         # On scheduled runs, github.event.inputs.* is typically unset/null
-        # rather than an empty string. The `!= 'true'` comparison and the
-        # `|| 'default'` fallbacks below let this workflow run without
-        # workflow_dispatch inputs.
-        if: ${{ github.event.inputs.force != 'true' }}
+        # rather than an empty string. The `|| 'default'` fallbacks below
+        # let this workflow run without workflow_dispatch inputs.
         uses: ./.github/actions/diff-guard
         with:
           target_db: ./vuls.db
@@ -106,8 +95,8 @@ jobs:
           db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
           detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
 
-      # Guard passed (or was skipped via force=true): attach :nightly to the
-      # verified digest. If the guard fails this step is skipped and
+      # Guard passed: attach :nightly to the verified digest. If the guard
+      # fails this step is skipped and
       # :nightly stays pointing at the previous verified digest.
       - name: Promote digest to :nightly
         env:
