@@ -95,7 +95,7 @@ jobs:
         uses: ./.github/actions/diff-guard
         with:
           target_db: ./vuls.db
-          baseline_repository: ghcr.io/vulsio/vuls-nightly-db:latest
+          baseline_repository: ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_schema_version.outputs.schema_version }}
           db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
           detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
 
