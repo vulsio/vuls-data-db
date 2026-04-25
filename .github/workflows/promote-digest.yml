@@ -56,13 +56,15 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
 
-      - name: Validate digest format
+      - name: Validate and normalize digest
         run: |
           set -euo pipefail
-          if [[ ! "${DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+          normalized_digest="${DIGEST,,}"
+          if [[ ! "${normalized_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
             echo "::error::Invalid digest format: '${DIGEST}'. Expected 'sha256:<64 hex chars>'."
             exit 1
           fi
+          echo "DIGEST=${normalized_digest}" >> "$GITHUB_ENV"
 
       - name: Promote digest to tag
         run: |
