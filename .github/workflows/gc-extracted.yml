@@ -80,6 +80,15 @@ jobs:
           - tag: vuls-data-extracted-microsoft-wsusscn2
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-mitre-attack
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-mitre-capec
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-mitre-cwe
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-mitre-v5
             pack-threads: 2
             pack-windowMemory: 4g

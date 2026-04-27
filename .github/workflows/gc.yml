@@ -48,6 +48,9 @@ on:
           - vuls-data-extracted-microsoft-cvrf
           - vuls-data-extracted-microsoft-msuc
           - vuls-data-extracted-microsoft-wsusscn2
+          - vuls-data-extracted-mitre-attack
+          - vuls-data-extracted-mitre-capec
+          - vuls-data-extracted-mitre-cwe
           - vuls-data-extracted-mitre-v5
           - vuls-data-extracted-msf
           - vuls-data-extracted-nvd-api-cve
