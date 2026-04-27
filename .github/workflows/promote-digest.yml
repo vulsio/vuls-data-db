@@ -1,4 +1,4 @@
-name: Promote Digest
+name: DB(Promote Digest)
 
 run-name: "Promote ${{ inputs.digest }} -> :${{ inputs.tag }} by @${{ github.actor }}"
 
@@ -67,10 +67,12 @@ jobs:
           echo "DIGEST=${normalized_digest}" >> "$GITHUB_ENV"
 
       - name: Promote digest to tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           vuls-data-update dotgit registry tag \
-            --token "${{ secrets.GITHUB_TOKEN }}" \
+            --token "${GITHUB_TOKEN}" \
             "${REPOSITORY}@${DIGEST}" "${TAG}"
           {
             echo "## Promoted digest to :${TAG}"
