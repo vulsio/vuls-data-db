@@ -1,0 +1,93 @@
+name: DB(Promote Digest)
+
+run-name: "Promote ${{ inputs.digest }} -> :${{ inputs.tag }} by @${{ github.actor }}"
+
+# Manual recovery workflow for attaching a tag (latest / nightly / 0) to a
+# tagless image digest on ghcr.io/vulsio/vuls-nightly-db.
+#
+# Background: db-main.yml and db-nightly.yml always push the candidate image
+# tagless first, then promote a tag onto the verified digest only when the
+# diff-guard passes. When diff-guard fails (e.g. on large DB changes), the
+# candidate stays untagged. After an operator manually inspects the diff and
+# decides it is safe to promote, this workflow records the tag-promotion as a
+# GitHub Actions run (instead of running `vuls-data-update dotgit registry tag`
+# from someone's terminal where no audit trail remains).
+
+on:
+  workflow_dispatch:
+    inputs:
+      digest:
+        description: "Image digest to tag (sha256:<64 hex chars>) on ghcr.io/vulsio/vuls-nightly-db"
+        required: true
+        type: string
+      tag:
+        description: "Tag to attach to the digest"
+        required: true
+        type: choice
+        options:
+          - latest
+          - nightly
+          - "0"
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    name: promote digest
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    env:
+      REPOSITORY: ghcr.io/vulsio/vuls-nightly-db
+      DIGEST: ${{ inputs.digest }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
+
+      - name: Validate and normalize digest
+        run: |
+          set -euo pipefail
+          normalized_digest="${DIGEST,,}"
+          if [[ ! "${normalized_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid digest format: '${DIGEST}'. Expected 'sha256:<64 hex chars>'."
+            exit 1
+          fi
+          echo "DIGEST=${normalized_digest}" >> "$GITHUB_ENV"
+
+      - name: Promote digest to tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          vuls-data-update dotgit registry tag \
+            --token "${GITHUB_TOKEN}" \
+            "${REPOSITORY}@${DIGEST}" "${TAG}"
+          {
+            echo "## Promoted digest to :${TAG}"
+            echo '```text'
+            echo "actor      : ${{ github.actor }}"
+            echo "ref        : ${REPOSITORY}:${TAG}"
+            echo "digest ref : ${REPOSITORY}@${DIGEST}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  action-run-summary:
+    name: Action run summary
+    if: ${{ success() || failure() }}
+    needs: [promote]
+    uses: ./.github/workflows/action-run-summary.yml
+    permissions:
+      contents: read
+      actions: read
