@@ -37,6 +37,9 @@ jobs:
           - microsoft-cvrf
           - microsoft-msuc
           - microsoft-wsusscn2
+          - mitre-attack
+          - mitre-capec
+          - mitre-cwe
           - mitre-v5
           - msf
           - nuclei-repository

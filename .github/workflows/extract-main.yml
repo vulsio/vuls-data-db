@@ -73,10 +73,10 @@ on:
           - microsoft-cvrf
           - microsoft-msuc
           - microsoft-wsusscn2
-          # - mitre-attack
-          # - mitre-capec
+          - mitre-attack
+          - mitre-capec
           # - mitre-cvrf
-          # - mitre-cwe
+          - mitre-cwe
           # - mitre-emb3d
           # - mitre-v4
           - mitre-v5
