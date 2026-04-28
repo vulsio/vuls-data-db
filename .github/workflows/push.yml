@@ -45,6 +45,9 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
+      - name: Disable git auto-gc globally
+        run: git config --global gc.auto 0
+
       - name: Check out ${{ inputs.owner }}/${{ inputs.target }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:

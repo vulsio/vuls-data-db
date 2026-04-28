@@ -64,6 +64,9 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
+      - name: Disable git auto-gc globally
+        run: git config --global gc.auto 0
+
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} --restore ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
 

@@ -71,6 +71,9 @@ jobs:
       - name: Install xq
         run: go install github.com/sibprogrammer/xq@v1.4.0
 
+      - name: Disable git auto-gc globally
+        run: git config --global gc.auto 0
+
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
 

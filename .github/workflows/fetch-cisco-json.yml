@@ -48,6 +48,9 @@ jobs:
       - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
+      - name: Disable git auto-gc globally
+        run: git config --global gc.auto 0
+
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
 
