@@ -35,7 +35,7 @@ inputs:
   integration_ref:
     description: vulsio/integration commit SHA to pin scan-result fixtures to.
     required: false
-    default: 24c96d27ea0ead49ad8311d8c92d204fef5c58b4
+    default: 6dfd74510f5944e7c973e40d7844020d53dbb3a7
   vuls0_old_ref:
     description: future-architect/vuls commit SHA for the older-binary detection check.
     required: false
