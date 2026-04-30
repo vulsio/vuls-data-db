@@ -80,7 +80,7 @@ jobs:
       - name: Filter
         run: go run main.go ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} affected_repository_list.json ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel

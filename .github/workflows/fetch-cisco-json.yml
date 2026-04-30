@@ -61,7 +61,7 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch cisco-json --dir ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json ${{ secrets.CISCO_CLIENT_KEY }} ${{ secrets.CISCO_CLIENT_SECRET }}
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-cisco-json remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json

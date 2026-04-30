@@ -128,7 +128,7 @@ jobs:
             rmdir "ghcr.io/${{ github.repository }}/microsoft-msuc-data-${name}"
           done < <(echo "$include" | jq -r '.[].name')
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-msuc remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc

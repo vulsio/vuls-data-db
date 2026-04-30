@@ -122,7 +122,7 @@ jobs:
             rmdir ghcr.io/${{ github.repository }}/fedora-data-${release}
           done
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api

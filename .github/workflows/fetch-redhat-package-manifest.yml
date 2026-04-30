@@ -56,7 +56,7 @@ jobs:
       - name: Fetch all
         run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest 8 9 10
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest

@@ -56,7 +56,7 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch epss --dir ghcr.io/${{ github.repository }}/vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss

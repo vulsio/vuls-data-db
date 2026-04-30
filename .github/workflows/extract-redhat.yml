@@ -84,7 +84,7 @@ jobs:
       - name: Extract
         run: vuls-data-update extract ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}

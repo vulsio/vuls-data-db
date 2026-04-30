@@ -73,7 +73,7 @@ jobs:
       - name: Extract
         run: vuls-data-update extract nvd-api-cve --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve ghcr.io/${{ github.repository }}/vuls-data-raw-nvd-api-cve ghcr.io/${{ github.repository }}/vuls-data-raw-nvd-api-cpematch
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-nvd-api-cve remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-nvd-api-cve

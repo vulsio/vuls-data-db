@@ -94,7 +94,7 @@ jobs:
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list restore ${deleted}
           fi
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
