@@ -259,6 +259,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Set up Go 1.x
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
@@ -290,7 +297,7 @@ jobs:
         id: split_archive
         run: |
           echo "Create the latest repository..."
-          git clone --depth 1 --no-single-branch --no-checkout --branch main --config gc.auto=0 file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
+          git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
           if git -C ${{ inputs.tag }} remote | grep -q "^origin$"; then
             git -C ${{ inputs.tag }} remote set-url origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
           else

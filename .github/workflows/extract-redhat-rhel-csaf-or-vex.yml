@@ -49,6 +49,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -73,16 +80,13 @@ jobs:
       - name: Filter
         run: go run main.go ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} affected_repository_list.json ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
           else
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel config user.name "GitHub Action"
 
       - name: Commit
         run: |

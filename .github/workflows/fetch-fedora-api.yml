@@ -93,6 +93,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Set up Go 1.x
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
@@ -115,16 +122,13 @@ jobs:
             rmdir ghcr.io/${{ github.repository }}/fedora-data-${release}
           done
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
           else
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api config user.name "GitHub Action"
 
       - name: Commit
         run: |

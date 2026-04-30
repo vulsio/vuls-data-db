@@ -274,6 +274,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Set up Go 1.x
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
@@ -292,7 +299,6 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} config gc.auto 0
           git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} config pack.threads ${{ inputs.pack-threads }}
           git -C ghcr.io/${{ inputs.repository }}/${{ inputs.tag }} config pack.windowMemory ${{ inputs.pack-windowMemory }}
 

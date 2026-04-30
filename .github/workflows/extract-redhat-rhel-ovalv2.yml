@@ -40,6 +40,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -78,16 +85,13 @@ jobs:
       - name: Extract
         run: vuls-data-update extract redhat-ovalv2 --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv2 ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           else
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv2-rhel
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv2-rhel config user.name "GitHub Action"
 
       - name: Commit
         run: |

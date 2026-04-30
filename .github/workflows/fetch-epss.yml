@@ -29,6 +29,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -49,16 +56,13 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch epss --dir ghcr.io/${{ github.repository }}/vuls-data-raw-epss $(date --utc -d "-1 days" "+%Y-%m-%d")
 
-      - name: Set Git config
+      - name: Set Git remote
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           else
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss config user.name "GitHub Action"
 
       - name: Restore
         run: |
