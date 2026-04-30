@@ -49,6 +49,13 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -64,9 +71,6 @@ jobs:
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
-      - name: Disable git auto-gc globally
-        run: git config --global gc.auto 0
-
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} --restore ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
 
@@ -78,14 +82,11 @@ jobs:
 
       - name: Set Git config
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel config gc.auto 0
           if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote | grep -q "^origin$"; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
           else
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
           fi
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel config user.email "action@github.com"
-          git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel config user.name "GitHub Action"
 
       - name: Commit
         run: |

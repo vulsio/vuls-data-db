@@ -19,6 +19,13 @@ jobs:
     env:
       GOEXPERIMENT: jsonv2
     steps:
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Set up Go 1.x
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
@@ -27,9 +34,6 @@ jobs:
 
       - name: Install vuls-data-update
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
-
-      - name: Disable git auto-gc globally
-        run: git config --global gc.auto 0
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-epss
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-epss
@@ -47,10 +51,7 @@ jobs:
 
             mkdir vuls-data-raw-epss/
             mv ${y} vuls-data-raw-epss
-            git -C vuls-data-raw-epss -c init.defaultBranch=main init .
-            git -C vuls-data-raw-epss config gc.auto 0
-            git -C vuls-data-raw-epss config user.email "action@github.com"
-            git -C vuls-data-raw-epss config user.name "GitHub Action"
+            git -C vuls-data-raw-epss init .
             git -C vuls-data-raw-epss add ${y}
             git -C vuls-data-raw-epss commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
 
@@ -72,17 +73,14 @@ jobs:
           mkdir vuls-data-raw-epss/
           mv $(date "+%Y") vuls-data-raw-epss
 
-          git -C vuls-data-raw-epss -c init.defaultBranch=main init .
-          git -C vuls-data-raw-epss config gc.auto 0
-          
+          git -C vuls-data-raw-epss init .
+
           if git -C vuls-data-raw-epss remote | grep -q "^origin$"; then
             git -C vuls-data-raw-epss remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           else
             git -C vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           fi
-          
-          git -C vuls-data-raw-epss config user.email "action@github.com"
-          git -C vuls-data-raw-epss config user.name "GitHub Action"
+
           git -C vuls-data-raw-epss add $(date "+%Y")
           git -C vuls-data-raw-epss commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           
