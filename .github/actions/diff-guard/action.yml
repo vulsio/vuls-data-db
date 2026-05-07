@@ -325,15 +325,9 @@ runs:
           esac
         }
 
-        exit_rc=0
         for rc in "${RC_DETECTION_MASTER}" "${RC_DETECTION_OLD}" "${RC_DB}"; do
-          if [ -z "$rc" ] || [ "$rc" != "0" ]; then
-            exit_rc=$(pick_exit "$rc")
-            break
+          if [ "$rc" != "0" ]; then
+            echo "diff guard failed: detection(master)=${rc_master_disp} detection(old)=${rc_old_disp} db=${rc_db_disp}" >&2
+            exit "$(pick_exit "$rc")"
           fi
         done
-
-        if [ "$exit_rc" != "0" ]; then
-          echo "diff guard failed: detection(master)=${rc_master_disp} detection(old)=${rc_old_disp} db=${rc_db_disp}" >&2
-          exit "$exit_rc"
-        fi
