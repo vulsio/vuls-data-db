@@ -34,16 +34,21 @@ description: |
     are emitted via `if [ -s <file> ]; then head ...; else placeholder;`
     so a missing/empty report file is surfaced as a placeholder rather
     than crashing the step. Each diff step additionally carries
-    `continue-on-error: true` so an upstream abort — including
-    signal-kill or runner failure of an earlier diff — does not skip
-    the rest; downstream steps still run via the default success()
-    gate (because `continue-on-error` re-maps a failure outcome to a
-    success-style conclusion), capture their own rc, and the
-    aggregator surfaces any genuinely missing rc as MISSING. The
-    aggregator itself runs under `if: ${{ always() }}` (accepted only
-    on the terminal step of a composite action) so it executes even
-    when an intermediate setup step — which has no `continue-on-error`
-    — fails outright.
+    `continue-on-error: true` so a signal-kill or other unexpected
+    abort of one diff step does not skip the rest; downstream steps
+    still run via the default success() gate (because
+    `continue-on-error` re-maps a failure outcome to a success-style
+    conclusion), capture their own rc, and the aggregator surfaces
+    any genuinely missing rc as MISSING.
+
+    (We would prefer to also wrap the aggregator in `if: always()` so
+    a failure in a non-`continue-on-error` setup step — install /
+    prepare-scan-results — would still produce a summary. But the
+    composite-action manifest loader switches to a legacy code path
+    once any step carries `continue-on-error`, and the legacy loader
+    rejects status-check function calls in `if:` even on the terminal
+    step. The trade-off is acceptable: setup-step failures are
+    genuine bugs the operator sees in the run UI directly anyway.)
 
     Exit-code policy: the aggregation step preserves the *first* non-zero
     rc in step order (master HEAD → older binary → diff db) as the
@@ -302,17 +307,18 @@ runs:
     # in the table and `?` in the diagnostic line, and treated as a
     # failure with rc=1 so the job still fails.
     - name: Aggregate diff results
-      # Run unconditionally so a missing rc — caused by an upstream
-      # diff step that aborted before recording its `$GITHUB_OUTPUT`
-      # line, or a setup step that failed entirely — still produces a
-      # summary table and a job-failing rc. `if: always()` is accepted
-      # on the *terminal* step of a composite action (it is rejected
-      # by the manifest loader when used on non-final steps, which is
-      # why the diff steps above use `continue-on-error` instead).
-      # Defense-in-depth: in the normal path each diff step stays in
-      # `set +e` and always writes its rc, so `continue-on-error`
-      # rarely fires.
-      if: ${{ always() }}
+      # No `if:` here: in the normal path each diff step stays in
+      # `set +e`, exits 0 (only the recorded rc is non-zero), and
+      # `continue-on-error: true` covers the residual signal-kill
+      # case — so all three diff steps are reported as success-style
+      # by the time we get here, and the default success() gate
+      # passes. The composite-action manifest loader rejects
+      # `if: always()` (and other status-check function calls) when
+      # *any* step in the action carries `continue-on-error`, so we
+      # cannot wear belt and suspenders here. Setup steps (install /
+      # prepare scan-results) without `continue-on-error` still gate
+      # this off if they fail outright, but those failures are real
+      # bugs the operator should see directly anyway.
       shell: bash
       env:
         RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
