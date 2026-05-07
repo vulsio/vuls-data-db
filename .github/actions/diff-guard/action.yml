@@ -145,30 +145,18 @@ runs:
 
     - name: Diff detection between baseline and target DBs
       id: diff_detection_master
-      # `continue-on-error: true` lets the *next* step run even if this
-      # one is signal-killed or otherwise exits non-zero before
-      # recording its rc, by re-mapping a failure outcome to a
-      # success-style conclusion for the purposes of the default
-      # success()-gate on subsequent steps. Paired with the `set +e`
-      # discipline below this guarantees the aggregator sees an rc —
-      # or, if the step was killed before reaching the rc-write line,
-      # a MISSING — for every diff.
-      #
-      # `if: always()` would be the more idiomatic spelling but the
-      # composite-action manifest loader rejects status-check
-      # functions in `if:` on non-final steps. `continue-on-error` is
-      # a top-level step property and unaffected.
+      # See the `Failure-handling strategy` section in the action's
+      # description for why this is `continue-on-error: true` rather
+      # than `if: always()`.
       continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
       run: |
-        # Stay in `set +e` for the entire step. We must reach the final
-        # `echo "rc=..." >> $GITHUB_OUTPUT` regardless of what happens in
-        # between, so the aggregator can pick the rc up. A reinstated
-        # `set -e` would let an unrelated failure (e.g. a missing report
-        # file) abort the step before the rc is recorded.
+        # No `set -e` after `rc=$?` — the rest of the step must reach
+        # the final `echo "rc=..." >> $GITHUB_OUTPUT` so the aggregator
+        # can read it.
         set +e
         set -o pipefail
         vuls diff detection \
@@ -180,7 +168,7 @@ runs:
         rc=$?
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (vuls0 master HEAD) — rc=${rc:-?}" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
         if [ -s ./diff-detection-report.md ]; then
           head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
         else
@@ -251,7 +239,7 @@ runs:
         rc=$?
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc:-?}" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
         if [ -s ./diff-detection-old-report.md ]; then
           head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
         else
@@ -278,7 +266,7 @@ runs:
         rc=$?
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff vuls.db — rc=${rc:-?}" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
         if [ -s ./diff-report.md ]; then
           head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
         else
@@ -287,38 +275,12 @@ runs:
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
-    # Aggregate exit codes from all three diff steps. Each step above writes
-    # its rc to $GITHUB_OUTPUT without aborting, so by the time we reach this
-    # step every diff has run and the step summary already contains all three
-    # reports. We fail the job here if any check tripped its threshold so a
-    # single failure does not hide the information from the others.
-    #
-    # Exit-code policy: preserve the *first* non-zero rc in step order
-    # (master HEAD → older binary → diff db). Pre-refactor the action ran
-    # `exit "$rc"` from the first failing step and aborted, so the first
-    # failure's rc was the action's rc; by walking the same step order
-    # here we return the same rc the old design would have returned in
-    # both single- and multi-failure cases, keeping callers that branch
-    # on a specific rc fully compatible.
-    #
-    # MISSING rc: an empty `${RC_*}` means the upstream step crashed
-    # before writing its $GITHUB_OUTPUT line (e.g. an `set -e`-tripped
-    # error in surrounding non-`vuls` code). It is rendered as `MISSING`
-    # in the table and `?` in the diagnostic line, and treated as a
-    # failure with rc=1 so the job still fails.
+    # See the action description for the full Failure-handling and
+    # Exit-code policy. In short: every diff step has run by now and
+    # written its rc (or left it MISSING if killed before recording).
+    # This step turns the three rc values into a summary table and a
+    # single exit code (first non-zero in step order).
     - name: Aggregate diff results
-      # No `if:` here: in the normal path each diff step stays in
-      # `set +e`, exits 0 (only the recorded rc is non-zero), and
-      # `continue-on-error: true` covers the residual signal-kill
-      # case — so all three diff steps are reported as success-style
-      # by the time we get here, and the default success() gate
-      # passes. The composite-action manifest loader rejects
-      # `if: always()` (and other status-check function calls) when
-      # *any* step in the action carries `continue-on-error`, so we
-      # cannot wear belt and suspenders here. Setup steps (install /
-      # prepare scan-results) without `continue-on-error` still gate
-      # this off if they fail outright, but those failures are real
-      # bugs the operator should see directly anyway.
       shell: bash
       env:
         RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
@@ -351,24 +313,15 @@ runs:
           echo "| Diff vuls.db | ${rc_db_disp} | ${label_db} |"
         } >> "$GITHUB_STEP_SUMMARY"
 
-        # Map a recorded rc to the action's exit code: 0 stays 0, an
-        # rc in 1..255 is passed through (POSIX exit-code range), and
-        # everything else — empty (MISSING), non-numeric, or out of
-        # 1..255 — is mapped to 1. Out-of-range values are unreachable
-        # in practice (the shell already truncates child exit codes
-        # mod 256) so the catch-all 1 is a defensive "non-actionable
-        # rc → generic failure" rather than a numerical clamp.
+        # Map a non-zero recorded rc to the action's exit code:
+        # numeric 1..255 → pass through, anything else (empty MISSING,
+        # non-numeric, > 255) → 1. The caller's loop only invokes this
+        # for empty or non-zero rc, so 0 is unreachable here.
         pick_exit() {
           local v="$1"
           case "$v" in
-            "")        echo 1 ;;
-            *[!0-9]*)  echo 1 ;;
-            *)
-              if [ "$v" -ge 1 ] && [ "$v" -le 255 ]; then echo "$v"
-              elif [ "$v" = "0" ]; then echo 0
-              else echo 1
-              fi
-              ;;
+            "" | *[!0-9]*) echo 1 ;;
+            *) [ "$v" -le 255 ] && echo "$v" || echo 1 ;;
           esac
         }
 
