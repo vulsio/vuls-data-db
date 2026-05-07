@@ -19,6 +19,14 @@ description: |
        failure is easier to interpret because the earlier detection checks
        already established detection stability.
 
+  Failure-handling strategy:
+    All three diff steps record their exit code as a step output (`rc`) and
+    continue rather than aborting the job. A final aggregation step reads
+    those outputs, prints a summary table, and fails the job if any check
+    tripped its threshold. This guarantees that one failing check does not
+    hide the signals from the others — when triage is needed the step
+    summary always contains all three diffs.
+
 inputs:
   target_db:
     description: Path to the freshly built vuls.db to validate.
@@ -105,6 +113,7 @@ runs:
         echo "- vulsio/integration @ \`${integration_sha}\`" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Diff detection between baseline and target DBs
+      id: diff_detection_master
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -122,9 +131,12 @@ runs:
         set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (vuls0 master HEAD)" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
         head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
-        exit "$rc"
+        # Defer failure: final "Aggregate diff results" step exits non-zero
+        # if any diff tripped its threshold, so that all three diffs always
+        # run and their summaries are available for triage.
+        echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
     # Additional check with a slightly older vuls0 binary (pinned commit) to
     # catch regressions that only surface against past vuls0 versions.
@@ -165,6 +177,7 @@ runs:
         ls -1 ./scan-results-old
 
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
+      id: diff_detection_old
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -183,11 +196,13 @@ runs:
         set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7})" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
         head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
-        exit "$rc"
+        # Defer failure to "Aggregate diff results" step. See note above.
+        echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
     - name: Diff vuls.db against baseline
+      id: diff_db
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -202,6 +217,39 @@ runs:
         set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff vuls.db" >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
         head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
-        exit "$rc"
+        # Defer failure to "Aggregate diff results" step. See note above.
+        echo "rc=${rc}" >> "$GITHUB_OUTPUT"
+
+    # Aggregate exit codes from all three diff steps. Each step above writes
+    # its rc to $GITHUB_OUTPUT without aborting, so by the time we reach this
+    # step every diff has run and the step summary already contains all three
+    # reports. We fail the job here if any check tripped its threshold so a
+    # single failure does not hide the information from the others.
+    - name: Aggregate diff results
+      shell: bash
+      env:
+        RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
+        RC_DETECTION_OLD: ${{ steps.diff_detection_old.outputs.rc }}
+        RC_DB: ${{ steps.diff_db.outputs.rc }}
+      run: |
+        label_master="FAIL"; [ "${RC_DETECTION_MASTER}" = "0" ] && label_master="pass"
+        label_old="FAIL";    [ "${RC_DETECTION_OLD}"    = "0" ] && label_old="pass"
+        label_db="FAIL";     [ "${RC_DB}"               = "0" ] && label_db="pass"
+
+        {
+          echo "---"
+          echo "## Diff guard summary"
+          echo ""
+          echo "| Check | rc | Status |"
+          echo "| --- | --- | --- |"
+          echo "| Diff detection (vuls0 master HEAD) | ${RC_DETECTION_MASTER} | ${label_master} |"
+          echo "| Diff detection (older pinned vuls0) | ${RC_DETECTION_OLD} | ${label_old} |"
+          echo "| Diff vuls.db | ${RC_DB} | ${label_db} |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        if [ "${RC_DETECTION_MASTER}" != "0" ] || [ "${RC_DETECTION_OLD}" != "0" ] || [ "${RC_DB}" != "0" ]; then
+          echo "diff guard failed: detection(master)=${RC_DETECTION_MASTER} detection(old)=${RC_DETECTION_OLD} db=${RC_DB}" >&2
+          exit 1
+        fi
