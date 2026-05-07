@@ -351,9 +351,13 @@ runs:
           echo "| Diff vuls.db | ${rc_db_disp} | ${label_db} |"
         } >> "$GITHUB_STEP_SUMMARY"
 
-        # Map a recorded rc to the action's exit code: 0 stays 0, MISSING
-        # and non-numeric become 1, otherwise the rc is passed through
-        # (clamped to 1..255 to satisfy POSIX exit-code range).
+        # Map a recorded rc to the action's exit code: 0 stays 0, an
+        # rc in 1..255 is passed through (POSIX exit-code range), and
+        # everything else — empty (MISSING), non-numeric, or out of
+        # 1..255 — is mapped to 1. Out-of-range values are unreachable
+        # in practice (the shell already truncates child exit codes
+        # mod 256) so the catch-all 1 is a defensive "non-actionable
+        # rc → generic failure" rather than a numerical clamp.
         pick_exit() {
           local v="$1"
           case "$v" in
