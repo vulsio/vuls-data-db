@@ -34,10 +34,15 @@ description: |
     are emitted via `if [ -s <file> ]; then head ...; else placeholder;`
     so a missing/empty report file is surfaced as a placeholder rather
     than crashing the step. Each diff step (and the aggregation step)
-    additionally carries `if: ${{ always() }}` so an upstream abort —
-    including signal-kill or runner failure of an earlier diff — does
-    not skip the rest; downstream steps run, capture their own rc, and
-    the aggregator surfaces any genuinely missing rc as MISSING.
+    additionally carries `if: ${{ success() || failure() }}` so an
+    upstream abort — including signal-kill or runner failure of an
+    earlier diff — does not skip the rest; downstream steps run,
+    capture their own rc, and the aggregator surfaces any genuinely
+    missing rc as MISSING. (`always()` would be the natural choice
+    here but it is rejected by the composite action manifest loader
+    when used on non-final steps; `success() || failure()` covers
+    every state except the cancelled one, which is also where we *do*
+    want to skip.)
 
     Exit-code policy: the aggregation step preserves the *first* non-zero
     rc in step order (master HEAD → older binary → diff db) as the
@@ -139,7 +144,7 @@ runs:
       # silently leave its rc unrecorded. Each diff step is independent;
       # paired with the `set +e` discipline below this guarantees the
       # aggregator sees an rc — or a MISSING — for every diff.
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -213,7 +218,7 @@ runs:
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
       id: diff_detection_old
       # See note on diff_detection_master.
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -244,7 +249,7 @@ runs:
     - name: Diff vuls.db against baseline
       id: diff_db
       # See note on diff_detection_master.
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -293,7 +298,7 @@ runs:
       # line — still produces a summary table and a job-failing rc.
       # In the normal path (each diff step stays in `set +e` and always
       # writes its rc) this is a defense-in-depth guard.
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       shell: bash
       env:
         RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
