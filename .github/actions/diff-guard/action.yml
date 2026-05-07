@@ -149,8 +149,8 @@ runs:
       # or, if the step was killed before reaching the rc-write line,
       # a MISSING — for every diff.
       #
-      # `if: ${{ always() }}` would be the more idiomatic spelling but
-      # the composite-action manifest loader rejects status-check
+      # `if: always()` would be the more idiomatic spelling but the
+      # composite-action manifest loader rejects status-check
       # functions in `if:` on non-final steps. `continue-on-error` is
       # a top-level step property and unaffected.
       continue-on-error: true
@@ -305,13 +305,13 @@ runs:
       # Run unconditionally so a missing rc — caused by an upstream
       # diff step that aborted before recording its `$GITHUB_OUTPUT`
       # line, or a setup step that failed entirely — still produces a
-      # summary table and a job-failing rc. `if: ${{ always() }}` is
-      # accepted on the *terminal* step of a composite action (it is
-      # rejected by the manifest loader when used on non-final steps,
-      # which is why the diff steps above use `continue-on-error`
-      # instead). Defense-in-depth: in the normal path each diff
-      # step stays in `set +e` and always writes its rc, so
-      # `continue-on-error` rarely fires.
+      # summary table and a job-failing rc. `if: always()` is accepted
+      # on the *terminal* step of a composite action (it is rejected
+      # by the manifest loader when used on non-final steps, which is
+      # why the diff steps above use `continue-on-error` instead).
+      # Defense-in-depth: in the normal path each diff step stays in
+      # `set +e` and always writes its rc, so `continue-on-error`
+      # rarely fires.
       if: ${{ always() }}
       shell: bash
       env:
