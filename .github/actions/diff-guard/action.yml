@@ -33,16 +33,17 @@ description: |
     abort the step before its `$GITHUB_OUTPUT` line is written. Reports
     are emitted via `if [ -s <file> ]; then head ...; else placeholder;`
     so a missing/empty report file is surfaced as a placeholder rather
-    than crashing the step. Each diff step (and the aggregation step)
-    additionally carries `if: ${{ success() || failure() }}` so an
-    upstream abort — including signal-kill or runner failure of an
-    earlier diff — does not skip the rest; downstream steps run,
-    capture their own rc, and the aggregator surfaces any genuinely
-    missing rc as MISSING. (`always()` would be the natural choice
-    here but it is rejected by the composite action manifest loader
-    when used on non-final steps; `success() || failure()` covers
-    every state except the cancelled one, which is also where we *do*
-    want to skip.)
+    than crashing the step. Each diff step additionally carries
+    `continue-on-error: true` so an upstream abort — including
+    signal-kill or runner failure of an earlier diff — does not skip
+    the rest; downstream steps still run via the default success()
+    gate (because `continue-on-error` re-maps a failure outcome to a
+    success-style conclusion), capture their own rc, and the
+    aggregator surfaces any genuinely missing rc as MISSING. The
+    aggregator itself runs under `if: ${{ always() }}` (accepted only
+    on the terminal step of a composite action) so it executes even
+    when an intermediate setup step — which has no `continue-on-error`
+    — fails outright.
 
     Exit-code policy: the aggregation step preserves the *first* non-zero
     rc in step order (master HEAD → older binary → diff db) as the
@@ -139,12 +140,20 @@ runs:
 
     - name: Diff detection between baseline and target DBs
       id: diff_detection_master
-      # Run regardless of upstream status so an early abort (e.g. an
-      # install/prepare step that died) cannot skip the diff step and
-      # silently leave its rc unrecorded. Each diff step is independent;
-      # paired with the `set +e` discipline below this guarantees the
-      # aggregator sees an rc — or a MISSING — for every diff.
-      if: ${{ success() || failure() }}
+      # `continue-on-error: true` lets the *next* step run even if this
+      # one is signal-killed or otherwise exits non-zero before
+      # recording its rc, by re-mapping a failure outcome to a
+      # success-style conclusion for the purposes of the default
+      # success()-gate on subsequent steps. Paired with the `set +e`
+      # discipline below this guarantees the aggregator sees an rc —
+      # or, if the step was killed before reaching the rc-write line,
+      # a MISSING — for every diff.
+      #
+      # `if: ${{ always() }}` would be the more idiomatic spelling but
+      # the composite-action manifest loader rejects status-check
+      # functions in `if:` on non-final steps. `continue-on-error` is
+      # a top-level step property and unaffected.
+      continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -218,7 +227,7 @@ runs:
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
       id: diff_detection_old
       # See note on diff_detection_master.
-      if: ${{ success() || failure() }}
+      continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -249,7 +258,7 @@ runs:
     - name: Diff vuls.db against baseline
       id: diff_db
       # See note on diff_detection_master.
-      if: ${{ success() || failure() }}
+      continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
@@ -295,10 +304,15 @@ runs:
     - name: Aggregate diff results
       # Run unconditionally so a missing rc — caused by an upstream
       # diff step that aborted before recording its `$GITHUB_OUTPUT`
-      # line — still produces a summary table and a job-failing rc.
-      # In the normal path (each diff step stays in `set +e` and always
-      # writes its rc) this is a defense-in-depth guard.
-      if: ${{ success() || failure() }}
+      # line, or a setup step that failed entirely — still produces a
+      # summary table and a job-failing rc. `if: ${{ always() }}` is
+      # accepted on the *terminal* step of a composite action (it is
+      # rejected by the manifest loader when used on non-final steps,
+      # which is why the diff steps above use `continue-on-error`
+      # instead). Defense-in-depth: in the normal path each diff
+      # step stays in `set +e` and always writes its rc, so
+      # `continue-on-error` rarely fires.
+      if: ${{ always() }}
       shell: bash
       env:
         RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
