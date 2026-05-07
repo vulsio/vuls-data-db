@@ -27,6 +27,16 @@ description: |
     hide the signals from the others — when triage is needed the step
     summary always contains all three diffs.
 
+    To make this guarantee robust, each diff step keeps `set +e` in
+    effect for the *entire* step (rather than re-enabling `set -e` after
+    capturing rc), so a stray failure on the summary-write path cannot
+    abort the step before its `$GITHUB_OUTPUT` line is written. Reports
+    are emitted via `if [ -s <file> ]; then head ...; else placeholder;`
+    so a missing/empty report file is surfaced as a placeholder rather
+    than crashing the step. As a defense-in-depth, the aggregation step
+    runs with `if: ${{ always() }}` so it executes even when an upstream
+    step abnormally exits.
+
     Exit-code policy: the aggregation step preserves the *first* non-zero
     rc in step order (master HEAD → older binary → diff db) as the
     action's exit code, matching the rc the old `exit "$rc"` design would
@@ -127,6 +137,11 @@ runs:
         TARGET_DB: ${{ inputs.target_db }}
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
       run: |
+        # Stay in `set +e` for the entire step. We must reach the final
+        # `echo "rc=..." >> $GITHUB_OUTPUT` regardless of what happens in
+        # between, so the aggregator can pick the rc up. A reinstated
+        # `set -e` would let an unrelated failure (e.g. a missing report
+        # file) abort the step before the rc is recorded.
         set +e
         set -o pipefail
         vuls diff detection \
@@ -136,11 +151,14 @@ runs:
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
           | tee ./diff-detection-report.md
         rc=$?
-        set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (vuls0 master HEAD) — rc=${rc:-?}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -s ./diff-detection-report.md ]; then
+          head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
+        fi
         # Defer failure: final "Aggregate diff results" step exits non-zero
         # if any diff tripped its threshold, so that all three diffs always
         # run and their summaries are available for triage.
@@ -192,6 +210,7 @@ runs:
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
+        # Stay in `set +e` for the entire step. See note above.
         set +e
         set -o pipefail
         vuls diff detection \
@@ -201,11 +220,14 @@ runs:
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
           | tee ./diff-detection-old-report.md
         rc=$?
-        set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc:-?}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -s ./diff-detection-old-report.md ]; then
+          head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
+        fi
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
@@ -216,17 +238,21 @@ runs:
         TARGET_DB: ${{ inputs.target_db }}
         DB_CHANGE_RATE_THRESHOLD: ${{ inputs.db_change_rate_threshold }}
       run: |
+        # Stay in `set +e` for the entire step. See note above.
         set +e
         set -o pipefail
         vuls diff db ./baseline.db "$TARGET_DB" \
           --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
           | tee ./diff-report.md
         rc=$?
-        set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
+        echo "## Diff vuls.db — rc=${rc:-?}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -s ./diff-report.md ]; then
+          head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
+        fi
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
@@ -250,6 +276,12 @@ runs:
     # in the table and `?` in the diagnostic line, and treated as a
     # failure with rc=1 so the job still fails.
     - name: Aggregate diff results
+      # Run unconditionally so a missing rc — caused by an upstream
+      # diff step that aborted before recording its `$GITHUB_OUTPUT`
+      # line — still produces a summary table and a job-failing rc.
+      # In the normal path (each diff step stays in `set +e` and always
+      # writes its rc) this is a defense-in-depth guard.
+      if: ${{ always() }}
       shell: bash
       env:
         RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
