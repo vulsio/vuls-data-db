@@ -27,6 +27,14 @@ description: |
     hide the signals from the others — when triage is needed the step
     summary always contains all three diffs.
 
+    Exit-code policy: the aggregation step preserves the *first* non-zero
+    rc in step order (master HEAD → older binary → diff db) as the
+    action's exit code, matching the rc the old `exit "$rc"` design would
+    have returned in both single- and multi-failure cases. A missing
+    output (the upstream step crashed before recording its rc) is
+    rendered as `MISSING` in the summary table, surfaced as `?` in the
+    diagnostic line, and counted as failure (exit rc=1).
+
 inputs:
   target_db:
     description: Path to the freshly built vuls.db to validate.
@@ -227,6 +235,20 @@ runs:
     # step every diff has run and the step summary already contains all three
     # reports. We fail the job here if any check tripped its threshold so a
     # single failure does not hide the information from the others.
+    #
+    # Exit-code policy: preserve the *first* non-zero rc in step order
+    # (master HEAD → older binary → diff db). Pre-refactor the action ran
+    # `exit "$rc"` from the first failing step and aborted, so the first
+    # failure's rc was the action's rc; by walking the same step order
+    # here we return the same rc the old design would have returned in
+    # both single- and multi-failure cases, keeping callers that branch
+    # on a specific rc fully compatible.
+    #
+    # MISSING rc: an empty `${RC_*}` means the upstream step crashed
+    # before writing its $GITHUB_OUTPUT line (e.g. an `set -e`-tripped
+    # error in surrounding non-`vuls` code). It is rendered as `MISSING`
+    # in the table and `?` in the diagnostic line, and treated as a
+    # failure with rc=1 so the job still fails.
     - name: Aggregate diff results
       shell: bash
       env:
@@ -234,9 +256,20 @@ runs:
         RC_DETECTION_OLD: ${{ steps.diff_detection_old.outputs.rc }}
         RC_DB: ${{ steps.diff_db.outputs.rc }}
       run: |
-        label_master="FAIL"; [ "${RC_DETECTION_MASTER}" = "0" ] && label_master="pass"
-        label_old="FAIL";    [ "${RC_DETECTION_OLD}"    = "0" ] && label_old="pass"
-        label_db="FAIL";     [ "${RC_DB}"               = "0" ] && label_db="pass"
+        status() {
+          case "$1" in
+            "")  echo "MISSING" ;;
+            "0") echo "PASS" ;;
+            *)   echo "FAIL" ;;
+          esac
+        }
+        label_master=$(status "${RC_DETECTION_MASTER}")
+        label_old=$(status "${RC_DETECTION_OLD}")
+        label_db=$(status "${RC_DB}")
+
+        rc_master_disp="${RC_DETECTION_MASTER:-?}"
+        rc_old_disp="${RC_DETECTION_OLD:-?}"
+        rc_db_disp="${RC_DB:-?}"
 
         {
           echo "---"
@@ -244,12 +277,37 @@ runs:
           echo ""
           echo "| Check | rc | Status |"
           echo "| --- | --- | --- |"
-          echo "| Diff detection (vuls0 master HEAD) | ${RC_DETECTION_MASTER} | ${label_master} |"
-          echo "| Diff detection (older pinned vuls0) | ${RC_DETECTION_OLD} | ${label_old} |"
-          echo "| Diff vuls.db | ${RC_DB} | ${label_db} |"
+          echo "| Diff detection (vuls0 master HEAD) | ${rc_master_disp} | ${label_master} |"
+          echo "| Diff detection (older pinned vuls0) | ${rc_old_disp} | ${label_old} |"
+          echo "| Diff vuls.db | ${rc_db_disp} | ${label_db} |"
         } >> "$GITHUB_STEP_SUMMARY"
 
-        if [ "${RC_DETECTION_MASTER}" != "0" ] || [ "${RC_DETECTION_OLD}" != "0" ] || [ "${RC_DB}" != "0" ]; then
-          echo "diff guard failed: detection(master)=${RC_DETECTION_MASTER} detection(old)=${RC_DETECTION_OLD} db=${RC_DB}" >&2
-          exit 1
+        # Map a recorded rc to the action's exit code: 0 stays 0, MISSING
+        # and non-numeric become 1, otherwise the rc is passed through
+        # (clamped to 1..255 to satisfy POSIX exit-code range).
+        pick_exit() {
+          local v="$1"
+          case "$v" in
+            "")        echo 1 ;;
+            *[!0-9]*)  echo 1 ;;
+            *)
+              if [ "$v" -ge 1 ] && [ "$v" -le 255 ]; then echo "$v"
+              elif [ "$v" = "0" ]; then echo 0
+              else echo 1
+              fi
+              ;;
+          esac
+        }
+
+        exit_rc=0
+        for rc in "${RC_DETECTION_MASTER}" "${RC_DETECTION_OLD}" "${RC_DB}"; do
+          if [ -z "$rc" ] || [ "$rc" != "0" ]; then
+            exit_rc=$(pick_exit "$rc")
+            break
+          fi
+        done
+
+        if [ "$exit_rc" != "0" ]; then
+          echo "diff guard failed: detection(master)=${rc_master_disp} detection(old)=${rc_old_disp} db=${rc_db_disp}" >&2
+          exit "$exit_rc"
         fi
