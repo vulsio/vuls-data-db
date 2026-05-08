@@ -177,16 +177,13 @@ runs:
         set +e
         set -o pipefail
 
-        # Expand the multi-line "<file-basename>=<rate>" input into a
-        # repeated `--change-rate-threshold-override <key>=<rate>` flag.
-        # Blank lines and trailing "#" comments are skipped here; value
-        # validation (numeric, key non-empty, etc.) happens in vuls2.
-        overrides_args=()
-        while IFS= read -r line; do
-          line="${line%%#*}"
-          [[ "$line" =~ ^[[:space:]]*$ ]] && continue
-          overrides_args+=(--change-rate-threshold-override "$line")
-        done <<< "$DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES"
+        # Centralized expansion of multi-line "<key>=<rate>" overrides into
+        # repeated `--change-rate-threshold-override <entry>` flags. See
+        # ./expand-overrides.sh for the parsing rules.
+        mapfile -t overrides_args < <(
+          bash "${GITHUB_ACTION_PATH}/expand-overrides.sh" \
+            DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES
+        )
 
         vuls diff detection \
           ./scan-results \
@@ -262,13 +259,11 @@ runs:
         set +e
         set -o pipefail
 
-        # See diff_detection_master for the override-array build rationale.
-        overrides_args=()
-        while IFS= read -r line; do
-          line="${line%%#*}"
-          [[ "$line" =~ ^[[:space:]]*$ ]] && continue
-          overrides_args+=(--change-rate-threshold-override "$line")
-        done <<< "$DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES"
+        # See diff_detection_master and ./expand-overrides.sh for parsing rules.
+        mapfile -t overrides_args < <(
+          bash "${GITHUB_ACTION_PATH}/expand-overrides.sh" \
+            DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES
+        )
 
         vuls diff detection \
           ./scan-results-old \
@@ -303,13 +298,11 @@ runs:
         set +e
         set -o pipefail
 
-        # See diff_detection_master for the override-array build rationale.
-        overrides_args=()
-        while IFS= read -r line; do
-          line="${line%%#*}"
-          [[ "$line" =~ ^[[:space:]]*$ ]] && continue
-          overrides_args+=(--change-rate-threshold-override "$line")
-        done <<< "$DB_CHANGE_RATE_THRESHOLD_OVERRIDES"
+        # See diff_detection_master and ./expand-overrides.sh for parsing rules.
+        mapfile -t overrides_args < <(
+          bash "${GITHUB_ACTION_PATH}/expand-overrides.sh" \
+            DB_CHANGE_RATE_THRESHOLD_OVERRIDES
+        )
 
         vuls diff db ./baseline.db "$TARGET_DB" \
           --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
