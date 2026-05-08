@@ -6,13 +6,35 @@ on:
   workflow_dispatch:
     inputs:
       db_change_rate_threshold:
-        description: "`vuls diff db` change rate (%) threshold per ecosystem; diff fails if exceeded"
+        description: "`vuls diff db` default change rate (%) threshold per ecosystem; diff fails if exceeded"
         required: false
         default: "10"
+      db_change_rate_threshold_overrides:
+        description: |
+          Per-ecosystem overrides of `vuls diff db` threshold. One
+          "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25");
+          blank lines and trailing "# ..." comments are stripped at parse time.
+          Persistent overrides should be added to this default in a PR (with
+          rationale in the PR description) rather than at dispatch.
+        required: false
+        type: string
+        # Persistent override entries live in this default. vuls2 logs a
+        # warning when an override key matches no ecosystem, so stale entries
+        # surface in run logs and should be removed in follow-up PRs.
+        default: ""
       detection_change_rate_threshold:
-        description: "`vuls diff detection` change rate (%) threshold per scan result; diff fails if exceeded"
+        description: "`vuls diff detection` default change rate (%) threshold per scan result; diff fails if exceeded"
         required: false
         default: "5"
+      detection_change_rate_threshold_overrides:
+        description: |
+          Per-scan-result-file overrides of `vuls diff detection` threshold.
+          One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8");
+          blank lines and trailing "# ..." comments are stripped at parse time.
+          Persistent overrides should be added to this default in a PR.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -88,12 +110,17 @@ jobs:
         # On scheduled runs, github.event.inputs.* is typically unset/null
         # rather than an empty string. The `|| 'default'` fallbacks below
         # let this workflow run without workflow_dispatch inputs.
+        # The `_overrides` inputs default to an empty string when unset so
+        # the composite action's whitespace/comment-only handling treats them
+        # as "no overrides".
         uses: ./.github/actions/diff-guard
         with:
           target_db: ./vuls.db
           baseline_repository: ghcr.io/vulsio/vuls-nightly-db:nightly
           db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
+          db_change_rate_threshold_overrides: ${{ github.event.inputs.db_change_rate_threshold_overrides || '' }}
           detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
+          detection_change_rate_threshold_overrides: ${{ github.event.inputs.detection_change_rate_threshold_overrides || '' }}
 
       # Guard passed: attach :nightly to the verified digest. If the guard
       # fails this step is skipped and
