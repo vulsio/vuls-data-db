@@ -19,6 +19,45 @@ description: |
        failure is easier to interpret because the earlier detection checks
        already established detection stability.
 
+  Failure-handling strategy:
+    All three diff steps record their exit code as a step output (`rc`) and
+    continue rather than aborting the job. A final aggregation step reads
+    those outputs, prints a summary table, and fails the job if any check
+    tripped its threshold. This guarantees that one failing check does not
+    hide the signals from the others — when triage is needed the step
+    summary always contains all three diffs.
+
+    To make this guarantee robust, each diff step keeps `set +e` in
+    effect for the *entire* step (rather than re-enabling `set -e` after
+    capturing rc), so a stray failure on the summary-write path cannot
+    abort the step before its `$GITHUB_OUTPUT` line is written. Reports
+    are emitted via `if [ -s <file> ]; then head ...; else placeholder;`
+    so a missing/empty report file is surfaced as a placeholder rather
+    than crashing the step. Each diff step additionally carries
+    `continue-on-error: true` so a signal-kill or other unexpected
+    abort of one diff step does not skip the rest; downstream steps
+    still run via the default success() gate (because
+    `continue-on-error` re-maps a failure outcome to a success-style
+    conclusion), capture their own rc, and the aggregator surfaces
+    any genuinely missing rc as MISSING.
+
+    (We would prefer to also wrap the aggregator in `if: always()` so
+    a failure in a non-`continue-on-error` setup step — install /
+    prepare-scan-results — would still produce a summary. But the
+    composite-action manifest loader switches to a legacy code path
+    once any step carries `continue-on-error`, and the legacy loader
+    rejects status-check function calls in `if:` even on the terminal
+    step. The trade-off is acceptable: setup-step failures are
+    genuine bugs the operator sees in the run UI directly anyway.)
+
+    Exit-code policy: the aggregation step preserves the *first* non-zero
+    rc in step order (master HEAD → older binary → diff db) as the
+    action's exit code, matching the rc the old `exit "$rc"` design would
+    have returned in both single- and multi-failure cases. A missing
+    output (the upstream step crashed before recording its rc) is
+    rendered as `MISSING` in the summary table, surfaced as `?` in the
+    diagnostic line, and counted as failure (exit rc=1).
+
 inputs:
   target_db:
     description: Path to the freshly built vuls.db to validate.
@@ -105,11 +144,19 @@ runs:
         echo "- vulsio/integration @ \`${integration_sha}\`" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Diff detection between baseline and target DBs
+      id: diff_detection_master
+      # See the `Failure-handling strategy` section in the action's
+      # description for why this is `continue-on-error: true` rather
+      # than `if: always()`.
+      continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
       run: |
+        # No `set -e` after `rc=$?` — the rest of the step must reach
+        # the final `echo "rc=..." >> $GITHUB_OUTPUT` so the aggregator
+        # can read it.
         set +e
         set -o pipefail
         vuls diff detection \
@@ -119,12 +166,18 @@ runs:
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
           | tee ./diff-detection-report.md
         rc=$?
-        set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (vuls0 master HEAD)" >> "$GITHUB_STEP_SUMMARY"
-        head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
-        exit "$rc"
+        echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -s ./diff-detection-report.md ]; then
+          head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        # Defer failure: final "Aggregate diff results" step exits non-zero
+        # if any diff tripped its threshold, so that all three diffs always
+        # run and their summaries are available for triage.
+        echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
     # Additional check with a slightly older vuls0 binary (pinned commit) to
     # catch regressions that only surface against past vuls0 versions.
@@ -165,12 +218,16 @@ runs:
         ls -1 ./scan-results-old
 
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
+      id: diff_detection_old
+      # See note on diff_detection_master.
+      continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
+        # Stay in `set +e` for the entire step. See note above.
         set +e
         set -o pipefail
         vuls diff detection \
@@ -180,28 +237,97 @@ runs:
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
           | tee ./diff-detection-old-report.md
         rc=$?
-        set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7})" >> "$GITHUB_STEP_SUMMARY"
-        head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
-        exit "$rc"
+        echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -s ./diff-detection-old-report.md ]; then
+          head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        # Defer failure to "Aggregate diff results" step. See note above.
+        echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
     - name: Diff vuls.db against baseline
+      id: diff_db
+      # See note on diff_detection_master.
+      continue-on-error: true
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
         DB_CHANGE_RATE_THRESHOLD: ${{ inputs.db_change_rate_threshold }}
       run: |
+        # Stay in `set +e` for the entire step. See note above.
         set +e
         set -o pipefail
         vuls diff db ./baseline.db "$TARGET_DB" \
           --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
           | tee ./diff-report.md
         rc=$?
-        set -e
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "## Diff vuls.db" >> "$GITHUB_STEP_SUMMARY"
-        head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
-        exit "$rc"
+        echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -s ./diff-report.md ]; then
+          head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        # Defer failure to "Aggregate diff results" step. See note above.
+        echo "rc=${rc}" >> "$GITHUB_OUTPUT"
+
+    # See the action description for the full Failure-handling and
+    # Exit-code policy. In short: every diff step has run by now and
+    # written its rc (or left it MISSING if killed before recording).
+    # This step turns the three rc values into a summary table and a
+    # single exit code (first non-zero in step order).
+    - name: Aggregate diff results
+      shell: bash
+      env:
+        RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
+        RC_DETECTION_OLD: ${{ steps.diff_detection_old.outputs.rc }}
+        RC_DB: ${{ steps.diff_db.outputs.rc }}
+      run: |
+        status() {
+          case "$1" in
+            "")  echo "MISSING" ;;
+            "0") echo "PASS" ;;
+            *)   echo "FAIL" ;;
+          esac
+        }
+        label_master=$(status "${RC_DETECTION_MASTER}")
+        label_old=$(status "${RC_DETECTION_OLD}")
+        label_db=$(status "${RC_DB}")
+
+        rc_master_disp="${RC_DETECTION_MASTER:-?}"
+        rc_old_disp="${RC_DETECTION_OLD:-?}"
+        rc_db_disp="${RC_DB:-?}"
+
+        {
+          echo "---"
+          echo "## Diff guard summary"
+          echo ""
+          echo "| Check | rc | Status |"
+          echo "| --- | --- | --- |"
+          echo "| Diff detection (vuls0 master HEAD) | ${rc_master_disp} | ${label_master} |"
+          echo "| Diff detection (older pinned vuls0) | ${rc_old_disp} | ${label_old} |"
+          echo "| Diff vuls.db | ${rc_db_disp} | ${label_db} |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        # Map a non-zero recorded rc to the action's exit code:
+        # numeric 1..255 → pass through, anything else (empty MISSING,
+        # non-numeric, > 255) → 1. The caller's loop only invokes this
+        # for empty or non-zero rc, so 0 is unreachable here.
+        pick_exit() {
+          local v="$1"
+          case "$v" in
+            "" | *[!0-9]*) echo 1 ;;
+            *) [ "$v" -le 255 ] && echo "$v" || echo 1 ;;
+          esac
+        }
+
+        for rc in "${RC_DETECTION_MASTER}" "${RC_DETECTION_OLD}" "${RC_DB}"; do
+          if [ "$rc" != "0" ]; then
+            echo "diff guard failed: detection(master)=${rc_master_disp} detection(old)=${rc_old_disp} db=${rc_db_disp}" >&2
+            exit "$(pick_exit "$rc")"
+          fi
+        done
