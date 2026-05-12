@@ -19,7 +19,7 @@ permissions: {}
 
 jobs:
   extract:
-    name: Extract vuls-data-extracted-redhat-ovalv1-rhel@${{ inputs.branch }}
+    name: Extract vuls-data-extracted-redhat-oval-v1-rhel@${{ inputs.branch }}
     permissions:
       contents: read
       packages: write
@@ -60,8 +60,8 @@ jobs:
       - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
-      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv1
-        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-ovalv1
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-oval-v1
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-oval-v1
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-repository-to-cpe
@@ -70,29 +70,29 @@ jobs:
         run: |
           echo "{}" > ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe/repository-to-cpe.json
 
-      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel
-        run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-oval-v1-rhel
+        run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-oval-v1-rhel
 
       - name: Extract
-        run: vuls-data-update extract redhat-ovalv1 --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-ovalv1 ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe
+        run: vuls-data-update extract redhat-oval-v1 --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-oval-v1 ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-repository-to-cpe
 
       - name: Set Git remote
         run: |
-          if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel remote | grep -q "^origin$"; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-oval-v1-rhel
           else
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-oval-v1-rhel
           fi
 
       - name: Commit
         run: |
-          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel status --porcelain) ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
 
       - name: Create dotgit tarball
-        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-ovalv1-rhel
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v1-rhel
 
-      - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-ovalv1-rhel vuls-data-extracted-redhat-ovalv1-rhel.tar.zst
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-oval-v1-rhel
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-extracted-redhat-oval-v1-rhel vuls-data-extracted-redhat-oval-v1-rhel.tar.zst

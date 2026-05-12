@@ -283,10 +283,11 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - "redhat-ovalv1"
-          - "redhat-ovalv2"
+          - "redhat-oval-v1"
+          - "redhat-oval-v2"
           - "redhat-csaf"
-          - "redhat-vex"
+          - "redhat-vex-v1"
+          - "redhat-vex-v2"
     uses: ./.github/workflows/extract-redhat.yml
     permissions:
       contents: read
@@ -303,10 +304,11 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - "redhat-ovalv1"
-          - "redhat-ovalv2"
+          - "redhat-oval-v1"
+          - "redhat-oval-v2"
           - "redhat-csaf"
-          - "redhat-vex"
+          - "redhat-vex-v1"
+          - "redhat-vex-v2"
     uses: ./.github/workflows/extract-redhat.yml
     permissions:
       contents: read
@@ -315,34 +317,34 @@ jobs:
       target: ${{ matrix.target }}
       branch: nightly
 
-  # extract-redhat-rhel-ovalv1:
-  #   name: Extract vuls-data-extracted-redhat-ovalv1-rhel
-  #   uses: ./.github/workflows/extract-redhat-rhel-ovalv1.yml
+  # extract-redhat-rhel-oval-v1:
+  #   name: Extract vuls-data-extracted-redhat-oval-v1-rhel
+  #   uses: ./.github/workflows/extract-redhat-rhel-oval-v1.yml
   #   with:
   #     branch: main
 
-  # extract-redhat-rhel-ovalv1-nightly:
-  #   name: Extract vuls-data-extracted-redhat-ovalv1-rhel
+  # extract-redhat-rhel-oval-v1-nightly:
+  #   name: Extract vuls-data-extracted-redhat-oval-v1-rhel
   #   if: ${{ success() || failure() }}
-  #   needs: [extract-redhat-rhel-ovalv1]
-  #   uses: ./.github/workflows/extract-redhat-rhel-ovalv1.yml
+  #   needs: [extract-redhat-rhel-oval-v1]
+  #   uses: ./.github/workflows/extract-redhat-rhel-oval-v1.yml
   #   with:
   #     branch: nightly
 
-  extract-redhat-rhel-ovalv2:
-    name: Extract vuls-data-extracted-redhat-ovalv2-rhel
-    uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
+  extract-redhat-rhel-oval-v2:
+    name: Extract vuls-data-extracted-redhat-oval-v2-rhel
+    uses: ./.github/workflows/extract-redhat-rhel-oval-v2.yml
     permissions:
       contents: read
       packages: write
     with:
       branch: main
 
-  extract-redhat-rhel-ovalv2-nightly:
-    name: Extract vuls-data-extracted-redhat-ovalv2-rhel
+  extract-redhat-rhel-oval-v2-nightly:
+    name: Extract vuls-data-extracted-redhat-oval-v2-rhel
     if: ${{ success() || failure() }}
-    needs: [extract-redhat-rhel-ovalv2]
-    uses: ./.github/workflows/extract-redhat-rhel-ovalv2.yml
+    needs: [extract-redhat-rhel-oval-v2]
+    uses: ./.github/workflows/extract-redhat-rhel-oval-v2.yml
     permissions:
       contents: read
       packages: write
@@ -358,7 +360,8 @@ jobs:
       matrix:
         target:
           - "redhat-csaf"
-          - "redhat-vex"
+          - "redhat-vex-v1"
+          - "redhat-vex-v2"
     uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
     permissions:
       contents: read
@@ -376,7 +379,8 @@ jobs:
       matrix:
         target:
           - "redhat-csaf"
-          - "redhat-vex"
+          - "redhat-vex-v1"
+          - "redhat-vex-v2"
     uses: ./.github/workflows/extract-redhat-rhel-csaf-or-vex.yml
     permissions:
       contents: read

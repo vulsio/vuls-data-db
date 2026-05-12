@@ -425,10 +425,10 @@ jobs:
           - tag: vuls-data-raw-redhat-osv
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-redhat-ovalv1
+          - tag: vuls-data-raw-redhat-oval-v1
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-redhat-ovalv2
+          - tag: vuls-data-raw-redhat-oval-v2
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-redhat-package-manifest
@@ -437,7 +437,10 @@ jobs:
           - tag: vuls-data-raw-redhat-repository-to-cpe
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-raw-redhat-vex
+          - tag: vuls-data-raw-redhat-vex-v1
+            pack-threads: 1
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-redhat-vex-v2
             pack-threads: 1
             pack-windowMemory: 4g
           - tag: vuls-data-raw-rocky-errata

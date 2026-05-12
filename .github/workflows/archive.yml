@@ -151,11 +151,12 @@ on:
           - vuls-data-raw-redhat-cve
           - vuls-data-raw-redhat-cvrf
           - vuls-data-raw-redhat-osv
-          - vuls-data-raw-redhat-ovalv1
-          - vuls-data-raw-redhat-ovalv2
+          - vuls-data-raw-redhat-oval-v1
+          - vuls-data-raw-redhat-oval-v2
           - vuls-data-raw-redhat-package-manifest
           - vuls-data-raw-redhat-repository-to-cpe
-          - vuls-data-raw-redhat-vex
+          - vuls-data-raw-redhat-vex-v1
+          - vuls-data-raw-redhat-vex-v2
           - vuls-data-raw-rocky-errata
           - vuls-data-raw-rocky-osv
           - vuls-data-raw-rootio

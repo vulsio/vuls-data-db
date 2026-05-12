@@ -15,10 +15,11 @@ on:
         required: true
         type: choice
         options:
-          - redhat-ovalv1
-          - redhat-ovalv2
+          - redhat-oval-v1
+          - redhat-oval-v2
           - redhat-csaf
-          - redhat-vex
+          - redhat-vex-v1
+          - redhat-vex-v2
       branch:
         required: true
         type: choice
