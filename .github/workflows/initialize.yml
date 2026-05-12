@@ -1,0 +1,142 @@
+name: Initialize
+
+run-name: "Initialize vuls-data-${{ inputs.kind }}-${{ inputs.target }}${{ inputs.force && ' (force)' || '' }} by @${{ github.actor }}"
+
+# Bootstraps an empty dotgit OCI image
+# (ghcr.io/<repo>:vuls-data-<kind>-<target>) so that the incremental fetch-all /
+# extract-all workflows have a base to pull and update. The image content is a
+# fresh `git init` plus a single empty commit. For kind=extracted, both `main`
+# and `nightly` branches are created (extract-main.yml selects one via input).
+
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "Image kind to initialize"
+        required: true
+        type: choice
+        options:
+          - raw
+          - extracted
+      target:
+        description: "Target name (no 'vuls-data-<kind>-' prefix), e.g. 'redhat-csaf'"
+        required: true
+        type: string
+      force:
+        description: "Overwrite the image if it already exists"
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: initialize-${{ inputs.kind }}-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  initialize:
+    name: Initialize vuls-data-${{ inputs.kind }}-${{ inputs.target }}
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    env:
+      KIND: ${{ inputs.kind }}
+      TARGET: ${{ inputs.target }}
+      FORCE: ${{ inputs.force }}
+      IMAGE_REF: ghcr.io/${{ github.repository }}:vuls-data-${{ inputs.kind }}-${{ inputs.target }}
+      LOCAL_DIR: ghcr.io/${{ github.repository }}/vuls-data-${{ inputs.kind }}-${{ inputs.target }}
+      TARBALL: vuls-data-${{ inputs.kind }}-${{ inputs.target }}.tar.zst
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Validate target name
+        run: |
+          set -euo pipefail
+          if [[ ! "${TARGET}" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+            echo "::error::invalid target name '${TARGET}' (allowed: ^[a-z0-9][a-z0-9-]*\$)"
+            exit 1
+          fi
+          case "${TARGET}" in
+            vuls-data-*)
+              echo "::error::do not include the 'vuls-data-<kind>-' prefix in target (got '${TARGET}')"
+              exit 1
+              ;;
+          esac
+
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
+      - name: Check existing image
+        if: ${{ inputs.force != true }}
+        run: |
+          set -euo pipefail
+          if vuls-data-update dotgit registry status "${IMAGE_REF}" >/dev/null; then
+            echo "::error::${IMAGE_REF} already exists. Re-run with force=true to overwrite."
+            exit 1
+          fi
+
+      - name: Initialize empty dotgit repository
+        run: |
+          set -euo pipefail
+          mkdir -p "${LOCAL_DIR}"
+          git -C "${LOCAL_DIR}" init -b main
+          git -C "${LOCAL_DIR}" commit --allow-empty \
+            -m "init" \
+            -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [[ "${KIND}" == "extracted" ]]; then
+            git -C "${LOCAL_DIR}" checkout --orphan nightly
+            git -C "${LOCAL_DIR}" commit --allow-empty \
+              -m "init" \
+              -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            git -C "${LOCAL_DIR}" checkout main
+          fi
+          git -C "${LOCAL_DIR}" remote add origin "${IMAGE_REF}"
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress "${LOCAL_DIR}"
+
+      - name: Push ${{ env.IMAGE_REF }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: vuls-data-update dotgit registry push ${{ inputs.force && '--force' || '' }} --token "${GITHUB_TOKEN}" "${IMAGE_REF}" "${TARBALL}"
+
+      - name: Summary
+        run: |
+          {
+            echo "## Initialized ${IMAGE_REF}"
+            echo '```text'
+            echo "actor    : ${{ github.actor }}"
+            echo "kind     : ${KIND}"
+            echo "target   : ${TARGET}"
+            echo "ref      : ${IMAGE_REF}"
+            if [[ "${KIND}" == "extracted" ]]; then
+              echo "branches : main, nightly"
+            else
+              echo "branches : main"
+            fi
+            echo "force    : ${FORCE}"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  action-run-summary:
+    name: Action run summary
+    if: ${{ success() || failure() }}
+    needs: [initialize]
+    uses: ./.github/workflows/action-run-summary.yml
+    permissions:
+      contents: read
+      actions: read
