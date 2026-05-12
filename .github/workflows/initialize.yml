@@ -82,11 +82,9 @@ jobs:
 
       - name: Check existing image
         if: ${{ inputs.force != true }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if vuls-data-update dotgit registry status --token "${GITHUB_TOKEN}" "${IMAGE_REF}" >/dev/null; then
+          if vuls-data-update dotgit registry status "${IMAGE_REF}" >/dev/null; then
             echo "::error::${IMAGE_REF} already exists. Re-run with force=true to overwrite."
             exit 1
           fi
