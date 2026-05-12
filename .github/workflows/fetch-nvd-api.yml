@@ -19,8 +19,7 @@ on:
           - nvd-api-cpe
           - nvd-api-cpematch
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   fetch:

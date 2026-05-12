@@ -249,8 +249,7 @@ on:
         default: 4g
         type: string
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   gc:

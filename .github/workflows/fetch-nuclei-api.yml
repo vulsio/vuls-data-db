@@ -7,8 +7,7 @@ on:
         required: true
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   fetch:

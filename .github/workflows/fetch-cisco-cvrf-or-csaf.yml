@@ -15,8 +15,7 @@ on:
           - cisco-cvrf
           - cisco-csaf
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   fetch:

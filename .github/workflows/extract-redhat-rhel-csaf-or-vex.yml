@@ -24,8 +24,7 @@ on:
           - main
           - nightly
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   extract:
