@@ -71,9 +71,11 @@ inputs:
   db_change_rate_threshold_overrides:
     description: |
       Per-ecosystem overrides of the `vuls diff db` change rate threshold.
-      Multi-line "<ecosystem>=<rate>" entries (e.g. "ubuntu:26.04=25"); blank
-      lines and trailing "#" comments are ignored. Empty value means "no
-      overrides" — every ecosystem uses db_change_rate_threshold.
+      One "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25");
+      blank/whitespace-only lines are dropped, but trailing "# ..." inline
+      comments are NOT stripped (would be parsed as part of the value and
+      rejected by vuls2). Empty value means "no overrides" — every
+      ecosystem uses db_change_rate_threshold.
     required: false
     default: ""
   detection_change_rate_threshold:
@@ -82,9 +84,10 @@ inputs:
   detection_change_rate_threshold_overrides:
     description: |
       Per-file overrides of the `vuls diff detection` change rate threshold.
-      Multi-line "<file-basename>=<rate>" entries (e.g. "debian_13=8") where
-      the basename is the scan-result file name without ".json"; blank lines
-      and trailing "#" comments are ignored.
+      One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8") where
+      the basename is the scan-result file name without ".json".
+      Blank/whitespace-only lines are dropped; trailing "# ..." inline
+      comments are NOT stripped (would be rejected by vuls2).
     required: false
     default: ""
   integration_ref:
@@ -177,13 +180,16 @@ runs:
         set +e
         set -o pipefail
 
-        # Centralized expansion of multi-line "<key>=<rate>" overrides into
-        # repeated `--change-rate-threshold-override <entry>` flags. See
-        # ./expand-overrides.sh for the parsing rules.
-        mapfile -t overrides_args < <(
-          bash "${GITHUB_ACTION_PATH}/expand-overrides.sh" \
-            DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES
-        )
+        # Collapse the multi-line "<key>=<rate>" input into a single
+        # comma-separated string. `awk 'NF'` drops blank/whitespace-only
+        # lines (NF is 0 for them); `paste -sd, -` joins survivors with
+        # ",". Whitespace around each entry is intentionally NOT trimmed
+        # here — vuls2 trims around the "=" itself in override.Parse.
+        # Empty input yields an empty $overrides_csv → the flag is
+        # omitted, matching the no-overrides default exactly.
+        overrides_csv=$(printf '%s' "$DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES" | awk 'NF' | paste -sd, -)
+        overrides_args=()
+        [ -n "$overrides_csv" ] && overrides_args+=(--change-rate-threshold-override "$overrides_csv")
 
         vuls diff detection \
           ./scan-results \
@@ -259,11 +265,10 @@ runs:
         set +e
         set -o pipefail
 
-        # See diff_detection_master and ./expand-overrides.sh for parsing rules.
-        mapfile -t overrides_args < <(
-          bash "${GITHUB_ACTION_PATH}/expand-overrides.sh" \
-            DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES
-        )
+        # See diff_detection_master for the parsing-rule rationale.
+        overrides_csv=$(printf '%s' "$DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES" | awk 'NF' | paste -sd, -)
+        overrides_args=()
+        [ -n "$overrides_csv" ] && overrides_args+=(--change-rate-threshold-override "$overrides_csv")
 
         vuls diff detection \
           ./scan-results-old \
@@ -298,11 +303,10 @@ runs:
         set +e
         set -o pipefail
 
-        # See diff_detection_master and ./expand-overrides.sh for parsing rules.
-        mapfile -t overrides_args < <(
-          bash "${GITHUB_ACTION_PATH}/expand-overrides.sh" \
-            DB_CHANGE_RATE_THRESHOLD_OVERRIDES
-        )
+        # See diff_detection_master for the parsing-rule rationale.
+        overrides_csv=$(printf '%s' "$DB_CHANGE_RATE_THRESHOLD_OVERRIDES" | awk 'NF' | paste -sd, -)
+        overrides_args=()
+        [ -n "$overrides_csv" ] && overrides_args+=(--change-rate-threshold-override "$overrides_csv")
 
         vuls diff db ./baseline.db "$TARGET_DB" \
           --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \

@@ -12,15 +12,14 @@ on:
       db_change_rate_threshold_overrides:
         description: |
           Per-ecosystem overrides of `vuls diff db` threshold. One
-          "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25");
-          blank lines and trailing "# ..." comments are stripped at parse time.
-          Persistent overrides should be added to this default in a PR (with
-          rationale in the PR description) rather than at dispatch.
+          "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25").
+          Blank/whitespace-only lines are dropped; inline "# ..." comments
+          are NOT supported (would be rejected by vuls2). Persistent
+          overrides should be added to this default in a PR (with rationale
+          in the PR description / YAML comments outside the default string)
+          rather than at dispatch.
         required: false
         type: string
-        # Persistent override entries live in this default. vuls2 logs a
-        # warning when an override key matches no ecosystem, so stale entries
-        # surface in run logs and should be removed in follow-up PRs.
         default: ""
       detection_change_rate_threshold:
         description: "`vuls diff detection` default change rate (%) threshold per scan result; diff fails if exceeded"
@@ -29,9 +28,10 @@ on:
       detection_change_rate_threshold_overrides:
         description: |
           Per-scan-result-file overrides of `vuls diff detection` threshold.
-          One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8");
-          blank lines and trailing "# ..." comments are stripped at parse time.
-          Persistent overrides should be added to this default in a PR.
+          One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8").
+          Blank/whitespace-only lines are dropped; inline "# ..." comments
+          are NOT supported. Persistent overrides should be added to this
+          default in a PR.
         required: false
         type: string
         default: ""
