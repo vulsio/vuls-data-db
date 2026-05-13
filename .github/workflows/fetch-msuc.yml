@@ -4,13 +4,14 @@ on:
   workflow_call:
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   list-names:
     name: List MSUC target names
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       include: ${{ steps.list.outputs.include }}
     steps:

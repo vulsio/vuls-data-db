@@ -18,8 +18,7 @@ on:
           - variot-exploits
           - variot-vulns
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   fetch:

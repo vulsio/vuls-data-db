@@ -11,8 +11,7 @@ on:
         default: false
         type: boolean
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   fetch-main:

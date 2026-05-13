@@ -14,8 +14,7 @@ on:
         required: false
         default: "5"
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:

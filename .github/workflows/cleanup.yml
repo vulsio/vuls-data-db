@@ -17,8 +17,7 @@ on:
           - vuls-data-db-archive
           - vuls-data-db-backup
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   cleanup:

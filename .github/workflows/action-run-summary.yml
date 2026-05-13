@@ -9,14 +9,14 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: read
-  actions: read
+permissions: {}
 
 jobs:
   report:
     name: Action run summary
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     steps:
       - name: Collect action run summary
         env:

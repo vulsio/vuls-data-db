@@ -155,8 +155,7 @@ on:
           - wolfi-secdb
           - wrlinux
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   fetch:

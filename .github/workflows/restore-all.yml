@@ -13,8 +13,7 @@ on:
           - backup-weekly
           - backup-monthly
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   restore-all:

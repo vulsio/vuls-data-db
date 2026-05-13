@@ -8,8 +8,7 @@ on:
       - completed
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   cleanup:
