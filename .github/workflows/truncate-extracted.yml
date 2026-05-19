@@ -50,8 +50,8 @@ jobs:
           - redhat-oval-v2
           - redhat-oval-v2-rhel
           - redhat-vex-v1
-          - redhat-vex-v2
           - redhat-vex-v1-rhel
+          - redhat-vex-v2
           - redhat-vex-v2-rhel
           - rocky-errata
           - suse-oval
