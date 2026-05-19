@@ -44,12 +44,14 @@ jobs:
           - vuls-data-extracted-redhat-cve
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
-          - vuls-data-extracted-redhat-ovalv1
-          # - vuls-data-extracted-redhat-ovalv1-rhel
-          - vuls-data-extracted-redhat-ovalv2
-          - vuls-data-extracted-redhat-ovalv2-rhel
-          - vuls-data-extracted-redhat-vex
-          - vuls-data-extracted-redhat-vex-rhel
+          - vuls-data-extracted-redhat-oval-v1
+          # - vuls-data-extracted-redhat-oval-v1-rhel
+          - vuls-data-extracted-redhat-oval-v2
+          - vuls-data-extracted-redhat-oval-v2-rhel
+          - vuls-data-extracted-redhat-vex-v1
+          - vuls-data-extracted-redhat-vex-v1-rhel
+          - vuls-data-extracted-redhat-vex-v2
+          - vuls-data-extracted-redhat-vex-v2-rhel
           - vuls-data-extracted-rocky-errata
           - vuls-data-extracted-suse-oval
           - vuls-data-extracted-ubuntu-cve-tracker
@@ -191,11 +193,12 @@ jobs:
           - vuls-data-raw-redhat-cve
           - vuls-data-raw-redhat-cvrf
           - vuls-data-raw-redhat-osv
-          - vuls-data-raw-redhat-ovalv1
-          - vuls-data-raw-redhat-ovalv2
+          - vuls-data-raw-redhat-oval-v1
+          - vuls-data-raw-redhat-oval-v2
           - vuls-data-raw-redhat-package-manifest
           - vuls-data-raw-redhat-repository-to-cpe
-          - vuls-data-raw-redhat-vex
+          - vuls-data-raw-redhat-vex-v1
+          - vuls-data-raw-redhat-vex-v2
           - vuls-data-raw-rocky-errata
           - vuls-data-raw-rocky-osv
           - vuls-data-raw-rootio
