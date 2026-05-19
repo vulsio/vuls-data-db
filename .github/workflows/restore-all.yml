@@ -57,8 +57,8 @@ jobs:
           - vuls-data-extracted-redhat-oval-v2
           - vuls-data-extracted-redhat-oval-v2-rhel
           - vuls-data-extracted-redhat-vex-v1
-          - vuls-data-extracted-redhat-vex-v2
           - vuls-data-extracted-redhat-vex-v1-rhel
+          - vuls-data-extracted-redhat-vex-v2
           - vuls-data-extracted-redhat-vex-v2-rhel
           - vuls-data-extracted-rocky-errata
           - vuls-data-extracted-suse-oval

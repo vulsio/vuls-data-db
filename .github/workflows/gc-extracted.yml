@@ -118,10 +118,10 @@ jobs:
           - tag: vuls-data-extracted-redhat-vex-v1
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-vex-v2
+          - tag: vuls-data-extracted-redhat-vex-v1-rhel
             pack-threads: 2
             pack-windowMemory: 4g
-          - tag: vuls-data-extracted-redhat-vex-v1-rhel
+          - tag: vuls-data-extracted-redhat-vex-v2
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-redhat-vex-v2-rhel
