@@ -173,6 +173,11 @@ runs:
         DETECTION_OVERRIDES: ${{ inputs.detection_change_rate_threshold_overrides }}
         DB_OVERRIDES: ${{ inputs.db_change_rate_threshold_overrides }}
       run: |
+        # GitHub's `shell: bash` already runs with `-eo pipefail`; set it
+        # explicitly so the fail-fast contract is visible at the call site
+        # and not reliant on the runner default — if `awk`/`paste` fail
+        # the step aborts instead of silently emitting empty overrides.
+        set -euo pipefail
         detection_csv=$(printf '%s' "$DETECTION_OVERRIDES" | awk 'NF' | paste -sd, -)
         db_csv=$(printf '%s' "$DB_OVERRIDES" | awk 'NF' | paste -sd, -)
         # printf, not echo: a value beginning with `-` (e.g. `-n`) or
