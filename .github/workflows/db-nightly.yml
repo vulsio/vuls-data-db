@@ -108,9 +108,8 @@ jobs:
         # rather than an empty string. The `|| 'default'` fallbacks below
         # let this workflow run without workflow_dispatch inputs.
         # The `_overrides` inputs default to an empty string when unset;
-        # the composite action drops blank/whitespace-only lines and treats
-        # an empty result as "no overrides" (the `--change-rate-threshold-override`
-        # flag is omitted entirely).
+        # the composite action drops blank/whitespace-only lines and an
+        # empty result is parsed by vuls2 as "no overrides".
         uses: ./.github/actions/diff-guard
         with:
           target_db: ./vuls.db

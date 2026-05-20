@@ -163,9 +163,9 @@ runs:
     # diff steps below. Rule: `awk 'NF'` drops blank/whitespace-only lines
     # (NF is 0 for them); `paste -sd, -` joins survivors with ",".
     # Whitespace around each entry is intentionally NOT trimmed here —
-    # vuls2 trims around the "=" itself in override.Parse. Empty result →
-    # consuming diff step omits the `--change-rate-threshold-override` flag
-    # entirely, matching the no-overrides default exactly.
+    # vuls2 trims around the "=" itself in override.Parse. An empty result
+    # is forwarded as-is: vuls2's StringSlice flag parses "" into an empty
+    # override list, i.e. the no-overrides default.
     - name: Parse threshold overrides
       id: parse_overrides
       shell: bash
@@ -175,8 +175,11 @@ runs:
       run: |
         detection_csv=$(printf '%s' "$DETECTION_OVERRIDES" | awk 'NF' | paste -sd, -)
         db_csv=$(printf '%s' "$DB_OVERRIDES" | awk 'NF' | paste -sd, -)
-        echo "detection_csv=${detection_csv}" >> "$GITHUB_OUTPUT"
-        echo "db_csv=${db_csv}" >> "$GITHUB_OUTPUT"
+        # printf, not echo: a value beginning with `-` (e.g. `-n`) or
+        # containing backslashes is written verbatim, avoiding echo's
+        # implementation-defined option/escape handling.
+        printf '%s\n' "detection_csv=${detection_csv}" >> "$GITHUB_OUTPUT"
+        printf '%s\n' "db_csv=${db_csv}" >> "$GITHUB_OUTPUT"
 
     - name: Diff detection between baseline and target DBs
       id: diff_detection_master
@@ -197,17 +200,15 @@ runs:
         set -o pipefail
 
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
-        # step (single source of truth for the parsing rule). Empty →
-        # flag is omitted, matching the no-overrides default exactly.
-        overrides_args=()
-        [ -n "$OVERRIDES_CSV" ] && overrides_args+=(--change-rate-threshold-override "$OVERRIDES_CSV")
-
+        # step. Passed verbatim: vuls2's StringSlice flag parses an empty
+        # value into an empty override list, so the no-overrides path
+        # needs no special-casing here.
         vuls diff detection \
           ./scan-results \
           ./baseline.db "$VULS0" \
           "$TARGET_DB" "$VULS0" \
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
-          "${overrides_args[@]}" \
+          --change-rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-detection-report.md
         rc=$?
 
@@ -277,16 +278,13 @@ runs:
         set -o pipefail
 
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
-        # step. See diff_detection_master for the flag-omission rationale.
-        overrides_args=()
-        [ -n "$OVERRIDES_CSV" ] && overrides_args+=(--change-rate-threshold-override "$OVERRIDES_CSV")
-
+        # step. See diff_detection_master for the verbatim-pass rationale.
         vuls diff detection \
           ./scan-results-old \
           ./baseline.db "$VULS0_OLD" \
           "$TARGET_DB" "$VULS0_OLD" \
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
-          "${overrides_args[@]}" \
+          --change-rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-detection-old-report.md
         rc=$?
 
@@ -315,13 +313,10 @@ runs:
         set -o pipefail
 
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
-        # step. See diff_detection_master for the flag-omission rationale.
-        overrides_args=()
-        [ -n "$OVERRIDES_CSV" ] && overrides_args+=(--change-rate-threshold-override "$OVERRIDES_CSV")
-
+        # step. See diff_detection_master for the verbatim-pass rationale.
         vuls diff db ./baseline.db "$TARGET_DB" \
           --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
-          "${overrides_args[@]}" \
+          --change-rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-report.md
         rc=$?
 
