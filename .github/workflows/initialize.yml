@@ -67,6 +67,7 @@ jobs:
       - name: Set global git config
         run: |
           git config --global gc.auto 0
+          git config --global maintenance.auto false
           git config --global init.defaultBranch main
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
