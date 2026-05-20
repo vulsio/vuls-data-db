@@ -8,6 +8,7 @@ on:
       db_change_rate_threshold:
         description: "`vuls diff db` default change rate (%) threshold per ecosystem; diff fails if exceeded"
         required: false
+        type: string
         default: "10"
       db_change_rate_threshold_overrides:
         description: |
@@ -25,6 +26,7 @@ on:
       detection_change_rate_threshold:
         description: "`vuls diff detection` default change rate (%) threshold per scan result; diff fails if exceeded"
         required: false
+        type: string
         default: "5"
       detection_change_rate_threshold_overrides:
         description: |
