@@ -13,9 +13,12 @@ on:
         description: |
           Per-ecosystem overrides of `vuls diff db` threshold. One
           "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25").
-          Blank/whitespace-only lines are dropped. Persistent overrides
-          should be added to this default in a PR (with rationale in the
-          PR description) rather than at dispatch.
+          Blank/whitespace-only lines are dropped. Leading/trailing
+          whitespace around an entry's key and value is not trimmed
+          here — vuls2's override parser trims both sides, so it has no
+          effect on the resolved override. Persistent overrides should
+          be added to this default in a PR (with rationale in the PR
+          description) rather than at dispatch.
         required: false
         type: string
         default: ""
@@ -27,8 +30,11 @@ on:
         description: |
           Per-scan-result-file overrides of `vuls diff detection` threshold.
           One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8").
-          Blank/whitespace-only lines are dropped. Persistent overrides
-          should be added to this default in a PR.
+          Blank/whitespace-only lines are dropped. Leading/trailing
+          whitespace around an entry's key and value is not trimmed
+          here — vuls2's override parser trims both sides, so it has no
+          effect on the resolved override. Persistent overrides should
+          be added to this default in a PR.
         required: false
         type: string
         default: ""
