@@ -72,10 +72,8 @@ inputs:
     description: |
       Per-ecosystem overrides of the `vuls diff db` change rate threshold.
       One "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25");
-      blank/whitespace-only lines are dropped, but trailing "# ..." inline
-      comments are NOT stripped (would be parsed as part of the value and
-      rejected by vuls2). Empty value means "no overrides" — every
-      ecosystem uses db_change_rate_threshold.
+      blank/whitespace-only lines are dropped. Empty value means "no
+      overrides" — every ecosystem uses db_change_rate_threshold.
     required: false
     default: ""
   detection_change_rate_threshold:
@@ -86,8 +84,7 @@ inputs:
       Per-file overrides of the `vuls diff detection` change rate threshold.
       One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8") where
       the basename is the scan-result file name without ".json".
-      Blank/whitespace-only lines are dropped; trailing "# ..." inline
-      comments are NOT stripped (would be rejected by vuls2).
+      Blank/whitespace-only lines are dropped.
     required: false
     default: ""
   integration_ref:
@@ -166,11 +163,9 @@ runs:
     # diff steps below. Rule: `awk 'NF'` drops blank/whitespace-only lines
     # (NF is 0 for them); `paste -sd, -` joins survivors with ",".
     # Whitespace around each entry is intentionally NOT trimmed here —
-    # vuls2 trims around the "=" itself in override.Parse. Inline "# ..."
-    # comments are also NOT stripped (would be forwarded as part of the
-    # value and rejected by vuls2). Empty result → consuming diff step
-    # omits the `--change-rate-threshold-override` flag entirely, matching
-    # the no-overrides default exactly.
+    # vuls2 trims around the "=" itself in override.Parse. Empty result →
+    # consuming diff step omits the `--change-rate-threshold-override` flag
+    # entirely, matching the no-overrides default exactly.
     - name: Parse threshold overrides
       id: parse_overrides
       shell: bash
