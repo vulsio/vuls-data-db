@@ -16,8 +16,11 @@ on:
           multi-line "<ecosystem>=<rate>" entries. Leave empty to use the
           persistent list in the build job's
           DB_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty value here
-          replaces it for this dispatch only. Blank/whitespace-only lines
-          are dropped; per-entry whitespace is trimmed by vuls2.
+          replaces it for this dispatch only. A whitespace-only value
+          still counts as non-empty, so it replaces the env list with
+          nothing — use it to disable all persistent overrides for a
+          single dispatch. Blank/whitespace-only lines are dropped;
+          per-entry whitespace is trimmed by vuls2.
         required: false
         type: string
         default: ""
@@ -32,7 +35,10 @@ on:
           threshold, as multi-line "<file-basename>=<rate>" entries.
           Leave empty to use the persistent list in the build job's
           DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty
-          value here replaces it for this dispatch only.
+          value here replaces it for this dispatch only. A
+          whitespace-only value still counts as non-empty, so it
+          replaces the env list with nothing — use it to disable all
+          persistent overrides for a single dispatch.
           Blank/whitespace-only lines are dropped; per-entry whitespace
           is trimmed by vuls2.
         required: false
@@ -57,9 +63,10 @@ jobs:
       # values whenever no dispatch input is supplied. Each entry covers
       # recurring upstream-driven churn (new-distro / rolling-release /
       # monthly vendor-data cycles) found in a review of db-nightly
-      # failures over 2026-04-30..05-20; see PR #152 for the per-entry
-      # failure-rate rationale. `#` comments are NOT allowed inside these
-      # lists (vuls2's override parser would reject them).
+      # failures over 2026-04-30..05-20; run `git blame` on these lines
+      # for the commit that introduced each entry and its rationale.
+      # `#` comments are NOT allowed inside these lists (vuls2's override
+      # parser would reject them).
       DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         ubuntu:26.04=30
         microsoft=35
