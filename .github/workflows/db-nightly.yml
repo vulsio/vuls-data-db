@@ -12,14 +12,15 @@ on:
         default: "10"
       db_change_rate_threshold_overrides:
         description: |
-          Per-ecosystem overrides of `vuls diff db` threshold. One
-          "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25").
-          Blank/whitespace-only lines are dropped. Leading/trailing
-          whitespace around an entry's key and value is not trimmed
-          here — vuls2's override parser trims both sides, so it has no
-          effect on the resolved override. Persistent overrides should
-          be added to this default in a PR (with rationale in the PR
-          description) rather than at dispatch.
+          Per-ecosystem overrides of `vuls diff db` threshold, as
+          multi-line "<ecosystem>=<rate>" entries. Leave empty to use the
+          persistent list in the build job's
+          DB_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty value here
+          replaces it for this dispatch only. A whitespace-only value
+          still counts as non-empty, so it replaces the env list with
+          nothing — use it to disable all persistent overrides for a
+          single dispatch. Blank/whitespace-only lines are dropped;
+          per-entry whitespace is trimmed by vuls2.
         required: false
         type: string
         default: ""
@@ -30,13 +31,16 @@ on:
         default: "5"
       detection_change_rate_threshold_overrides:
         description: |
-          Per-scan-result-file overrides of `vuls diff detection` threshold.
-          One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8").
-          Blank/whitespace-only lines are dropped. Leading/trailing
-          whitespace around an entry's key and value is not trimmed
-          here — vuls2's override parser trims both sides, so it has no
-          effect on the resolved override. Persistent overrides should
-          be added to this default in a PR.
+          Per-scan-result-file overrides of `vuls diff detection`
+          threshold, as multi-line "<file-basename>=<rate>" entries.
+          Leave empty to use the persistent list in the build job's
+          DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty
+          value here replaces it for this dispatch only. A
+          whitespace-only value still counts as non-empty, so it
+          replaces the env list with nothing — use it to disable all
+          persistent overrides for a single dispatch.
+          Blank/whitespace-only lines are dropped; per-entry whitespace
+          is trimmed by vuls2.
         required: false
         type: string
         default: ""
@@ -52,6 +56,25 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2
+      # Persistent diff-guard threshold overrides — the single source of
+      # truth, applied to BOTH scheduled and manually-dispatched runs.
+      # workflow_dispatch input defaults are NOT visible to `schedule`
+      # events, so the `Run diff guard` step falls back to these env
+      # values whenever no dispatch input is supplied. Each entry covers
+      # recurring upstream-driven churn (new-distro / rolling-release /
+      # monthly vendor-data cycles) found in a review of db-nightly
+      # failures over 2026-04-30..05-20; run `git blame` on these lines
+      # for the commit that introduced each entry and its rationale.
+      # `#` comments are NOT allowed inside these lists (vuls2's override
+      # parser would reject them).
+      DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
+        ubuntu:26.04=30
+        microsoft=35
+        fedora:45=50
+      DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
+        debian_13=20
+        ubuntu_2604=50
+        opensuse_tumbleweed=15
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -111,20 +134,21 @@ jobs:
 
       # Runs on every scheduled and manually dispatched invocation.
       - name: Run diff guard
-        # On scheduled runs, github.event.inputs.* is typically unset/null
-        # rather than an empty string. The `|| 'default'` fallbacks below
-        # let this workflow run without workflow_dispatch inputs.
-        # The `_overrides` inputs default to an empty string when unset;
-        # the composite action drops blank/whitespace-only lines and an
-        # empty result is parsed by vuls2 as "no overrides".
+        # On scheduled runs github.event.inputs.* is unset/null, so the
+        # `|| ...` fallbacks supply the values. Thresholds fall back to
+        # literals; the `_overrides` fall back to the job-level env lists
+        # (DB/DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES) so the persistent
+        # overrides apply to scheduled runs too. A workflow_dispatch
+        # `_overrides` input, when supplied, replaces the env list for
+        # that run.
         uses: ./.github/actions/diff-guard
         with:
           target_db: ./vuls.db
           baseline_repository: ghcr.io/vulsio/vuls-nightly-db:nightly
           db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
-          db_change_rate_threshold_overrides: ${{ github.event.inputs.db_change_rate_threshold_overrides || '' }}
+          db_change_rate_threshold_overrides: ${{ github.event.inputs.db_change_rate_threshold_overrides || env.DB_CHANGE_RATE_THRESHOLD_OVERRIDES }}
           detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
-          detection_change_rate_threshold_overrides: ${{ github.event.inputs.detection_change_rate_threshold_overrides || '' }}
+          detection_change_rate_threshold_overrides: ${{ github.event.inputs.detection_change_rate_threshold_overrides || env.DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES }}
 
       # Guard passed: attach :nightly to the verified digest. If the guard
       # fails this step is skipped and
