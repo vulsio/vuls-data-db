@@ -22,7 +22,18 @@ on:
           description) rather than at dispatch.
         required: false
         type: string
-        default: ""
+        # Persistent per-ecosystem overrides. Each entry is justified by
+        # recurring upstream-driven churn seen in db-nightly failures over
+        # the 2026-04-30..05-20 review window:
+        #   ubuntu:26.04=30 — Ubuntu 26.04 (future release): new-distro
+        #                     structural churn; observed ~17% db drift.
+        #   microsoft=35    — Microsoft KB bucket churns on the monthly
+        #                     Patch Tuesday cycle; observed KB rate 15-28%.
+        #   fedora:45=50    — Fedora 45 (recent release): observed ~39% drift.
+        default: |
+          ubuntu:26.04=30
+          microsoft=35
+          fedora:45=50
       detection_change_rate_threshold:
         description: "`vuls diff detection` default change rate (%) threshold per scan result; diff fails if exceeded"
         required: false
@@ -39,7 +50,19 @@ on:
           be added to this default in a PR.
         required: false
         type: string
-        default: ""
+        # Persistent per-file overrides. Each entry is justified by
+        # recurring upstream-driven churn seen in db-nightly failures over
+        # the 2026-04-30..05-20 review window:
+        #   debian_13=20           — Debian 13 (trixie): steady new-CVE
+        #                            inflow from the upstream feed; 5-14% drift.
+        #   ubuntu_2604=50         — Ubuntu 26.04 (future release):
+        #                            new-distro churn; observed 9-39% drift.
+        #   opensuse_tumbleweed=15 — rolling release, churns by design;
+        #                            observed ~7% drift.
+        default: |
+          debian_13=20
+          ubuntu_2604=50
+          opensuse_tumbleweed=15
 
 permissions: {}
 
