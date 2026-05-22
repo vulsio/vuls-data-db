@@ -19,6 +19,12 @@ on:
     - cron: "7 9 1 * *" # 09:07 UTC on the 1st of every month
   workflow_dispatch:
 
+# Serialize runs so a manual dispatch overlapping the scheduled run
+# cannot both pass the "no open issue" gate and file a duplicate issue.
+concurrency:
+  group: diff-guard-override-grooming
+  cancel-in-progress: false
+
 permissions: {}
 
 jobs:

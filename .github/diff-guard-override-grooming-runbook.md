@@ -6,8 +6,8 @@ issue (see `.github/workflows/diff-guard-override-grooming.yml`); hand this
 runbook to whoever works that issue — human or LLM. The issue body carries the
 *policy* (the summary); this file is the *procedure*.
 
-Repo: `vulsio/vuls-data-db`. The `gh` commands below omit `--repo
-vulsio/vuls-data-db` for brevity — add it, or run from a clone.
+Repo: `vulsio/vuls-data-db`. The `gh` commands below omit
+`--repo vulsio/vuls-data-db` for brevity — add it, or run from a clone.
 
 ## What you are grooming
 
