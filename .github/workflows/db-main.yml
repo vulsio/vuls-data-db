@@ -6,10 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       db_change_rate_threshold:
-        description: "`vuls diff db` default change rate (%) threshold per ecosystem; diff fails if exceeded"
+        description: |
+          `vuls diff db` default change rate (%) threshold per ecosystem;
+          diff fails if exceeded. Leave empty to use the build job's
+          DB_CHANGE_RATE_THRESHOLD env; a value here replaces it for this
+          dispatch only.
         required: false
         type: string
-        default: "10"
+        default: ""
       db_change_rate_threshold_overrides:
         description: |
           Per-ecosystem overrides of `vuls diff db` threshold, as
@@ -25,10 +29,14 @@ on:
         type: string
         default: ""
       detection_change_rate_threshold:
-        description: "`vuls diff detection` default change rate (%) threshold per scan result; diff fails if exceeded"
+        description: |
+          `vuls diff detection` default change rate (%) threshold per
+          scan result; diff fails if exceeded. Leave empty to use the
+          build job's DETECTION_CHANGE_RATE_THRESHOLD env; a value here
+          replaces it for this dispatch only.
         required: false
         type: string
-        default: "5"
+        default: ""
       detection_change_rate_threshold_overrides:
         description: |
           Per-scan-result-file overrides of `vuls diff detection`
@@ -56,13 +64,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOEXPERIMENT: jsonv2
-      # Persistent diff-guard threshold overrides — the single source of
+      # Persistent diff-guard threshold config — the single source of
       # truth, applied to BOTH scheduled and manually-dispatched runs.
       # workflow_dispatch input defaults are NOT visible to `schedule`
       # events, so the `Run diff guard` step falls back to these env
-      # values whenever no dispatch input is supplied. Each entry covers
-      # recurring upstream-driven churn (new-distro / recent-release
-      # cycles) found in a review of DB (db-main) workflow failures over
+      # values whenever no dispatch input is supplied; a dispatch input,
+      # when supplied, replaces the corresponding value for that run.
+      # Default per-target change-rate thresholds (%).
+      DB_CHANGE_RATE_THRESHOLD: "10"
+      DETECTION_CHANGE_RATE_THRESHOLD: "5"
+      # Per-target threshold overrides. Each entry covers recurring
+      # upstream-driven churn (new-distro / recent-release cycles) found
+      # in a review of DB (db-main) workflow failures over
       # 2026-05-01..05-20; run `git blame` on these lines for the commit
       # that introduced each entry and its rationale. `#` comments are
       # NOT allowed inside these lists (vuls2's override parser would
@@ -109,7 +122,7 @@ jobs:
 
       - name: Save vuls.db schema_version
         id: save_schema_version
-        run: echo "schema_version=$(vuls db search metadata --dbpath ./vuls.db | jq .schema_version)" >> $GITHUB_OUTPUT
+        run: echo "schema_version=$(vuls db search metadata --dbpath ./vuls.db | jq .schema_version)" >> "$GITHUB_OUTPUT"
 
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
@@ -137,19 +150,17 @@ jobs:
       # Runs on every scheduled and manually dispatched invocation.
       - name: Run diff guard
         # On scheduled runs github.event.inputs.* is unset/null, so the
-        # `|| ...` fallbacks supply the values. Thresholds fall back to
-        # literals; the `_overrides` fall back to the job-level env lists
-        # (DB/DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES) so the persistent
-        # overrides apply to scheduled runs too. A workflow_dispatch
-        # `_overrides` input, when supplied, replaces the env list for
-        # that run.
+        # `|| env.*` fallbacks supply every value from the job-level env
+        # block (the single source of truth). A workflow_dispatch input,
+        # when supplied, replaces the corresponding env value for that
+        # run only.
         uses: ./.github/actions/diff-guard
         with:
           target_db: ./vuls.db
           baseline_repository: ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_schema_version.outputs.schema_version }}
-          db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || '10' }}
+          db_change_rate_threshold: ${{ github.event.inputs.db_change_rate_threshold || env.DB_CHANGE_RATE_THRESHOLD }}
           db_change_rate_threshold_overrides: ${{ github.event.inputs.db_change_rate_threshold_overrides || env.DB_CHANGE_RATE_THRESHOLD_OVERRIDES }}
-          detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || '5' }}
+          detection_change_rate_threshold: ${{ github.event.inputs.detection_change_rate_threshold || env.DETECTION_CHANGE_RATE_THRESHOLD }}
           detection_change_rate_threshold_overrides: ${{ github.event.inputs.detection_change_rate_threshold_overrides || env.DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES }}
 
       # Guard passed: attach :latest and :<schema_version> to the verified digest.
