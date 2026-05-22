@@ -2,7 +2,7 @@
 
 It is time for the periodic re-triage of the per-target diff-guard threshold overrides — the `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` / `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` env lists in `db-main.yml` and `db-nightly.yml`. This issue is filed automatically on a ~2-month cadence; **close it once the re-triage is done.**
 
-> **How to process this issue:** follow the runbook at [`.github/diff-guard-override-grooming-runbook.md`](.github/diff-guard-override-grooming-runbook.md) — it has the exact commands, the log-parsing recipe, the decision rules, and the output conventions. The policy below is the summary.
+> **How to process this issue:** follow the runbook at [`.github/diff-guard-override-grooming-runbook.md`](https://github.com/vulsio/vuls-data-db/blob/main/.github/diff-guard-override-grooming-runbook.md) — it has the exact commands, the log-parsing recipe, the decision rules, and the output conventions. The policy below is the summary.
 
 ### Why this is needed
 
