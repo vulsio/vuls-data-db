@@ -4,6 +4,9 @@ name: diff-guard override grooming reminder
 # overrides (the DB_/DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES env
 # lists in db-main.yml / db-nightly.yml) on a ~2-month cadence.
 #
+# Prerequisite: the `diff-guard-grooming` label must already exist in
+# the repo — it is created once, out of band, not by this workflow.
+#
 # The job fires MONTHLY rather than on a bimonthly cron: GitHub's
 # scheduled-workflow scheduler is best-effort and can drop a run, and
 # a low-frequency cron that misses a fire leaves a long gap nobody
@@ -38,31 +41,24 @@ jobs:
 
           # A grooming issue is already open — the re-triage is still
           # pending, so don't pile another one on top of it.
-          open_count=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
-            --state open --limit 1 --json number --jq 'length')
-          if [ "$open_count" -gt 0 ]; then
-            echo "An open diff-guard-grooming issue already exists; nothing to do."
+          open_issue=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
+            --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open_issue" ]; then
+            echo "diff-guard-grooming issue #$open_issue is already open; nothing to do."
             exit 0
           fi
 
           # The cron fires monthly, but the cadence is ~2 months: file a
           # new issue only once the most recent grooming issue (open or
-          # closed) is at least 2 months old.
+          # closed) is at least 2 months old. `gh issue list` returns
+          # newest-first, so --limit 1 yields exactly that issue.
           last=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
-            --state all --limit 100 --json createdAt \
-            --jq 'sort_by(.createdAt) | last | .createdAt // empty')
+            --state all --limit 1 --json createdAt --jq '.[0].createdAt // empty')
           if [ -n "$last" ] && \
              [ "$(date -u +%s)" -lt "$(date -u -d "$last + 2 months" +%s)" ]; then
             echo "Most recent grooming issue ($last) is < 2 months old; not due yet."
             exit 0
           fi
-
-          # Ensure the label exists. --force makes this idempotent
-          # (create-or-update), so the expected "already exists" case is
-          # a no-op while real errors (rate limit, outage) still surface
-          # instead of being swallowed.
-          gh label create diff-guard-grooming --repo "$REPO" --force \
-            --color FBCA04 --description "Periodic diff-guard override re-triage"
 
           gh issue create --repo "$REPO" \
             --label diff-guard-grooming \
