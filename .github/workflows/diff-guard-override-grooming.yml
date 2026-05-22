@@ -54,15 +54,20 @@ jobs:
             exit 0
           fi
 
-          # The cron fires monthly, but the cadence is ~2 months: file a
-          # new issue only once the most recent grooming issue (open or
-          # closed) is at least 2 months old. `gh issue list` returns
-          # newest-first, so --limit 1 yields exactly that issue.
+          # The cron fires monthly; act on every other fire (~2-month
+          # cadence). Gate on a 45-day threshold, NOT an exact
+          # "+2 months": a "+2 months" cutoff falls on the very day the
+          # 2-months-later run fires, so cron jitter would decide ~50/50
+          # whether that run sees itself as due — a miss stretches the
+          # cadence to 3 months. 45 days sits safely between the monthly
+          # gaps (~30 days → skip, ~60 days → fire), so the outcome no
+          # longer depends on time-of-day. `gh issue list` returns
+          # newest-first, so --limit 1 yields exactly the latest issue.
           last=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
             --state all --limit 1 --json createdAt --jq '.[0].createdAt // empty')
           if [ -n "$last" ] && \
-             [ "$(date -u +%s)" -lt "$(date -u -d "$last + 2 months" +%s)" ]; then
-            echo "Most recent grooming issue ($last) is < 2 months old; not due yet."
+             [ "$(date -u +%s)" -lt "$(date -u -d "$last + 45 days" +%s)" ]; then
+            echo "Most recent grooming issue ($last) is < 45 days old; not due yet."
             exit 0
           fi
 
