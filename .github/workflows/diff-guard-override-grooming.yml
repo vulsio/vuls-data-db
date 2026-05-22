@@ -16,14 +16,15 @@ on:
     - cron: "7 9 1 * *" # 09:07 UTC on the 1st of every month
   workflow_dispatch:
 
-permissions:
-  contents: read
-  issues: write
+permissions: {}
 
 jobs:
   remind:
     name: file grooming issue when due
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Check out (for the issue body template)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -37,8 +38,8 @@ jobs:
 
           # A grooming issue is already open — the re-triage is still
           # pending, so don't pile another one on top of it.
-          open_count=$(gh issue list --repo "$REPO" \
-            --label diff-guard-grooming --state open --json number --jq 'length')
+          open_count=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
+            --state open --limit 1 --json number --jq 'length')
           if [ "$open_count" -gt 0 ]; then
             echo "An open diff-guard-grooming issue already exists; nothing to do."
             exit 0
@@ -48,7 +49,7 @@ jobs:
           # new issue only once the most recent grooming issue (open or
           # closed) is at least 2 months old.
           last=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
-            --state all --json createdAt \
+            --state all --limit 100 --json createdAt \
             --jq 'sort_by(.createdAt) | last | .createdAt // empty')
           if [ -n "$last" ] && \
              [ "$(date -u +%s)" -lt "$(date -u -d "$last + 2 months" +%s)" ]; then
@@ -56,10 +57,12 @@ jobs:
             exit 0
           fi
 
-          # Ensure the label exists (idempotent — no manual setup step).
-          gh label create diff-guard-grooming --repo "$REPO" \
-            --color FBCA04 --description "Periodic diff-guard override re-triage" \
-            2>/dev/null || true
+          # Ensure the label exists. --force makes this idempotent
+          # (create-or-update), so the expected "already exists" case is
+          # a no-op while real errors (rate limit, outage) still surface
+          # instead of being swallowed.
+          gh label create diff-guard-grooming --repo "$REPO" --force \
+            --color FBCA04 --description "Periodic diff-guard override re-triage"
 
           gh issue create --repo "$REPO" \
             --label diff-guard-grooming \
