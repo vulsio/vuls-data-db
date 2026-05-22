@@ -11,8 +11,9 @@ name: diff-guard override grooming reminder
 # scheduled-workflow scheduler is best-effort and can drop a run, and
 # a low-frequency cron that misses a fire leaves a long gap nobody
 # notices. Firing monthly and self-gating to "only when the most
-# recent grooming issue is >= 2 months old" makes a missed fire
-# harmless — the following month picks it up.
+# recent grooming issue is at least 45 days old" yields an effective
+# ~2-month cadence and makes a missed fire harmless — the following
+# month picks it up.
 
 on:
   schedule:
