@@ -66,5 +66,6 @@ jobs:
 
           gh issue create --repo "$REPO" \
             --label diff-guard-grooming \
+            --assignee MaineK00n --assignee shino \
             --title "diff-guard override re-triage ($(date -u +%Y-%m))" \
             --body-file .github/diff-guard-override-grooming-issue.md
