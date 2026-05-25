@@ -64,18 +64,32 @@ Do **not** fetch every run's log. You need:
 
 The enabled data sources for each pipeline are listed in `db-main.mk` /
 `db-nightly.mk`. For each enabled source, pull the extracted dotgit once and
-read its commit log over the window:
+read its full commit log. Match the dotgit branch to the workflow you are
+grooming — db-main runs `make ... BRANCH=main`, db-nightly runs
+`make ... BRANCH=nightly`, and the two branches can have independent commit
+histories:
 
-```
+```text
 vuls-data-update dotgit pull --dir /tmp/ex \
+  --checkout <main|nightly> \
   --restore ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-<source>
 git -C /tmp/ex/ghcr.io/vulsio/vuls-data-db/vuls-data-extracted-<source> \
-  log --format='%H %ct' --since='<window-start>'
+  log --format='%H %ct'
 ```
 
 (`%ct` is committer-time as epoch — sortable across sources without timezone
-fuss.) For each run with start time `T`, the tuple is the per-source latest
-extracted commit at-or-before `T`. Runs with identical tuples are duplicates.
+fuss. Take the full log instead of `--since=<window-start>`: runs near the
+start of the window resolve their tuple against the last commit *before* the
+window, and the log is cheap.) For each run, take `T` as the `createdAt`
+from Step 1's metadata; its tuple is the per-source latest extracted commit
+at-or-before `T`. Runs with identical tuples are duplicates.
+
+Edge case: queue delay between a run's `createdAt` and its actual `db-build`
+step can in principle straddle an extract bump and shift a run into the
+next tuple. The window is bounded (GitHub Actions queueing is minutes to
+~1h) and extracted dotgits typically bump on a daily-or-longer cadence, so
+this is rare; if a single tuple-boundary run looks important, re-pin `T`
+against the `db-build` step start recorded in that run's job log.
 
 The arithmetic is small (~240 runs × O(sources) lookups), so a throwaway
 script is the natural tool — write whatever shape fits the moment. If it
