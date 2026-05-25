@@ -1,0 +1,79 @@
+name: diff-guard override grooming reminder
+
+# Files a re-triage reminder issue for the diff-guard threshold
+# overrides (the DB_/DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES env
+# lists in db-main.yml / db-nightly.yml) on a ~2-month cadence.
+#
+# Prerequisite: the `diff-guard-grooming` label must already exist in
+# the repo — it is created once, out of band, not by this workflow.
+#
+# The job fires MONTHLY rather than on a bimonthly cron: GitHub's
+# scheduled-workflow scheduler is best-effort and can drop a run, and
+# a low-frequency cron that misses a fire leaves a long gap nobody
+# notices. Firing monthly and self-gating to "only when the most
+# recent grooming issue is at least 45 days old" yields an effective
+# ~2-month cadence and makes a missed fire harmless — the following
+# month picks it up.
+
+on:
+  schedule:
+    - cron: "7 9 1 * *" # 09:07 UTC on the 1st of every month
+  workflow_dispatch:
+
+# Serialize runs so a manual dispatch overlapping the scheduled run
+# cannot both pass the "no open issue" gate and file a duplicate issue.
+concurrency:
+  group: diff-guard-override-grooming
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  remind:
+    name: file grooming issue when due
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out (for the issue body template)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: File grooming issue when due
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # A grooming issue is already open — the re-triage is still
+          # pending, so don't pile another one on top of it.
+          open_issue=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
+            --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open_issue" ]; then
+            echo "diff-guard-grooming issue #$open_issue is already open; nothing to do."
+            exit 0
+          fi
+
+          # The cron fires monthly; act on every other fire (~2-month
+          # cadence). Gate on a 45-day threshold, NOT an exact
+          # "+2 months": a "+2 months" cutoff falls on the very day the
+          # 2-months-later run fires, so cron jitter would decide ~50/50
+          # whether that run sees itself as due — a miss stretches the
+          # cadence to 3 months. 45 days sits safely between the monthly
+          # gaps (~30 days → skip, ~60 days → fire), so the outcome no
+          # longer depends on time-of-day. `gh issue list` returns
+          # newest-first, so --limit 1 yields exactly the latest issue.
+          last=$(gh issue list --repo "$REPO" --label diff-guard-grooming \
+            --state all --limit 1 --json createdAt --jq '.[0].createdAt // empty')
+          if [ -n "$last" ] && \
+             [ "$(date -u +%s)" -lt "$(date -u -d "$last + 45 days" +%s)" ]; then
+            echo "Most recent grooming issue ($last) is < 45 days old; not due yet."
+            exit 0
+          fi
+
+          gh issue create --repo "$REPO" \
+            --label diff-guard-grooming \
+            --assignee MaineK00n --assignee shino \
+            --title "diff-guard override re-triage ($(date -u +%Y-%m))" \
+            --body-file .github/diff-guard-override-grooming-issue.md
