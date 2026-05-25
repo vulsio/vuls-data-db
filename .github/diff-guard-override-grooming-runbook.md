@@ -50,10 +50,37 @@ Do **not** fetch every run's log. You need:
 - **All FAIL runs** — group consecutive failures into *events*: a streak of
   failures is usually one upstream cause re-failing because promotion is
   blocked. Read 1–2 representative logs per FAIL event.
-- **A PASS sample** — to observe each *currently-overridden* target's rate when
-  it is not failing. This is the half a failure-only triage cannot see, and is
-  what lets you *retire* an override. Sample ~1 run every 3–4 days per workflow
-  from the PASS runs.
+- **PASS runs — signal-bearing only.** A PASS run inherits its DB diff from
+  its inputs: if no source's extracted dotgit advanced between two consecutive
+  builds, the second build sees identical anchors and the diff guard reports
+  the same rates (typically near-0%) — a duplicate that does not move any
+  target's distribution. Group PASS runs by their extract-anchor tuple and
+  read **one log per group** (the earliest run in the group is the
+  representative). Time-uniform sampling (e.g. "1 every 3 days") is a poor
+  fit: override-worthy excursions are bursty and concentrated in
+  immediately-after-extract runs, which uniform sampling underweights.
+
+### How to compute the extract-anchor tuple
+
+The enabled data sources for each pipeline are listed in `db-main.mk` /
+`db-nightly.mk`. For each enabled source, pull the extracted dotgit once and
+read its commit log over the window:
+
+```
+vuls-data-update dotgit pull --dir /tmp/ex \
+  --restore ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-<source>
+git -C /tmp/ex/ghcr.io/vulsio/vuls-data-db/vuls-data-extracted-<source> \
+  log --format='%H %ct' --since='<window-start>'
+```
+
+(`%ct` is committer-time as epoch — sortable across sources without timezone
+fuss.) For each run with start time `T`, the tuple is the per-source latest
+extracted commit at-or-before `T`. Runs with identical tuples are duplicates.
+
+The arithmetic is small (~240 runs × O(sources) lookups), so a throwaway
+script is the natural tool — write whatever shape fits the moment. If it
+turns out to be reusable across grooming cycles, drop it under `.github/`
+next time; pre-creating it is not required.
 
 Fetching logs is the expensive part — fan the reads out in parallel (runs are
 independent; e.g. several parallel workers/agents).
