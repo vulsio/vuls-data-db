@@ -74,14 +74,15 @@ jobs:
       DB_CHANGE_RATE_THRESHOLD: "10"
       DETECTION_CHANGE_RATE_THRESHOLD: "5"
       # Per-target threshold overrides. Each entry covers recurring
-      # upstream-driven churn (new-distro / recent-release cycles) found
-      # in a review of DB (db-main) workflow failures over
-      # 2026-05-01..05-20; run `git blame` on these lines for the commit
-      # that introduced each entry and its rationale. `#` comments are
-      # NOT allowed inside these lists (vuls2's override parser would
-      # reject them).
+      # upstream-driven churn (new-distro / recent-release / small-
+      # baseline cycles) surfaced by DB (db-main) diff-guard failures;
+      # entries are added incrementally as new sources of churn appear.
+      # Run `git blame` on these lines for the commit that introduced
+      # each entry and its rationale. `#` comments are NOT allowed
+      # inside these lists (vuls2's override parser would reject them).
       DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         ubuntu:26.04=30
+        ubuntu:snap=30
         fedora:45=50
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         debian_13=20
