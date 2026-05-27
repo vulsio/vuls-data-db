@@ -90,6 +90,7 @@ jobs:
         debian_13=20
         ubuntu_2604=50
         opensuse_tumbleweed=15
+        alma_10=100
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
