@@ -50,10 +50,51 @@ Do **not** fetch every run's log. You need:
 - **All FAIL runs** — group consecutive failures into *events*: a streak of
   failures is usually one upstream cause re-failing because promotion is
   blocked. Read 1–2 representative logs per FAIL event.
-- **A PASS sample** — to observe each *currently-overridden* target's rate when
-  it is not failing. This is the half a failure-only triage cannot see, and is
-  what lets you *retire* an override. Sample ~1 run every 3–4 days per workflow
-  from the PASS runs.
+- **PASS runs — signal-bearing only.** A PASS run inherits its DB diff from
+  its inputs: if no source's extracted dotgit advanced between two consecutive
+  builds, the second build sees identical anchors and the diff guard reports
+  the same rates (typically near-0%) — a duplicate that does not move any
+  target's distribution. Group PASS runs by their extract-anchor tuple and
+  read **one log per group** (the earliest run in the group is the
+  representative). Time-uniform sampling (e.g. "1 every 3 days") is a poor
+  fit: override-worthy excursions are bursty and concentrated in
+  immediately-after-extract runs, which uniform sampling underweights.
+
+### How to compute the extract-anchor tuple
+
+The enabled data sources for each pipeline are listed in `db-main.mk` /
+`db-nightly.mk`. For each enabled source, pull the extracted dotgit once and
+read its full commit log. Match the dotgit branch to the workflow you are
+grooming — db-main runs `make ... BRANCH=main`, db-nightly runs
+`make ... BRANCH=nightly`, and the two branches can have independent commit
+histories:
+
+```text
+vuls-data-update dotgit pull --dir /tmp/ex \
+  --checkout <main|nightly> \
+  --restore ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-<source>
+git -C /tmp/ex/ghcr.io/vulsio/vuls-data-db/vuls-data-extracted-<source> \
+  log --format='%H %ct'
+```
+
+(`%ct` is committer-time as epoch — sortable across sources without timezone
+fuss. Take the full log instead of `--since=<window-start>`: runs near the
+start of the window resolve their tuple against the last commit *before* the
+window, and the log is cheap.) For each run, take `T` as the `createdAt`
+from Step 1's metadata; its tuple is the per-source latest extracted commit
+at-or-before `T`. Runs with identical tuples are duplicates.
+
+Edge case: queue delay between a run's `createdAt` and its actual `db-build`
+step can in principle straddle an extract bump and shift a run into the
+next tuple. The window is bounded (GitHub Actions queueing is minutes to
+~1h) and extracted dotgits typically bump on a daily-or-longer cadence, so
+this is rare; if a single tuple-boundary run looks important, re-pin `T`
+against the `db-build` step start recorded in that run's job log.
+
+The arithmetic is small (~240 runs × O(sources) lookups), so a throwaway
+script is the natural tool — write whatever shape fits the moment. If it
+turns out to be reusable across grooming cycles, drop it under `.github/`
+next time; pre-creating it is not required.
 
 Fetching logs is the expensive part — fan the reads out in parallel (runs are
 independent; e.g. several parallel workers/agents).
