@@ -83,6 +83,7 @@ jobs:
       DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         ubuntu:26.04=30
         ubuntu:snap=30
+        microsoft=35
         fedora:45=50
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         debian_13=20

@@ -148,11 +148,12 @@ runs:
       shell: bash
       run: |
         mkdir -p ./scan-results
-        # Copy all scan results then drop the ones excluded from this vuls2
-        # detection diff: Windows (handled by gost) and CentOS — see
-        # vuls/detector/detector.go DetectPkgCves switch.
+        # Copy all scan results then drop CentOS, which vuls2 does not handle
+        # (see vuls/detector/detector.go DetectPkgCves switch). Windows is now
+        # KEPT: vuls0 master detects Windows via vuls2, so the windows fixtures
+        # exercise the microsoft data in the DB under test.
         cp ./integration/data/results/*.json ./scan-results/
-        rm -f ./scan-results/windows_*.json ./scan-results/centos_*.json
+        rm -f ./scan-results/centos_*.json
         ls -1 ./scan-results
 
         integration_sha=$(git -C ./integration rev-parse HEAD)
@@ -251,14 +252,21 @@ runs:
     - name: Prepare scan results for older-binary check (drop families unsupported by older vuls0)
       shell: bash
       run: |
-        # Start from the already-filtered master-HEAD set (windows/centos gone)
-        # and additionally remove families the pinned older vuls0 cannot
-        # process. This is expressed as a *blacklist* so new families added
-        # upstream are retained automatically; only known-broken ones need
-        # listing here. Update this set when bumping `vuls0_old_ref`.
+        # Start from the already-filtered master-HEAD set (centos gone) and
+        # additionally remove families the pinned older vuls0 cannot process.
+        # This is expressed as a *blacklist* so new families added upstream
+        # are retained automatically; only known-broken ones need listing
+        # here. Update this set when bumping `vuls0_old_ref`.
+        #
+        # Windows is removed here but KEPT for the master-HEAD check above:
+        # the pinned older vuls0 predates "detect windows with vuls2" and
+        # still routes Windows to gost, so it does not exercise the vuls2 DB.
+        # Drop windows from this older-binary set until `vuls0_old_ref` is
+        # bumped past that change.
         mkdir -p ./scan-results-old
         cp ./scan-results/*.json ./scan-results-old/
         rm -f \
+          ./scan-results-old/windows_*.json \
           ./scan-results-old/amazon_*.json \
           ./scan-results-old/debian_*.json \
           ./scan-results-old/leap.json \
