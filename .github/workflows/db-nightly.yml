@@ -86,6 +86,7 @@ jobs:
         ubuntu:snap=30
         microsoft=35
         fedora:45=50
+        alma:10=100
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         debian_13=20
         ubuntu_2604=50
