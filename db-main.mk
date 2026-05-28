@@ -6,7 +6,11 @@ DBPATH := ~/.cache/vuls/vuls.db
 .PHONY: db-build
 db-build:
 	vuls db init --dbtype ${DBTYPE} --dbpath ${DBPATH}
-	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alma-errata BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	# alma-errata: temporarily pinned to the last extracted commit that built a passing DB
+	# (extracted anchor of vuls-nightly-db@sha256:b97cdf2a — main :0/:latest at 2026-05-27).
+	# Upstream AlmaLinux 10 errata is mid-republish (large ALSA retirements); restore to
+	# ${BRANCH} once the new baseline settles.
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alma-errata BRANCH=564e8bdd1c936e2f09452a6370a0cd63c6b0be3d DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-alpine-secdb BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-amazon BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-cisa-kev BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
