@@ -41,6 +41,7 @@ jobs:
           - msf
           - nuclei-repository
           - nvd-api-cve
+          - nvd-feed-cve-v2
           - oracle-linux
           - redhat-cve
           - redhat-csaf
