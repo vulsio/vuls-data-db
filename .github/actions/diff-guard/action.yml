@@ -94,7 +94,7 @@ inputs:
   vuls0_old_ref:
     description: future-architect/vuls commit SHA for the older-binary detection check.
     required: false
-    default: 4cc910824a2880fbfb322dd4e9d94b68558bed57
+    default: 3266337a725b1209503128a32187e09b39c89b5d
 
 runs:
   using: composite
@@ -266,13 +266,7 @@ runs:
         mkdir -p ./scan-results-old
         cp ./scan-results/*.json ./scan-results-old/
         rm -f \
-          ./scan-results-old/windows_*.json \
-          ./scan-results-old/amazon_*.json \
-          ./scan-results-old/debian_*.json \
-          ./scan-results-old/leap.json \
-          ./scan-results-old/opensuse_*.json \
-          ./scan-results-old/sles*.json \
-          ./scan-results-old/suse_*.json
+          ./scan-results-old/windows_*.json
         ls -1 ./scan-results-old
 
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
