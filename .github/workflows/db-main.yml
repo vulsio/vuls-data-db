@@ -136,6 +136,8 @@ jobs:
       # only when the guard step below passes.
       - name: Push vuls.db to GHCR (tagless, digest-only)
         id: push
+        env:
+          SCHEMA_VERSION: ${{ steps.save_schema_version.outputs.schema_version }}
         run: |
           set -euo pipefail
           digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
@@ -147,6 +149,16 @@ jobs:
             echo '```'
             echo "Image is always pushed before the diff guard runs; a failing"
             echo "build stays pullable by digest for investigation."
+            echo ""
+            echo "If the diff guard fails and an operator decides the candidate is"
+            echo "safe after inspecting the diff, promote it via the promote-digest"
+            echo "workflow (records an audit trail as an Actions run):"
+            echo '```sh'
+            echo " gh workflow run promote-digest.yml -R ${{ github.repository }} -f digest=${digest} -f tag=${SCHEMA_VERSION}"
+            echo '```'
+            echo '```sh'
+            echo " gh workflow run promote-digest.yml -R ${{ github.repository }} -f digest=${digest} -f tag=latest"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
       # Runs on every scheduled and manually dispatched invocation.
