@@ -1,6 +1,6 @@
 name: DB(Promote Digest)
 
-run-name: "Promote ${{ inputs.digest }} -> :${{ inputs.tag }} by @${{ github.actor }}"
+run-name: "Promote :${{ inputs.tag }} <- ${{ inputs.digest }} by @${{ github.actor }}"
 
 # Manual recovery workflow for attaching a tag (latest / nightly / 0) to a
 # tagless image digest on ghcr.io/vulsio/vuls-nightly-db.
