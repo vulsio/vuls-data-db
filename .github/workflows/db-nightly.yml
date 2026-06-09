@@ -145,6 +145,13 @@ jobs:
             echo '```'
             echo "Image is always pushed before the diff guard runs; a failing"
             echo "build stays pullable by digest for investigation."
+            echo ""
+            echo "If the diff guard fails and an operator decides the candidate is"
+            echo "safe after inspecting the diff, promote it via the promote-digest"
+            echo "workflow (records an audit trail as an Actions run):"
+            echo '```sh'
+            echo " gh workflow run promote-digest.yml -R ${{ github.repository }} -f digest=${digest} -f tag=nightly"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
       # Runs on every scheduled and manually dispatched invocation.
