@@ -389,44 +389,38 @@ jobs:
       target: ${{ matrix.target }}
       branch: nightly
 
-  extract-nvd-api-cve:
-    name: Extract vuls-data-extracted-nvd-api-cve
-    uses: ./.github/workflows/extract-nvd-api-cve.yml
+  extract-nvd-cve:
+    name: Extract vuls-data-extracted-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "nvd-api-cve"
+          - "nvd-feed-cve-v2"
+    uses: ./.github/workflows/extract-nvd-cve.yml
     permissions:
       contents: read
       packages: write
     with:
+      target: ${{ matrix.target }}
       branch: main
 
-  extract-nvd-api-cve-nightly:
-    name: Extract vuls-data-extracted-nvd-api-cve
+  extract-nvd-cve-nightly:
+    name: Extract vuls-data-extracted-${{ matrix.target }}
     if: ${{ success() || failure() }}
-    needs: [extract-nvd-api-cve]
-    uses: ./.github/workflows/extract-nvd-api-cve.yml
+    needs: [extract-nvd-cve]
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "nvd-api-cve"
+          - "nvd-feed-cve-v2"
+    uses: ./.github/workflows/extract-nvd-cve.yml
     permissions:
       contents: read
       packages: write
     with:
-      branch: nightly
-
-  extract-nvd-feed-cve-v2:
-    name: Extract vuls-data-extracted-nvd-feed-cve-v2
-    uses: ./.github/workflows/extract-nvd-feed-cve-v2.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      branch: main
-
-  extract-nvd-feed-cve-v2-nightly:
-    name: Extract vuls-data-extracted-nvd-feed-cve-v2
-    if: ${{ success() || failure() }}
-    needs: [extract-nvd-feed-cve-v2]
-    uses: ./.github/workflows/extract-nvd-feed-cve-v2.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
+      target: ${{ matrix.target }}
       branch: nightly
 
   extract-eol:
@@ -460,10 +454,8 @@ jobs:
         extract-redhat-nightly,
         extract-redhat-csaf-or-vex-rhel,
         extract-redhat-csaf-or-vex-rhel-nightly,
-        extract-nvd-api-cve,
-        extract-nvd-api-cve-nightly,
-        extract-nvd-feed-cve-v2,
-        extract-nvd-feed-cve-v2-nightly,
+        extract-nvd-cve,
+        extract-nvd-cve-nightly,
         extract-eol,
         extract-eol-nightly,
       ]
