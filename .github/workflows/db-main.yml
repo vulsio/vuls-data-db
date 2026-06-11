@@ -88,6 +88,33 @@ jobs:
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         debian_13=20
         ubuntu_2604=50
+        windows_7=10
+        windows_81=10
+        windows_10_1709=10
+        windows_10_1803=10
+        windows_10_1809=10
+        windows_10_1903=10
+        windows_10_1909=10
+        windows_10_2004=10
+        windows_10_20h2=10
+        windows_10_21h1=10
+        windows_10_21h2=10
+        windows_10_21h2_old=10
+        windows_10_22h2=10
+        windows_11_21h2=10
+        windows_11_22h2=10
+        windows_11_23h2=20
+        windows_11_24h2=20
+        windows_11_25h2=20
+        windows_server_2008=10
+        windows_server_2008_r2=10
+        windows_server_2012=10
+        windows_server_2012_r2=10
+        windows_server_2016=10
+        windows_server_2019=10
+        windows_server_2022=20
+        windows_server_2022_sql_server_2019=20
+        windows_server_2025=20
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
