@@ -49,7 +49,7 @@ on:
           - vuls-data-extracted-microsoft-cvrf
           - vuls-data-extracted-microsoft-msuc
           - vuls-data-extracted-microsoft-wsusscn2
-          - vuls-data-extracted-mitre-v5
+          - vuls-data-extracted-mitre-cve-v5
           - vuls-data-extracted-msf
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-nvd-feed-cve-v2
@@ -159,8 +159,8 @@ on:
           - vuls-data-raw-mitre-cvrf
           - vuls-data-raw-mitre-cwe
           - vuls-data-raw-mitre-emb3d
-          - vuls-data-raw-mitre-v4
-          - vuls-data-raw-mitre-v5
+          - vuls-data-raw-mitre-cve-v4
+          - vuls-data-raw-mitre-cve-v5
           - vuls-data-raw-msf
           - vuls-data-raw-ncsc-csaf
           - vuls-data-raw-netbsd

@@ -86,8 +86,8 @@ on:
           - mitre-cvrf
           - mitre-cwe
           - mitre-emb3d
-          - mitre-v4
-          - mitre-v5
+          - mitre-cve-v4
+          - mitre-cve-v5
           - msf
           - netbsd
           # - npm-db
