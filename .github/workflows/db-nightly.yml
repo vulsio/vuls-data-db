@@ -89,6 +89,7 @@ jobs:
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         debian_13=20
         ubuntu_2604=50
+        rocky_10=20
         opensuse_tumbleweed=15
         windows_7=10
         windows_81=10
