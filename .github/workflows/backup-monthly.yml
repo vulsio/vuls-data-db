@@ -145,11 +145,11 @@ jobs:
           - vuls-data-raw-minimos-secdb
           - vuls-data-raw-mitre-attack
           - vuls-data-raw-mitre-capec
+          - vuls-data-raw-mitre-cve-v4
+          - vuls-data-raw-mitre-cve-v5
           - vuls-data-raw-mitre-cvrf
           - vuls-data-raw-mitre-cwe
           - vuls-data-raw-mitre-emb3d
-          - vuls-data-raw-mitre-cve-v4
-          - vuls-data-raw-mitre-cve-v5
           - vuls-data-raw-msf
           - vuls-data-raw-ncsc-csaf
           - vuls-data-raw-netbsd

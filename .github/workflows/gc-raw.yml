@@ -275,6 +275,12 @@ jobs:
           - tag: vuls-data-raw-mitre-capec
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-cve-v4
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-raw-mitre-cve-v5
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-mitre-cvrf
             pack-threads: 2
             pack-windowMemory: 4g
@@ -282,12 +288,6 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-mitre-emb3d
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-mitre-cve-v4
-            pack-threads: 2
-            pack-windowMemory: 4g
-          - tag: vuls-data-raw-mitre-cve-v5
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-raw-msf
