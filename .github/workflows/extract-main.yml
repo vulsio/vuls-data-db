@@ -65,7 +65,7 @@ on:
           # - haskell-hackage-osv
           # - jvn-feed-detail
           # - jvn-feed-product
-          # - jvn-feed-rss
+          - jvn-feed-rss
           # - linux-osv
           # - maven-ghsa
           # - maven-glsa
