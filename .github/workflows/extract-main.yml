@@ -131,6 +131,7 @@ on:
           # - ubuntu-osv
           # - ubuntu-vex
           - vulncheck-kev
+          - vulncheck-nist-nvd2
           # - wolfi-osv
       branch:
         required: true

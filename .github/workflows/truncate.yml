@@ -58,6 +58,7 @@ on:
           - vuls-data-extracted-suse-oval
           - vuls-data-extracted-ubuntu-cve-tracker
           - vuls-data-extracted-vulncheck-kev
+          - vuls-data-extracted-vulncheck-nist-nvd2
       threshold-mb:
         required: true
         type: number

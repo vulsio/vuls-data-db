@@ -138,6 +138,7 @@ jobs:
           # - "ubuntu-osv"
           # - "ubuntu-vex"
           - "vulncheck-kev"
+          - "vulncheck-nist-nvd2"
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
     permissions:
@@ -270,6 +271,7 @@ jobs:
           # - "ubuntu-osv"
           # - "ubuntu-vex"
           - "vulncheck-kev"
+          - "vulncheck-nist-nvd2"
           # - "wolfi-osv"
     uses: ./.github/workflows/extract-main.yml
     permissions:
