@@ -59,6 +59,7 @@ jobs:
           - vuls-data-extracted-suse-oval
           - vuls-data-extracted-ubuntu-cve-tracker
           - vuls-data-extracted-vulncheck-kev
+          - vuls-data-extracted-vulncheck-nist-nvd2
           - vuls-data-raw-alma-errata
           - vuls-data-raw-alma-osv
           - vuls-data-raw-alma-oval
