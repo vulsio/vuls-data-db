@@ -70,6 +70,9 @@ jobs:
           - tag: vuls-data-extracted-freebsd
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-jvn-feed-detail
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-jvn-feed-rss
             pack-threads: 2
             pack-windowMemory: 4g
