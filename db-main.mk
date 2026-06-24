@@ -29,7 +29,7 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-wsusscn2 BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-attack BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-capec BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-cve-v5 BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-cve-v5 BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	# $(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-cwe BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-msf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-nuclei-repository BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
