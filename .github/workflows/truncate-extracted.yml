@@ -50,6 +50,7 @@ jobs:
           - nvd-api-cve
           - nvd-feed-cve-v2
           - oracle-linux
+          - paloalto-json
           - redhat-cve
           - redhat-csaf
           - redhat-csaf-rhel
