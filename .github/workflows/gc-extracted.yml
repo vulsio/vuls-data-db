@@ -37,6 +37,9 @@ jobs:
           - tag: vuls-data-extracted-cisa-kev
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-cisco-json
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-debian-security-tracker-salsa
             pack-threads: 2
             pack-windowMemory: 4g
