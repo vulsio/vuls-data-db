@@ -23,6 +23,7 @@ jobs:
           - arch
           - cargo-ghsa
           - cisa-kev
+          - cisco-json
           - debian-security-tracker-salsa
           - eol
           - enisa-euvd-list
