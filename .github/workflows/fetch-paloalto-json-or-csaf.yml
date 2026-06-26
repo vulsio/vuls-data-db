@@ -76,13 +76,18 @@ jobs:
       # advisory that is still listed upstream but missing from the freshly-fetched tree,
       # so the dataset stays complete instead of losing the 404'd advisories.
       - name: Restore advisories dropped by upstream 404 (recover last-known-good from history)
+        shell: bash
         run: |
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
-          list_ids="$(find "ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list" -name '*.json' -exec basename {} .json \; | sort -u)"
+          # Build the set of currently-listed advisory IDs once for O(1) membership.
+          declare -A listed
+          while IFS= read -r id; do
+            listed["$id"]=1
+          done < <(find "ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list" -name '*.json' -exec basename {} .json \;)
           restored=0
-          while read -r rel; do
+          while IFS= read -r rel; do
             id="$(basename "$rel" .json)"
-            if [ ! -f "$dir/$rel" ] && printf '%s\n' "$list_ids" | grep -qxF "$id"; then
+            if [ ! -f "$dir/$rel" ] && [ -n "${listed[$id]:-}" ]; then
               git -C "$dir" checkout HEAD -- "$rel"
               restored=$((restored + 1))
             fi
