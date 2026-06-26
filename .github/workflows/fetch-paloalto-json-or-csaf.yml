@@ -70,12 +70,17 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} $(find ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list -name "*.json" | xargs -I {} basename {} .json | tr '\n' ' ')
 
-      # vuls-data-update skips advisories whose per-advisory endpoint returns 404
-      # (an upstream regression on ~40 older advisories). Those files would then be
-      # dropped from this commit. Restore the last-known-good copy from history for any
-      # advisory that is still listed upstream but missing from the freshly-fetched tree,
-      # so the dataset stays complete instead of losing the 404'd advisories.
+      # vuls-data-update's json fetcher skips advisories whose per-advisory endpoint
+      # returns 404 (an upstream regression on ~40 older advisories). Those files would
+      # then be dropped from this commit. Restore the last-known-good copy from history
+      # for any advisory that is still listed upstream but missing from the freshly-fetched
+      # tree, so the dataset stays complete instead of losing the 404'd advisories.
+      #
+      # json only: csaf returns 404 for the normal "no CSAF generated for this advisory"
+      # state (not a regression), so restoring csaf files from history would resurrect
+      # intentionally-absent documents and prevent expected deletions.
       - name: Restore advisories dropped by upstream 404 (recover last-known-good from history)
+        if: ${{ inputs.target == 'paloalto-json' }}
         shell: bash
         run: |
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
