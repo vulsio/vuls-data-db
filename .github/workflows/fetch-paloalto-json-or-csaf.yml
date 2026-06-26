@@ -84,6 +84,11 @@ jobs:
         shell: bash
         run: |
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
+          # Nothing to recover from on a freshly-initialized repo with no commits yet.
+          if ! git -C "$dir" rev-parse --verify -q HEAD >/dev/null; then
+            echo "no HEAD commit in $dir; nothing to restore"
+            exit 0
+          fi
           # Build the set of currently-listed advisory IDs once for O(1) membership.
           declare -A listed
           while IFS= read -r id; do
@@ -93,7 +98,7 @@ jobs:
           while IFS= read -r rel; do
             id="$(basename "$rel" .json)"
             if [ ! -f "$dir/$rel" ] && [ -n "${listed[$id]:-}" ]; then
-              git -C "$dir" checkout HEAD -- "$rel"
+              git -C "$dir" restore --source=HEAD -- "$rel"
               restored=$((restored + 1))
             fi
           done < <(git -C "$dir" ls-tree -r --name-only HEAD -- '*.json')
