@@ -96,7 +96,7 @@ jobs:
               git -C "$dir" checkout HEAD -- "$rel"
               restored=$((restored + 1))
             fi
-          done < <(git -C "$dir" ls-tree -r --name-only HEAD | grep -E '\.json$')
+          done < <(git -C "$dir" ls-tree -r --name-only HEAD -- '*.json')
           echo "restored ${restored} advisories dropped by upstream 404 (recovered last-known-good from HEAD)"
 
       - name: Set Git remote
