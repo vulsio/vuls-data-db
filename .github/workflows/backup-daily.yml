@@ -22,6 +22,7 @@ jobs:
           - vuls-data-extracted-arch
           - vuls-data-extracted-cargo-ghsa
           - vuls-data-extracted-cisa-kev
+          - vuls-data-extracted-cisco-json
           - vuls-data-extracted-debian-security-tracker-salsa
           - vuls-data-extracted-eol
           - vuls-data-extracted-enisa-euvd-list
@@ -48,6 +49,7 @@ jobs:
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-nvd-feed-cve-v2
           - vuls-data-extracted-oracle-linux
+          - vuls-data-extracted-paloalto-json
           - vuls-data-extracted-redhat-cve
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
