@@ -49,6 +49,7 @@ jobs:
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-nvd-feed-cve-v2
           - vuls-data-extracted-oracle-linux
+          - vuls-data-extracted-paloalto-json
           - vuls-data-extracted-redhat-cve
           - vuls-data-extracted-redhat-csaf
           - vuls-data-extracted-redhat-csaf-rhel
