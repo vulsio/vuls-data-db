@@ -101,6 +101,7 @@ on:
           # - nvd-feed-cpematch-v2
           - oracle-linux
           # - oss-fuzz-osv
+          - paloalto-json
           # - perl-db
           # - pip-ghsa
           # - pip-glsa
