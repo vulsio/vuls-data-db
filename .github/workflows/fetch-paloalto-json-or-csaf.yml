@@ -70,6 +70,25 @@ jobs:
       - name: Fetch
         run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} $(find ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list -name "*.json" | xargs -I {} basename {} .json | tr '\n' ' ')
 
+      # vuls-data-update skips advisories whose per-advisory endpoint returns 404
+      # (an upstream regression on ~40 older advisories). Those files would then be
+      # dropped from this commit. Restore the last-known-good copy from history for any
+      # advisory that is still listed upstream but missing from the freshly-fetched tree,
+      # so the dataset stays complete instead of losing the 404'd advisories.
+      - name: Restore advisories dropped by upstream 404 (recover last-known-good from history)
+        run: |
+          dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
+          list_ids="$(find "ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list" -name '*.json' -exec basename {} .json \; | sort -u)"
+          restored=0
+          while read -r rel; do
+            id="$(basename "$rel" .json)"
+            if [ ! -f "$dir/$rel" ] && printf '%s\n' "$list_ids" | grep -qxF "$id"; then
+              git -C "$dir" checkout HEAD -- "$rel"
+              restored=$((restored + 1))
+            fi
+          done < <(git -C "$dir" ls-tree -r --name-only HEAD | grep -E '\.json$')
+          echo "restored ${restored} advisories dropped by upstream 404 (recovered last-known-good from HEAD)"
+
       - name: Set Git remote
         run: |
           if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} remote | grep -q "^origin$"; then
