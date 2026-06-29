@@ -163,11 +163,6 @@ jobs:
             allow["$line"]=1
           done <<< "${KNOWN_404_IDS}"
 
-          # Escape a value before embedding it in a ::warning::/::error:: workflow command.
-          # Advisory IDs are well-formed, but they originate from filenames / list content,
-          # so neutralise any %, CR or LF defensively (GitHub Actions command escaping).
-          esc() { local s=${1//'%'/%25}; s=${s//$'\r'/%0D}; s=${s//$'\n'/%0A}; printf '%s' "$s"; }
-
           # IDs currently listed upstream (vuls-data-raw-paloalto-list).
           declare -A listed
           while IFS= read -r f; do
@@ -200,7 +195,7 @@ jobs:
             fi
           done
           if [ "${#unexpected[@]}" -gt 0 ]; then
-            printf '::error::paloalto-json: %d advisory(ies) listed upstream but missing from the fetch and NOT in the known-404 allowlist: %s\n' "${#unexpected[@]}" "$(esc "${unexpected[*]}")"
+            printf '::error::paloalto-json: %d advisory(ies) listed upstream but missing from the fetch and NOT in the known-404 allowlist: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
             echo "If these are genuinely new upstream 404s, add them to KNOWN_404_IDS; otherwise this is a fetch regression."
             exit 1
           fi
@@ -209,16 +204,16 @@ jobs:
           restored=0
           for id in "${!allow[@]}"; do
             if [ -n "${present[$id]:-}" ]; then
-              echo "::warning::paloalto-json $(esc "$id"): upstream 404 healed (fetched again); remove it from KNOWN_404_IDS."
+              echo "::warning::paloalto-json ${id}: upstream 404 healed (fetched again); remove it from KNOWN_404_IDS."
             elif [ -z "${listed[$id]:-}" ]; then
-              echo "::warning::paloalto-json $(esc "$id"): no longer listed upstream (delisted); remove it from KNOWN_404_IDS and let the deletion through."
+              echo "::warning::paloalto-json ${id}: no longer listed upstream (delisted); remove it from KNOWN_404_IDS and let the deletion through."
             else
               rel="${srcpath[$id]:-}"
               if [ -z "$rel" ]; then
                 # Allowlisted, still listed, dropped by the fetch, yet not in the restore
                 # source either: we cannot keep the dataset complete -> fail, don't commit
                 # a silently-incomplete tree.
-                echo "::error::paloalto-json $(esc "$id"): allowlisted and listed-but-missing, but absent from ${RESTORE_SOURCE}; cannot restore (dataset would be incomplete)."
+                echo "::error::paloalto-json ${id}: allowlisted and listed-but-missing, but absent from ${RESTORE_SOURCE}; cannot restore (dataset would be incomplete)."
                 exit 1
               fi
               # Restore to both the index and the worktree so the recovered file is
