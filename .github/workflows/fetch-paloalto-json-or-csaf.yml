@@ -153,17 +153,25 @@ jobs:
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
           list="ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list"
 
-          # Resolve the restore source. A missing HEAD just means a freshly-initialized
-          # repo with no commits yet (nothing to recover) — but an explicit override that
-          # doesn't resolve is a mistake and must fail, not silently skip the recovery.
-          if ! git -C "$dir" rev-parse --verify -q "${RESTORE_SOURCE}^{commit}" >/dev/null; then
+          # Resolve the restore source to a concrete commit up front, so every later git
+          # call uses a hash and a user-supplied workflow_dispatch value that starts with
+          # "-" can't be mistaken for an option (--end-of-options guards the resolve itself).
+          # A missing HEAD just means a fresh repo (nothing to restore); any other source
+          # that doesn't resolve fails loudly.
+          #
+          # Caveat: the default is a pinned historical commit, so if truncate.yml ever gc's
+          # it out of this tag's history the step hard-fails. That is intentional — re-point
+          # restore_source (and its input default) at a good commit that still carries the
+          # advisories, rather than silently falling back and restoring nothing.
+          if ! resolved=$(git -C "$dir" rev-parse --verify -q --end-of-options "${RESTORE_SOURCE}^{commit}"); then
             if [ "$RESTORE_SOURCE" = "HEAD" ]; then
               echo "no HEAD commit in $dir yet; nothing to restore"
               exit 0
             fi
-            echo "::error::restore_source '${RESTORE_SOURCE}' is not a valid commit in $dir"
+            echo "::error::restore_source '${RESTORE_SOURCE}' is not a valid commit in $dir (if it is the pinned default, truncate.yml may have gc'd it — re-point it at a good commit)"
             exit 1
           fi
+          RESTORE_SOURCE="$resolved"
 
           # Allowlist of known-404 IDs.
           declare -A allow
