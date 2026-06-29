@@ -6,11 +6,6 @@ on:
       target:
         required: true
         type: string
-      restore_source:
-        description: "commit-ish to restore the known-404 advisories from. Defaults to the last commit before the per-advisory-404 fetch dropped them (the canonical last-known-good snapshot of these frozen advisories); override only if a different source is ever needed."
-        required: false
-        type: string
-        default: f00f2226feef378cfacd24819912ebad7b0ac38a
   workflow_dispatch:
     inputs:
       target:
@@ -19,11 +14,6 @@ on:
         options:
           - paloalto-json
           - paloalto-csaf
-      restore_source:
-        description: "commit-ish to restore the known-404 advisories from. Defaults to the last commit before the per-advisory-404 fetch dropped them (the canonical last-known-good snapshot of these frozen advisories); override only if a different source is ever needed."
-        required: false
-        type: string
-        default: f00f2226feef378cfacd24819912ebad7b0ac38a
 
 permissions: {}
 
@@ -143,35 +133,25 @@ jobs:
             PAN-SA-2019-0013
             PAN-SA-2022-0006
             PAN-SA-2022-0007
-          # Commit to restore the 404'd advisories from. Defaults (via restore_source) to
-          # the last commit before the per-advisory-404 fetch dropped these advisories —
-          # the canonical last-known-good snapshot of this frozen content — so every run
-          # restores it deterministically regardless of what HEAD currently holds.
-          RESTORE_SOURCE: ${{ inputs.restore_source }}
+          # Fixed last-known-good snapshot to restore the 404'd advisories from: the last
+          # commit before the per-advisory-404 fetch dropped them (its child 3ad36dd deleted
+          # exactly the 41 files). The content is frozen upstream, so a pinned snapshot is
+          # the canonical source and every run restores it deterministically regardless of
+          # what HEAD currently holds. Pinned rather than an input because it is never a
+          # human-supplied value; bump it here if it ever needs to change.
+          RESTORE_SOURCE: f00f2226feef378cfacd24819912ebad7b0ac38a
         run: |
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
           list="ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list"
 
-          # Resolve the restore source to a concrete commit up front, so every later git
-          # call uses a hash and a user-supplied workflow_dispatch value that starts with
-          # "-" can't be mistaken for an option (--end-of-options guards the resolve itself).
-          # A missing HEAD just means a fresh repo (nothing to restore); any other source
-          # that doesn't resolve fails loudly.
-          #
-          # Caveat: the default is a pinned historical commit, so if truncate.yml ever gc's
-          # it out of this tag's history the step hard-fails. That is intentional — re-point
-          # restore_source (and its input default) at a good commit that still carries the
-          # advisories, rather than silently falling back and restoring nothing.
-          if ! resolved=$(git -C "$dir" rev-parse --verify -q --end-of-options "${RESTORE_SOURCE}^{commit}"); then
-            if [ "$RESTORE_SOURCE" = "HEAD" ]; then
-              echo "no HEAD commit in $dir yet; nothing to restore"
-              exit 0
-            fi
-            echo "::error::restore_source '${RESTORE_SOURCE}' is not a valid commit in $dir (if it is the pinned default, truncate.yml may have gc'd it — re-point it at a good commit)"
+          # The snapshot must still be present in history. If truncate.yml ever gc's it out
+          # of this tag's history the step hard-fails — intentionally: re-point RESTORE_SOURCE
+          # at a good commit that still carries the advisories rather than restoring nothing.
+          if ! git -C "$dir" rev-parse --verify -q "${RESTORE_SOURCE}^{commit}" >/dev/null; then
+            echo "::error::restore snapshot ${RESTORE_SOURCE} is not present in $dir (gc'd out of history?); re-point RESTORE_SOURCE at a good commit"
             exit 1
           fi
-          RESTORE_SOURCE="$resolved"
 
           # Allowlist of known-404 IDs.
           declare -A allow
