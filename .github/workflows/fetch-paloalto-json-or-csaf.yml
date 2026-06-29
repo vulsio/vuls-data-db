@@ -6,6 +6,11 @@ on:
       target:
         required: true
         type: string
+      restore_source:
+        description: "commit-ish to restore the known-404 advisories from. Defaults to the last commit before the per-advisory-404 fetch dropped them (the canonical last-known-good snapshot of these frozen advisories); override only if a different source is ever needed."
+        required: false
+        type: string
+        default: f00f2226feef378cfacd24819912ebad7b0ac38a
   workflow_dispatch:
     inputs:
       target:
@@ -14,6 +19,11 @@ on:
         options:
           - paloalto-json
           - paloalto-csaf
+      restore_source:
+        description: "commit-ish to restore the known-404 advisories from. Defaults to the last commit before the per-advisory-404 fetch dropped them (the canonical last-known-good snapshot of these frozen advisories); override only if a different source is ever needed."
+        required: false
+        type: string
+        default: f00f2226feef378cfacd24819912ebad7b0ac38a
 
 permissions: {}
 
@@ -133,18 +143,26 @@ jobs:
             PAN-SA-2019-0013
             PAN-SA-2022-0006
             PAN-SA-2022-0007
-          # Commit to restore the 404'd advisories from. HEAD in steady state (each run
-          # re-commits them, so HEAD stays last-known-good).
-          RESTORE_SOURCE: HEAD
+          # Commit to restore the 404'd advisories from. Defaults (via restore_source) to
+          # the last commit before the per-advisory-404 fetch dropped these advisories —
+          # the canonical last-known-good snapshot of this frozen content — so every run
+          # restores it deterministically regardless of what HEAD currently holds.
+          RESTORE_SOURCE: ${{ inputs.restore_source }}
         run: |
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
           list="ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list"
 
-          # Nothing to recover from on a freshly-initialized repo with no commits yet.
+          # Resolve the restore source. A missing HEAD just means a freshly-initialized
+          # repo with no commits yet (nothing to recover) — but an explicit override that
+          # doesn't resolve is a mistake and must fail, not silently skip the recovery.
           if ! git -C "$dir" rev-parse --verify -q "${RESTORE_SOURCE}^{commit}" >/dev/null; then
-            echo "no '${RESTORE_SOURCE}' commit in $dir; nothing to restore"
-            exit 0
+            if [ "$RESTORE_SOURCE" = "HEAD" ]; then
+              echo "no HEAD commit in $dir yet; nothing to restore"
+              exit 0
+            fi
+            echo "::error::restore_source '${RESTORE_SOURCE}' is not a valid commit in $dir"
+            exit 1
           fi
 
           # Allowlist of known-404 IDs.
