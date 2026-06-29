@@ -190,17 +190,23 @@ jobs:
             srcpath["$(basename "$rel" .json)"]="$rel"
           done < <(git -C "$dir" ls-tree -r --name-only "$RESTORE_SOURCE" -- '*.json')
 
-          restored=0
-          unexpected=()
-
           # Unexpected drop: listed upstream, missing from the fetch, NOT allowlisted.
+          # Fail fast — if this trips, the run is dying regardless, so don't bother
+          # restoring anything first.
+          unexpected=()
           for id in "${!listed[@]}"; do
             if [ -z "${present[$id]:-}" ] && [ -z "${allow[$id]:-}" ]; then
               unexpected+=("$id")
             fi
           done
+          if [ "${#unexpected[@]}" -gt 0 ]; then
+            printf '::error::paloalto-json: %d advisory(ies) listed upstream but missing from the fetch and NOT in the known-404 allowlist: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
+            echo "If these are genuinely new upstream 404s, add them to KNOWN_404_IDS; otherwise this is a fetch regression."
+            exit 1
+          fi
 
           # Handle each allowlisted ID by its current state.
+          restored=0
           for id in "${!allow[@]}"; do
             if [ -n "${present[$id]:-}" ]; then
               echo "::warning::paloalto-json ${id}: upstream 404 healed (fetched again); remove it from KNOWN_404_IDS."
@@ -209,19 +215,16 @@ jobs:
             else
               rel="${srcpath[$id]:-}"
               if [ -z "$rel" ]; then
-                echo "::warning::paloalto-json ${id}: allowlisted but absent from ${RESTORE_SOURCE}; cannot restore."
-                continue
+                # Allowlisted, still listed, dropped by the fetch, yet not in the restore
+                # source either: we cannot keep the dataset complete -> fail, don't commit
+                # a silently-incomplete tree.
+                echo "::error::paloalto-json ${id}: allowlisted and listed-but-missing, but absent from ${RESTORE_SOURCE}; cannot restore (dataset would be incomplete)."
+                exit 1
               fi
               git -C "$dir" restore --source="$RESTORE_SOURCE" -- "$rel"
               restored=$((restored + 1))
             fi
           done
-
-          if [ "${#unexpected[@]}" -gt 0 ]; then
-            printf '::error::paloalto-json: %d advisory(ies) listed upstream but missing from the fetch and NOT in the known-404 allowlist: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
-            echo "If these are genuinely new upstream 404s, add them to KNOWN_404_IDS; otherwise this is a fetch regression."
-            exit 1
-          fi
 
           echo "restored ${restored} known-404 advisory(ies) from ${RESTORE_SOURCE}"
 
