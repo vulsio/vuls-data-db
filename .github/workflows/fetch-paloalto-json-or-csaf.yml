@@ -192,11 +192,15 @@ jobs:
           done < <(find "$dir" -path '*/.git' -prune -o -name '*.json' -print)
 
           # id -> path, taken from the restore source so the on-disk layout is honoured
-          # (advisories live under <year>/<id>.json, not a flat <id>.json).
+          # (advisories live under <year>/<id>.json, not a flat <id>.json). List every
+          # path and filter for .json in-shell: a `-- '*.json'` pathspec would not match,
+          # since its `*` does not cross `/`, so nested advisories would be missed.
           declare -A srcpath
           while IFS= read -r rel; do
-            srcpath["$(basename "$rel" .json)"]="$rel"
-          done < <(git -C "$dir" ls-tree -r --name-only "$RESTORE_SOURCE" -- '*.json')
+            case "$rel" in
+              *.json) srcpath["$(basename "$rel" .json)"]="$rel" ;;
+            esac
+          done < <(git -C "$dir" ls-tree -r --name-only "$RESTORE_SOURCE")
 
           # Unexpected drop: listed upstream, missing from the fetch, NOT allowlisted.
           # Fail fast — if this trips, the run is dying regardless, so don't bother
