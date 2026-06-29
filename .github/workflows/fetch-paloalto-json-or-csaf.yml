@@ -153,14 +153,11 @@ jobs:
             exit 1
           fi
 
-          # Allowlist of known-404 IDs. Strip an inline/full-line '#' comment first,
-          # then drop surrounding whitespace (incl. a trailing CR, so a CRLF-edited
-          # block still matches) and skip blanks — so KNOWN_404_IDS stays safe to edit,
-          # including inline notes like 'PAN-SA-2016-0006 # delisted?'. (Advisory IDs
-          # carry no internal whitespace, so removing all of it is just a trim here.)
+          # Allowlist of known-404 IDs. Drop surrounding whitespace (incl. a trailing
+          # CR, so a CRLF-edited block still matches) and skip blank lines. Advisory
+          # IDs carry no internal whitespace, so removing all of it is just a trim.
           declare -A allow
           while IFS= read -r line; do
-            line="${line%%#*}"
             line="${line//[[:space:]]/}"
             [ -n "$line" ] || continue
             allow["$line"]=1
