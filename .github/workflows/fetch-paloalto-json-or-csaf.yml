@@ -71,38 +71,141 @@ jobs:
         run: vuls-data-update fetch ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} $(find ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list -name "*.json" | xargs -I {} basename {} .json | tr '\n' ' ')
 
       # vuls-data-update's json fetcher skips advisories whose per-advisory endpoint
-      # returns 404 (an upstream regression on ~40 older advisories). Those files would
-      # then be dropped from this commit. Restore the last-known-good copy from history
-      # for any advisory that is still listed upstream but missing from the freshly-fetched
-      # tree, so the dataset stays complete instead of losing the 404'd advisories.
+      # returns a known, stable upstream 404 (a regression on ~40 older advisories;
+      # see the PSIRT report linked in the PR). Those files would otherwise be dropped
+      # from this commit, so restore the last-known-good copy from history — but ONLY
+      # for the allowlisted known-404 IDs. Any OTHER advisory that is listed upstream
+      # yet missing from the fetch is treated as unexpected breakage and fails the job,
+      # so a real fetch regression is never silently papered over with stale data.
       #
       # json only: csaf returns 404 for the normal "no CSAF generated for this advisory"
       # state (not a regression), so restoring csaf files from history would resurrect
       # intentionally-absent documents and prevent expected deletions.
-      - name: Restore advisories dropped by upstream 404 (recover last-known-good from history)
+      - name: Restore advisories dropped by upstream 404 (allowlisted known-404 only)
         if: ${{ inputs.target == 'paloalto-json' }}
         shell: bash
+        env:
+          # Source-controlled allowlist of advisories whose per-advisory json endpoint
+          # returns a known, stable 404. Keep it honest:
+          #   - a NEW listed-but-missing advisory not in this list trips `exit 1` below
+          #     (a human then adds it here);
+          #   - an ID whose 404 heals, or that is delisted upstream, emits a ::warning::
+          #     (a human then removes it).
+          KNOWN_404_IDS: |
+            CVE-2022-42889
+            PAN-SA-2014-0001
+            PAN-SA-2014-0002
+            PAN-SA-2014-0004
+            PAN-SA-2014-0006
+            PAN-SA-2015-0003
+            PAN-SA-2015-0005
+            PAN-SA-2015-0006
+            PAN-SA-2016-0006
+            PAN-SA-2016-0007
+            PAN-SA-2016-0008
+            PAN-SA-2016-0010
+            PAN-SA-2016-0011
+            PAN-SA-2016-0013
+            PAN-SA-2016-0014
+            PAN-SA-2016-0015
+            PAN-SA-2016-0016
+            PAN-SA-2016-0017
+            PAN-SA-2016-0018
+            PAN-SA-2016-0019
+            PAN-SA-2016-0020
+            PAN-SA-2016-0022
+            PAN-SA-2016-0023
+            PAN-SA-2016-0024
+            PAN-SA-2016-0025
+            PAN-SA-2016-0026
+            PAN-SA-2016-0028
+            PAN-SA-2016-0029
+            PAN-SA-2016-0030
+            PAN-SA-2016-0031
+            PAN-SA-2016-0032
+            PAN-SA-2016-0033
+            PAN-SA-2018-0001
+            PAN-SA-2018-0011
+            PAN-SA-2018-0015
+            PAN-SA-2019-0004
+            PAN-SA-2019-0011
+            PAN-SA-2019-0012
+            PAN-SA-2019-0013
+            PAN-SA-2022-0006
+            PAN-SA-2022-0007
+          # Commit to restore the 404'd advisories from. HEAD in steady state (each run
+          # re-commits them, so HEAD stays last-known-good).
+          RESTORE_SOURCE: HEAD
         run: |
+          set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
+          list="ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list"
+
           # Nothing to recover from on a freshly-initialized repo with no commits yet.
-          if ! git -C "$dir" rev-parse --verify -q HEAD >/dev/null; then
-            echo "no HEAD commit in $dir; nothing to restore"
+          if ! git -C "$dir" rev-parse --verify -q "${RESTORE_SOURCE}^{commit}" >/dev/null; then
+            echo "no '${RESTORE_SOURCE}' commit in $dir; nothing to restore"
             exit 0
           fi
-          # Build the set of currently-listed advisory IDs once for O(1) membership.
-          declare -A listed
+
+          # Allowlist of known-404 IDs.
+          declare -A allow
           while IFS= read -r id; do
-            listed["$id"]=1
-          done < <(find "ghcr.io/${{ github.repository }}/vuls-data-raw-paloalto-list" -name '*.json' -exec basename {} .json \;)
-          restored=0
+            [ -n "$id" ] && allow["$id"]=1
+          done <<< "${KNOWN_404_IDS}"
+
+          # IDs currently listed upstream (vuls-data-raw-paloalto-list).
+          declare -A listed
+          while IFS= read -r f; do
+            listed["$(basename "$f" .json)"]=1
+          done < <(find "$list" -path '*/.git' -prune -o -name '*.json' -print)
+
+          # IDs present in the freshly-fetched tree (after the fetcher dropped 404s).
+          declare -A present
+          while IFS= read -r f; do
+            present["$(basename "$f" .json)"]=1
+          done < <(find "$dir" -path '*/.git' -prune -o -name '*.json' -print)
+
+          # id -> path, taken from the restore source so the on-disk layout is honoured
+          # (advisories live under <year>/<id>.json, not a flat <id>.json).
+          declare -A srcpath
           while IFS= read -r rel; do
-            id="$(basename "$rel" .json)"
-            if [ ! -f "$dir/$rel" ] && [ -n "${listed[$id]:-}" ]; then
-              git -C "$dir" restore --source=HEAD -- "$rel"
+            srcpath["$(basename "$rel" .json)"]="$rel"
+          done < <(git -C "$dir" ls-tree -r --name-only "$RESTORE_SOURCE" -- '*.json')
+
+          restored=0
+          unexpected=()
+
+          # Unexpected drop: listed upstream, missing from the fetch, NOT allowlisted.
+          for id in "${!listed[@]}"; do
+            if [ -z "${present[$id]:-}" ] && [ -z "${allow[$id]:-}" ]; then
+              unexpected+=("$id")
+            fi
+          done
+
+          # Handle each allowlisted ID by its current state.
+          for id in "${!allow[@]}"; do
+            if [ -n "${present[$id]:-}" ]; then
+              echo "::warning::paloalto-json ${id}: upstream 404 healed (fetched again); remove it from KNOWN_404_IDS."
+            elif [ -z "${listed[$id]:-}" ]; then
+              echo "::warning::paloalto-json ${id}: no longer listed upstream (delisted); remove it from KNOWN_404_IDS and let the deletion through."
+            else
+              rel="${srcpath[$id]:-}"
+              if [ -z "$rel" ]; then
+                echo "::warning::paloalto-json ${id}: allowlisted but absent from ${RESTORE_SOURCE}; cannot restore."
+                continue
+              fi
+              git -C "$dir" restore --source="$RESTORE_SOURCE" -- "$rel"
               restored=$((restored + 1))
             fi
-          done < <(git -C "$dir" ls-tree -r --name-only HEAD -- '*.json')
-          echo "restored ${restored} advisories dropped by upstream 404 (recovered last-known-good from HEAD)"
+          done
+
+          if [ "${#unexpected[@]}" -gt 0 ]; then
+            printf '::error::paloalto-json: %d advisory(ies) listed upstream but missing from the fetch and NOT in the known-404 allowlist: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
+            echo "If these are genuinely new upstream 404s, add them to KNOWN_404_IDS; otherwise this is a fetch regression."
+            exit 1
+          fi
+
+          echo "restored ${restored} known-404 advisory(ies) from ${RESTORE_SOURCE}"
 
       - name: Set Git remote
         run: |
