@@ -213,7 +213,9 @@ jobs:
                 echo "::error::paloalto-json ${id}: allowlisted and listed-but-missing, but absent from ${RESTORE_SOURCE}; cannot restore (dataset would be incomplete)."
                 exit 1
               fi
-              git -C "$dir" restore --source="$RESTORE_SOURCE" -- "$rel"
+              # Restore to both the index and the worktree so the recovered file is
+              # committed even if the later Commit step's staging changes.
+              git -C "$dir" restore --staged --worktree --source="$RESTORE_SOURCE" -- "$rel"
               restored=$((restored + 1))
             fi
           done
