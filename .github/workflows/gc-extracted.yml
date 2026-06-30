@@ -70,6 +70,12 @@ jobs:
           - tag: vuls-data-extracted-fedora-api
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-fortinet-csaf
+            pack-threads: 2
+            pack-windowMemory: 4g
+          - tag: vuls-data-extracted-fortinet-cvrf
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-freebsd
             pack-threads: 2
             pack-windowMemory: 4g

@@ -51,8 +51,8 @@ on:
           - fedora-api
           # - fedora-updateinfo
           # - fortinet-handmade
-          # - fortinet-csaf
-          # - fortinet-cvrf
+          - fortinet-csaf
+          - fortinet-cvrf
           - freebsd
           # - gentoo
           # - ghactions-osv
