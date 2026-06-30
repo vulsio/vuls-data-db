@@ -41,6 +41,8 @@ jobs:
           - vuls-data-extracted-exploit-inthewild
           - vuls-data-extracted-exploit-trickest
           - vuls-data-extracted-fedora-api
+          - vuls-data-extracted-fortinet-csaf
+          - vuls-data-extracted-fortinet-cvrf
           - vuls-data-extracted-freebsd
           - vuls-data-extracted-jvn-feed-detail
           - vuls-data-extracted-jvn-feed-rss

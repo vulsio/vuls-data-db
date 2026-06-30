@@ -45,6 +45,8 @@ on:
           - vuls-data-extracted-enisa-kev
           - vuls-data-extracted-epss
           - vuls-data-extracted-fedora-api
+          - vuls-data-extracted-fortinet-csaf
+          - vuls-data-extracted-fortinet-cvrf
           - vuls-data-extracted-freebsd
           - vuls-data-extracted-jvn-feed-detail
           - vuls-data-extracted-jvn-feed-rss

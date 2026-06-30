@@ -23,6 +23,8 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-exploit-inthewild BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-exploit-trickest BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-fedora-api BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-fortinet-csaf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-fortinet-cvrf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-jvn-feed-rss BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-bulletin BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-cvrf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
