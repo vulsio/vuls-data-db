@@ -64,19 +64,19 @@ jobs:
           while IFS= read -r job_name; do
             [[ -n "$job_name" ]] || continue
             job_url=$(jq -r --arg name "$job_name" \
-              '.jobs[] | select(.name == $name) | .url' <<< "$run_json" | head -1)
+              'first(.jobs[] | select(.name == $name) | .url) // empty' <<< "$run_json")
             [[ -n "$job_url" && "$job_url" != "null" ]] || job_url="$url"
             JOB_URL["$job_name"]="$job_url"
           done <<< "$failed_jobs"
 
-          # Escape markdown link-text metacharacters ( \ [ ] ) so a job name
-          # containing them cannot break the generated link.
+          # Escape the markdown link-text metacharacters backslash, [ and ]
+          # so a job name containing them cannot break the generated link.
           md_escape() { printf '%s' "$1" | sed 's/[][\\]/\\&/g'; }
 
           # Quick-jump list linking each failed job to its log page.
           while IFS= read -r job_name; do
             [[ -n "$job_name" ]] || continue
-            echo "- [$(md_escape "$job_name")](${JOB_URL[$job_name]})" >> "$GITHUB_STEP_SUMMARY"
+            echo "- [$(md_escape "$job_name")](${JOB_URL["$job_name"]})" >> "$GITHUB_STEP_SUMMARY"
           done <<< "$failed_jobs"
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
@@ -160,7 +160,7 @@ jobs:
 
           while IFS= read -r job_name; do
             # Reuse the precomputed log-page link (falls back to the run URL).
-            job_url="${JOB_URL[$job_name]:-$url}"
+            job_url="${JOB_URL["$job_name"]:-$url}"
 
             echo "---" >> "$GITHUB_STEP_SUMMARY"
             echo "#### [$(md_escape "$job_name")](${job_url})" >> "$GITHUB_STEP_SUMMARY"
