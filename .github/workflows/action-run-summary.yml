@@ -56,6 +56,16 @@ jobs:
           echo "### ❌ Failed jobs (${n_failed})" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
+          # Quick-jump list linking each failed job to its log page.
+          while IFS= read -r job_name; do
+            [[ -n "$job_name" ]] || continue
+            job_url=$(echo "$run_json" | jq -r --arg name "$job_name" \
+              '.jobs[] | select(.name == $name) | .url' | head -1)
+            [[ -n "$job_url" && "$job_url" != "null" ]] || job_url="$url"
+            echo "- [${job_name}](${job_url})" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$failed_jobs"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
           # --- get failed logs ----------------------------------------------------
           log_file=$(mktemp)
           log_err=$(mktemp)
@@ -135,8 +145,13 @@ jobs:
           rm -f "$log_err"
 
           while IFS= read -r job_name; do
+            # Direct link to the failed job's log page (falls back to the run URL).
+            job_url=$(echo "$run_json" | jq -r --arg name "$job_name" \
+              '.jobs[] | select(.name == $name) | .url' | head -1)
+            [[ -n "$job_url" && "$job_url" != "null" ]] || job_url="$url"
+
             echo "---" >> "$GITHUB_STEP_SUMMARY"
-            echo "#### ${job_name}" >> "$GITHUB_STEP_SUMMARY"
+            echo "#### [${job_name}](${job_url})" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
 
             if [[ ! -s "$log_file" ]]; then
