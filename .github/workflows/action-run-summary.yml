@@ -56,6 +56,30 @@ jobs:
           echo "### ❌ Failed jobs (${n_failed})" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
+          # Build a job-name → log-URL map once, so both the quick-jump list
+          # and the per-job headings can reuse it without re-parsing run_json
+          # per failed job. Feed run_json via a here-string (not echo | jq),
+          # which preserves the JSON exactly.
+          declare -A JOB_URL
+          while IFS= read -r job_name; do
+            [[ -n "$job_name" ]] || continue
+            job_url=$(jq -r --arg name "$job_name" \
+              'first(.jobs[] | select(.name == $name) | .url) // empty' <<< "$run_json")
+            [[ -n "$job_url" && "$job_url" != "null" ]] || job_url="$url"
+            JOB_URL["$job_name"]="$job_url"
+          done <<< "$failed_jobs"
+
+          # Escape the markdown link-text metacharacters backslash, [ and ]
+          # so a job name containing them cannot break the generated link.
+          md_escape() { printf '%s' "$1" | sed 's/[][\\]/\\&/g'; }
+
+          # Quick-jump list linking each failed job to its log page.
+          while IFS= read -r job_name; do
+            [[ -n "$job_name" ]] || continue
+            echo "- [$(md_escape "$job_name")](${JOB_URL["$job_name"]})" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$failed_jobs"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
           # --- get failed logs ----------------------------------------------------
           log_file=$(mktemp)
           log_err=$(mktemp)
@@ -135,8 +159,11 @@ jobs:
           rm -f "$log_err"
 
           while IFS= read -r job_name; do
+            # Reuse the precomputed log-page link (falls back to the run URL).
+            job_url="${JOB_URL["$job_name"]:-$url}"
+
             echo "---" >> "$GITHUB_STEP_SUMMARY"
-            echo "#### ${job_name}" >> "$GITHUB_STEP_SUMMARY"
+            echo "#### [$(md_escape "$job_name")](${job_url})" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
 
             if [[ ! -s "$log_file" ]]; then
