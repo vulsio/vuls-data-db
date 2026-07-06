@@ -64,73 +64,363 @@ jobs:
       # advisories, ~376 CVEs losing coverage). Upstream inquiry:
       # https://bugs.almalinux.org/view.php?id=644
       #
-      # Keep this repository as the union of everything upstream has ever
-      # published (the HTML/OSV semantics): after the fetch rewrites the tree
-      # from the current feed, restore any file that a restore source still
-      # carries but the fresh fetch no longer does. Unlike paloalto-json there
-      # is no upstream list to validate against, so the check is looser: no
-      # allowlist, and upstream deletions never propagate on their own. If an
-      # advisory ever needs to be genuinely removed, delete it from the dotgit
-      # manually and it will stay gone only if it is also absent from HEAD and
-      # the pinned snapshots below.
+      # After the fetch rewrites the tree from the current feed, restore exactly
+      # the advisories in RESTORE_PATHS from the pinned pre-purge snapshots, so
+      # the repository keeps carrying everything upstream ever published (the
+      # HTML/OSV semantics) without ever restoring anything unlisted. Unlike
+      # paloalto-json there is no upstream list to validate against, so the
+      # pre-fetch HEAD plays that role instead: any file that HEAD carries but
+      # the fresh fetch dropped, and that is in neither list below, fails the
+      # job. A human then triages it:
+      #   - upstream re-curated again -> append the paths to RESTORE_PATHS (and,
+      #     if the content is not in the pinned snapshots, pin the parent of the
+      #     new purge commit as an additional RESTORE_SNAPSHOTS entry);
+      #   - a genuine upstream removal that should propagate -> add the path to
+      #     ACCEPTED_REMOVAL_PATHS and drop it again once it has left HEAD.
       - name: Restore advisories dropped from the upstream feed
         shell: bash
         env:
-          # Restore sources, first match wins; freshest content first.
-          #   - HEAD: the pre-fetch state (this step runs before Commit), so once
-          #     a file has been fetched or restored it stays protected.
+          # Pre-purge snapshots to restore RESTORE_PATHS from, first match wins;
+          # freshest content first:
           #   - 8255896a: parent of e64c5ca88, the last commit carrying the 143
           #     advisories dropped by the 2026-05-27 re-curation.
           #   - 593d3bca: parent of cb5d6bc44, the last commit carrying the 102
           #     advisories dropped by the 2025-11-26 re-curation.
-          # HEAD ∪ both snapshots ∪ current feed = the 511-advisory set the
-          # OSV export carries (verified 2026-07-06). The pinned snapshots only
-          # matter until their files are committed back once; after that HEAD
-          # alone keeps the union. If truncate.yml ever drops them from this
-          # tag's history the step hard-fails — re-point at commits that still
-          # carry the advisories rather than restoring nothing.
-          RESTORE_SOURCES: |
-            HEAD
+          # If truncate.yml ever drops them from this tag's history the step
+          # hard-fails - re-point at commits that still carry the advisories
+          # rather than restoring nothing.
+          RESTORE_SNAPSHOTS: |
             8255896abc588ec077d76d777120a42e10197c38
             593d3bca20cce143cc3e36a279764a604d2077c6
+          # The 245 advisories the two re-curations dropped from the feed
+          # (current feed + these = the 511-advisory set the OSV export carries
+          # for AlmaLinux 10, verified 2026-07-06). An entry that the feed
+          # carries again emits a warning to remove it here.
+          RESTORE_PATHS: |
+            10/ALSA/2025/ALSA-2025:10073.json
+            10/ALSA/2025/ALSA-2025:10195.json
+            10/ALSA/2025/ALSA-2025:10630.json
+            10/ALSA/2025/ALSA-2025:10635.json
+            10/ALSA/2025/ALSA-2025:10873.json
+            10/ALSA/2025/ALSA-2025:11401.json
+            10/ALSA/2025/ALSA-2025:11537.json
+            10/ALSA/2025/ALSA-2025:11797.json
+            10/ALSA/2025/ALSA-2025:11888.json
+            10/ALSA/2025/ALSA-2025:11933.json
+            10/ALSA/2025/ALSA-2025:12064.json
+            10/ALSA/2025/ALSA-2025:12188.json
+            10/ALSA/2025/ALSA-2025:12850.json
+            10/ALSA/2025/ALSA-2025:13429.json
+            10/ALSA/2025/ALSA-2025:13674.json
+            10/ALSA/2025/ALSA-2025:13944.json
+            10/ALSA/2025/ALSA-2025:14137.json
+            10/ALSA/2025/ALSA-2025:14417.json
+            10/ALSA/2025/ALSA-2025:14592.json
+            10/ALSA/2025/ALSA-2025:14625.json
+            10/ALSA/2025/ALSA-2025:14844.json
+            10/ALSA/2025/ALSA-2025:15020.json
+            10/ALSA/2025/ALSA-2025:16109.json
+            10/ALSA/2025/ALSA-2025:16115.json
+            10/ALSA/2025/ALSA-2025:16157.json
+            10/ALSA/2025/ALSA-2025:16428.json
+            10/ALSA/2025/ALSA-2025:16432.json
+            10/ALSA/2025/ALSA-2025:16441.json
+            10/ALSA/2025/ALSA-2025:17119.json
+            10/ALSA/2025/ALSA-2025:17429.json
+            10/ALSA/2025/ALSA-2025:18152.json
+            10/ALSA/2025/ALSA-2025:18153.json
+            10/ALSA/2025/ALSA-2025:18154.json
+            10/ALSA/2025/ALSA-2025:18320.json
+            10/ALSA/2025/ALSA-2025:18824.json
+            10/ALSA/2025/ALSA-2025:19156.json
+            10/ALSA/2025/ALSA-2025:19403.json
+            10/ALSA/2025/ALSA-2025:19435.json
+            10/ALSA/2025/ALSA-2025:19566.json
+            10/ALSA/2025/ALSA-2025:19675.json
+            10/ALSA/2025/ALSA-2025:19772.json
+            10/ALSA/2025/ALSA-2025:20095.json
+            10/ALSA/2025/ALSA-2025:20126.json
+            10/ALSA/2025/ALSA-2025:20145.json
+            10/ALSA/2025/ALSA-2025:20155.json
+            10/ALSA/2025/ALSA-2025:20181.json
+            10/ALSA/2025/ALSA-2025:20478.json
+            10/ALSA/2025/ALSA-2025:20983.json
+            10/ALSA/2025/ALSA-2025:20998.json
+            10/ALSA/2025/ALSA-2025:21002.json
+            10/ALSA/2025/ALSA-2025:21013.json
+            10/ALSA/2025/ALSA-2025:21015.json
+            10/ALSA/2025/ALSA-2025:21030.json
+            10/ALSA/2025/ALSA-2025:21032.json
+            10/ALSA/2025/ALSA-2025:21034.json
+            10/ALSA/2025/ALSA-2025:21035.json
+            10/ALSA/2025/ALSA-2025:21142.json
+            10/ALSA/2025/ALSA-2025:21248.json
+            10/ALSA/2025/ALSA-2025:21281.json
+            10/ALSA/2025/ALSA-2025:21691.json
+            10/ALSA/2025/ALSA-2025:21843.json
+            10/ALSA/2025/ALSA-2025:21936.json
+            10/ALSA/2025/ALSA-2025:22012.json
+            10/ALSA/2025/ALSA-2025:22361.json
+            10/ALSA/2025/ALSA-2025:22394.json
+            10/ALSA/2025/ALSA-2025:23035.json
+            10/ALSA/2025/ALSA-2025:23083.json
+            10/ALSA/2025/ALSA-2025:23088.json
+            10/ALSA/2025/ALSA-2025:23294.json
+            10/ALSA/2025/ALSA-2025:23306.json
+            10/ALSA/2025/ALSA-2025:23479.json
+            10/ALSA/2025/ALSA-2025:23664.json
+            10/ALSA/2025/ALSA-2025:23667.json
+            10/ALSA/2025/ALSA-2025:23738.json
+            10/ALSA/2025/ALSA-2025:7457.json
+            10/ALSA/2025/ALSA-2025:7459.json
+            10/ALSA/2025/ALSA-2025:7462.json
+            10/ALSA/2025/ALSA-2025:7466.json
+            10/ALSA/2025/ALSA-2025:7467.json
+            10/ALSA/2025/ALSA-2025:7475.json
+            10/ALSA/2025/ALSA-2025:7476.json
+            10/ALSA/2025/ALSA-2025:7478.json
+            10/ALSA/2025/ALSA-2025:7482.json
+            10/ALSA/2025/ALSA-2025:7484.json
+            10/ALSA/2025/ALSA-2025:7489.json
+            10/ALSA/2025/ALSA-2025:7490.json
+            10/ALSA/2025/ALSA-2025:7494.json
+            10/ALSA/2025/ALSA-2025:7496.json
+            10/ALSA/2025/ALSA-2025:7497.json
+            10/ALSA/2025/ALSA-2025:7500.json
+            10/ALSA/2025/ALSA-2025:7502.json
+            10/ALSA/2025/ALSA-2025:7505.json
+            10/ALSA/2025/ALSA-2025:7506.json
+            10/ALSA/2025/ALSA-2025:7507.json
+            10/ALSA/2025/ALSA-2025:7508.json
+            10/ALSA/2025/ALSA-2025:7509.json
+            10/ALSA/2025/ALSA-2025:7510.json
+            10/ALSA/2025/ALSA-2025:7512.json
+            10/ALSA/2025/ALSA-2025:7517.json
+            10/ALSA/2025/ALSA-2025:7524.json
+            10/ALSA/2025/ALSA-2025:7592.json
+            10/ALSA/2025/ALSA-2025:7593.json
+            10/ALSA/2025/ALSA-2025:7599.json
+            10/ALSA/2025/ALSA-2025:7601.json
+            10/ALSA/2025/ALSA-2025:8047.json
+            10/ALSA/2025/ALSA-2025:8125.json
+            10/ALSA/2025/ALSA-2025:8135.json
+            10/ALSA/2025/ALSA-2025:8184.json
+            10/ALSA/2025/ALSA-2025:8196.json
+            10/ALSA/2025/ALSA-2025:8341.json
+            10/ALSA/2025/ALSA-2025:8550.json
+            10/ALSA/2025/ALSA-2025:8608.json
+            10/ALSA/2025/ALSA-2025:8636.json
+            10/ALSA/2025/ALSA-2025:8666.json
+            10/ALSA/2025/ALSA-2025:8814.json
+            10/ALSA/2025/ALSA-2025:8816.json
+            10/ALSA/2025/ALSA-2025:8915.json
+            10/ALSA/2025/ALSA-2025:9063.json
+            10/ALSA/2025/ALSA-2025:9120.json
+            10/ALSA/2025/ALSA-2025:9121.json
+            10/ALSA/2025/ALSA-2025:9148.json
+            10/ALSA/2025/ALSA-2025:9149.json
+            10/ALSA/2025/ALSA-2025:9151.json
+            10/ALSA/2025/ALSA-2025:9156.json
+            10/ALSA/2025/ALSA-2025:9304.json
+            10/ALSA/2025/ALSA-2025:9307.json
+            10/ALSA/2025/ALSA-2025:9317.json
+            10/ALSA/2025/ALSA-2025:9328.json
+            10/ALSA/2025/ALSA-2025:9418.json
+            10/ALSA/2025/ALSA-2025:9420.json
+            10/ALSA/2025/ALSA-2025:9421.json
+            10/ALSA/2025/ALSA-2025:9466.json
+            10/ALSA/2025/ALSA-2025:9623.json
+            10/ALSA/2025/ALSA-2025:A003.json
+            10/ALSA/2025/ALSA-2025:A006.json
+            10/ALSA/2026/ALSA-2026:0002.json
+            10/ALSA/2026/ALSA-2026:0025.json
+            10/ALSA/2026/ALSA-2026:0108.json
+            10/ALSA/2026/ALSA-2026:0237.json
+            10/ALSA/2026/ALSA-2026:0436.json
+            10/ALSA/2026/ALSA-2026:0594.json
+            10/ALSA/2026/ALSA-2026:0606.json
+            10/ALSA/2026/ALSA-2026:0668.json
+            10/ALSA/2026/ALSA-2026:0697.json
+            10/ALSA/2026/ALSA-2026:0770.json
+            10/ALSA/2026/ALSA-2026:0845.json
+            10/ALSA/2026/ALSA-2026:0928.json
+            10/ALSA/2026/ALSA-2026:0933.json
+            10/ALSA/2026/ALSA-2026:0975.json
+            10/ALSA/2026/ALSA-2026:10223.json
+            10/ALSA/2026/ALSA-2026:10707.json
+            10/ALSA/2026/ALSA-2026:10758.json
+            10/ALSA/2026/ALSA-2026:10767.json
+            10/ALSA/2026/ALSA-2026:11352.json
+            10/ALSA/2026/ALSA-2026:11412.json
+            10/ALSA/2026/ALSA-2026:11413.json
+            10/ALSA/2026/ALSA-2026:12265.json
+            10/ALSA/2026/ALSA-2026:12285.json
+            10/ALSA/2026/ALSA-2026:12423.json
+            10/ALSA/2026/ALSA-2026:13380.json
+            10/ALSA/2026/ALSA-2026:13498.json
+            10/ALSA/2026/ALSA-2026:13515.json
+            10/ALSA/2026/ALSA-2026:13641.json
+            10/ALSA/2026/ALSA-2026:13642.json
+            10/ALSA/2026/ALSA-2026:13643.json
+            10/ALSA/2026/ALSA-2026:13644.json
+            10/ALSA/2026/ALSA-2026:1472.json
+            10/ALSA/2026/ALSA-2026:14790.json
+            10/ALSA/2026/ALSA-2026:15888.json
+            10/ALSA/2026/ALSA-2026:15969.json
+            10/ALSA/2026/ALSA-2026:1597.json
+            10/ALSA/2026/ALSA-2026:16014.json
+            10/ALSA/2026/ALSA-2026:1628.json
+            10/ALSA/2026/ALSA-2026:16692.json
+            10/ALSA/2026/ALSA-2026:1696.json
+            10/ALSA/2026/ALSA-2026:17075.json
+            10/ALSA/2026/ALSA-2026:1714.json
+            10/ALSA/2026/ALSA-2026:1715.json
+            10/ALSA/2026/ALSA-2026:18064.json
+            10/ALSA/2026/ALSA-2026:1825.json
+            10/ALSA/2026/ALSA-2026:1831.json
+            10/ALSA/2026/ALSA-2026:1837.json
+            10/ALSA/2026/ALSA-2026:1838.json
+            10/ALSA/2026/ALSA-2026:1907.json
+            10/ALSA/2026/ALSA-2026:2222.json
+            10/ALSA/2026/ALSA-2026:2230.json
+            10/ALSA/2026/ALSA-2026:2271.json
+            10/ALSA/2026/ALSA-2026:2286.json
+            10/ALSA/2026/ALSA-2026:2719.json
+            10/ALSA/2026/ALSA-2026:2914.json
+            10/ALSA/2026/ALSA-2026:3033.json
+            10/ALSA/2026/ALSA-2026:3035.json
+            10/ALSA/2026/ALSA-2026:3068.json
+            10/ALSA/2026/ALSA-2026:3092.json
+            10/ALSA/2026/ALSA-2026:3094.json
+            10/ALSA/2026/ALSA-2026:3297.json
+            10/ALSA/2026/ALSA-2026:3343.json
+            10/ALSA/2026/ALSA-2026:3361.json
+            10/ALSA/2026/ALSA-2026:3443.json
+            10/ALSA/2026/ALSA-2026:3476.json
+            10/ALSA/2026/ALSA-2026:3477.json
+            10/ALSA/2026/ALSA-2026:3517.json
+            10/ALSA/2026/ALSA-2026:3551.json
+            10/ALSA/2026/ALSA-2026:3752.json
+            10/ALSA/2026/ALSA-2026:3840.json
+            10/ALSA/2026/ALSA-2026:3864.json
+            10/ALSA/2026/ALSA-2026:3939.json
+            10/ALSA/2026/ALSA-2026:4164.json
+            10/ALSA/2026/ALSA-2026:4174.json
+            10/ALSA/2026/ALSA-2026:4450.json
+            10/ALSA/2026/ALSA-2026:4451.json
+            10/ALSA/2026/ALSA-2026:4453.json
+            10/ALSA/2026/ALSA-2026:4629.json
+            10/ALSA/2026/ALSA-2026:4717.json
+            10/ALSA/2026/ALSA-2026:5063.json
+            10/ALSA/2026/ALSA-2026:5145.json
+            10/ALSA/2026/ALSA-2026:5146.json
+            10/ALSA/2026/ALSA-2026:5931.json
+            10/ALSA/2026/ALSA-2026:5939.json
+            10/ALSA/2026/ALSA-2026:6259.json
+            10/ALSA/2026/ALSA-2026:6342.json
+            10/ALSA/2026/ALSA-2026:6344.json
+            10/ALSA/2026/ALSA-2026:6388.json
+            10/ALSA/2026/ALSA-2026:6463.json
+            10/ALSA/2026/ALSA-2026:6622.json
+            10/ALSA/2026/ALSA-2026:6631.json
+            10/ALSA/2026/ALSA-2026:6799.json
+            10/ALSA/2026/ALSA-2026:7005.json
+            10/ALSA/2026/ALSA-2026:7081.json
+            10/ALSA/2026/ALSA-2026:7666.json
+            10/ALSA/2026/ALSA-2026:7672.json
+            10/ALSA/2026/ALSA-2026:7680.json
+            10/ALSA/2026/ALSA-2026:7682.json
+            10/ALSA/2026/ALSA-2026:7992.json
+            10/ALSA/2026/ALSA-2026:8119.json
+            10/ALSA/2026/ALSA-2026:8458.json
+            10/ALSA/2026/ALSA-2026:8470.json
+            10/ALSA/2026/ALSA-2026:8472.json
+            10/ALSA/2026/ALSA-2026:8492.json
+            10/ALSA/2026/ALSA-2026:8842.json
+            10/ALSA/2026/ALSA-2026:8858.json
+            10/ALSA/2026/ALSA-2026:9638.json
+            10/ALSA/2026/ALSA-2026:9666.json
+            10/ALSA/2026/ALSA-2026:9689.json
+            10/ALSA/2026/ALSA-2026:9693.json
+          # Feed removals a human has accepted as genuine; the guard lets these
+          # deletions propagate instead of failing. Remove an entry once the
+          # file has left HEAD.
+          ACCEPTED_REMOVAL_PATHS: ""
         run: |
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata"
 
-          sources=()
+          snapshots=()
           while IFS= read -r line; do
             line="${line//[[:space:]]/}"
             [ -n "$line" ] || continue
             if ! git -C "$dir" rev-parse --verify -q "${line}^{commit}" >/dev/null; then
-              echo "::error::restore source ${line} is not present in $dir (gc'd out of history?); re-point RESTORE_SOURCES at a good commit"
+              echo "::error::restore snapshot ${line} is not present in $dir (gc'd out of history?); re-point RESTORE_SNAPSHOTS at a good commit"
               exit 1
             fi
-            sources+=("$line")
-          done <<< "${RESTORE_SOURCES}"
+            snapshots+=("$line")
+          done <<< "${RESTORE_SNAPSHOTS}"
+
+          declare -A restore accepted
+          while IFS= read -r line; do
+            line="${line//[[:space:]]/}"
+            [ -n "$line" ] || continue
+            restore["$line"]=1
+          done <<< "${RESTORE_PATHS}"
+          while IFS= read -r line; do
+            line="${line//[[:space:]]/}"
+            [ -n "$line" ] || continue
+            accepted["$line"]=1
+          done <<< "${ACCEPTED_REMOVAL_PATHS}"
+
+          # Unexpected drop: carried by the pre-fetch HEAD (this step runs
+          # before Commit), missing from the fresh fetch, in neither list.
+          # Fail fast - if this trips the run is dying regardless, so don't
+          # restore first.
+          unexpected=()
+          while IFS= read -r rel; do
+            case "$rel" in
+              *.json) ;;
+              *) continue ;;
+            esac
+            [ ! -e "$dir/$rel" ] || continue
+            [ -z "${restore[$rel]:-}" ] || continue
+            [ -z "${accepted[$rel]:-}" ] || continue
+            unexpected+=("$rel")
+          done < <(git -C "$dir" ls-tree -r --name-only HEAD)
+          if [ "${#unexpected[@]}" -gt 0 ]; then
+            printf '::error::alma-errata: %d advisory(ies) dropped from the feed but not in RESTORE_PATHS / ACCEPTED_REMOVAL_PATHS: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
+            echo "If upstream re-curated again, add them to RESTORE_PATHS; if the removals are genuine, add them to ACCEPTED_REMOVAL_PATHS."
+            exit 1
+          fi
 
           restored=0
-          for src in "${sources[@]}"; do
-            # Files the source carries but the fresh fetch did not write (and no
-            # earlier source has restored). List every path and filter for .json
-            # in-shell: a `-- '*.json'` pathspec would not match, since its `*`
-            # does not cross `/`, so nested advisories would be missed.
-            while IFS= read -r rel; do
-              case "$rel" in
-                *.json) ;;
-                *) continue ;;
-              esac
-              [ ! -e "$dir/$rel" ] || continue
-              # Restore to both the index and the worktree so the recovered file
-              # is committed even if the later Commit step's staging changes.
-              git -C "$dir" restore --staged --worktree --source="$src" -- "$rel"
-              echo "restored $rel from $src"
-              restored=$((restored + 1))
-            done < <(git -C "$dir" ls-tree -r --name-only "$src")
+          for rel in "${!restore[@]}"; do
+            if [ -e "$dir/$rel" ]; then
+              echo "::warning::alma-errata ${rel}: carried by the feed again; remove it from RESTORE_PATHS."
+              continue
+            fi
+            src=""
+            for snap in "${snapshots[@]}"; do
+              if git -C "$dir" cat-file -e "${snap}:${rel}" 2>/dev/null; then
+                src="$snap"
+                break
+              fi
+            done
+            if [ -z "$src" ]; then
+              # Listed for restore yet present in no snapshot: we cannot keep
+              # the dataset complete -> fail, don't commit a silently-incomplete
+              # tree.
+              echo "::error::alma-errata ${rel}: in RESTORE_PATHS but absent from every RESTORE_SNAPSHOTS entry; cannot restore (dataset would be incomplete)."
+              exit 1
+            fi
+            # Restore to both the index and the worktree so the recovered file
+            # is committed even if the later Commit step's staging changes.
+            git -C "$dir" restore --staged --worktree --source="$src" -- "$rel"
+            restored=$((restored + 1))
           done
 
-          if [ "$restored" -gt 0 ]; then
-            echo "::warning::alma-errata: restored ${restored} advisory(ies) dropped from the upstream feed; if this number keeps growing across runs, upstream re-curated again (see https://bugs.almalinux.org/view.php?id=644)"
-          fi
+          echo "restored ${restored} advisory(ies) from pinned snapshots"
 
       - name: Set Git remote
         run: |
