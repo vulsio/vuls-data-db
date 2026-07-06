@@ -66,20 +66,28 @@ jobs:
       #
       # After the fetch rewrites the tree from the current feed, restore exactly
       # the advisories in RESTORE_PATHS from the pinned pre-purge snapshots, so
-      # the repository keeps carrying everything upstream ever published (the
-      # HTML/OSV semantics) without ever restoring anything unlisted. Unlike
-      # paloalto-json there is no upstream list to validate against, so the
-      # pre-fetch HEAD plays that role instead: any file that HEAD carries but
-      # the fresh fetch dropped, and that is in neither list below, fails the
-      # job. A human then triages it:
-      #   - upstream re-curated again -> append the paths to RESTORE_PATHS (and,
-      #     if the content is not in the pinned snapshots, pin the parent of the
-      #     new purge commit as an additional RESTORE_SNAPSHOTS entry);
-      #   - a genuine upstream removal that should propagate -> add the path to
-      #     ACCEPTED_REMOVAL_PATHS and drop it again once it has left HEAD.
+      # the repository keeps carrying everything upstream still publishes (the
+      # HTML/OSV semantics) without ever restoring anything unlisted.
+      #
+      # The per-version HTML directory index (one GET per version) is the
+      # oracle for whether upstream still publishes an advisory:
+      #   - a file the pre-fetch HEAD carries but the fresh fetch dropped, and
+      #     that is not in RESTORE_PATHS: still in the index -> feed
+      #     re-curation, fail so a human appends it to RESTORE_PATHS (and, if
+      #     its content is in no pinned snapshot, pins the parent of the new
+      #     purge commit as an additional RESTORE_SNAPSHOTS entry); gone from
+      #     the index -> genuine upstream retirement, let the deletion
+      #     propagate with a warning.
+      #   - a RESTORE_PATHS entry about to be restored that is gone from the
+      #     index -> upstream retired it for real; fail so a human removes the
+      #     entry (removing it is the explicit acceptance of the retirement).
+      # The index is served by the same host the Fetch step just read the feed
+      # from, so this adds no new availability dependency; an unreachable or
+      # unparsable index fails the job rather than guessing.
       - name: Restore advisories dropped from the upstream feed
         shell: bash
         env:
+          ERRATA_HTML_BASE: https://errata.almalinux.org
           # Pre-purge snapshots to restore RESTORE_PATHS from, first match wins;
           # freshest content first:
           #   - 8255896a: parent of e64c5ca88, the last commit carrying the 143
@@ -93,8 +101,8 @@ jobs:
             8255896abc588ec077d76d777120a42e10197c38
             593d3bca20cce143cc3e36a279764a604d2077c6
           # The 245 advisories the two re-curations dropped from the feed
-          # (current feed + these = the 511-advisory set the OSV export carries
-          # for AlmaLinux 10, verified 2026-07-06). An entry that the feed
+          # (current feed + these = the 511-advisory set the OSV export and the
+          # HTML index carry, verified 2026-07-06). An entry that the feed
           # carries again emits a warning to remove it here.
           RESTORE_PATHS: |
             10/ALSA/2025/ALSA-2025:10073.json
@@ -342,10 +350,6 @@ jobs:
             10/ALSA/2026/ALSA-2026:9666.json
             10/ALSA/2026/ALSA-2026:9689.json
             10/ALSA/2026/ALSA-2026:9693.json
-          # Feed removals a human has accepted as genuine; the guard lets these
-          # deletions propagate instead of failing. Remove an entry once the
-          # file has left HEAD.
-          ACCEPTED_REMOVAL_PATHS: ""
         run: |
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata"
@@ -361,23 +365,16 @@ jobs:
             snapshots+=("$line")
           done <<< "${RESTORE_SNAPSHOTS}"
 
-          declare -A restore accepted
+          declare -A restore
           while IFS= read -r line; do
             line="${line//[[:space:]]/}"
             [ -n "$line" ] || continue
             restore["$line"]=1
           done <<< "${RESTORE_PATHS}"
-          while IFS= read -r line; do
-            line="${line//[[:space:]]/}"
-            [ -n "$line" ] || continue
-            accepted["$line"]=1
-          done <<< "${ACCEPTED_REMOVAL_PATHS}"
 
-          # Unexpected drop: carried by the pre-fetch HEAD (this step runs
-          # before Commit), missing from the fresh fetch, in neither list.
-          # Fail fast - if this trips the run is dying regardless, so don't
-          # restore first.
-          unexpected=()
+          # Files the pre-fetch HEAD carries (this step runs before Commit)
+          # that the fresh fetch did not write and RESTORE_PATHS does not list.
+          dropped=()
           while IFS= read -r rel; do
             case "$rel" in
               *.json) ;;
@@ -385,12 +382,44 @@ jobs:
             esac
             [ ! -e "$dir/$rel" ] || continue
             [ -z "${restore[$rel]:-}" ] || continue
-            [ -z "${accepted[$rel]:-}" ] || continue
-            unexpected+=("$rel")
+            dropped+=("$rel")
           done < <(git -C "$dir" ls-tree -r --name-only HEAD)
+
+          # One HTML directory index GET per version involved; membership in
+          # the index is the still-published oracle. curl -f: an unreachable
+          # index fails the job (indeterminate is not "retired"); an index
+          # that parses to zero entries likewise.
+          declare -A html versions
+          for rel in "${dropped[@]:+"${dropped[@]}"}"; do versions["${rel%%/*}"]=1; done
+          for rel in "${!restore[@]}"; do [ -e "$dir/$rel" ] || versions["${rel%%/*}"]=1; done
+          for v in "${!versions[@]}"; do
+            n=0
+            while IFS= read -r f; do
+              html["$v/$f"]=1
+              n=$((n + 1))
+            done < <(curl -fsS --retry 3 --max-time 60 "${ERRATA_HTML_BASE}/$v/" | grep -oE 'href="AL[A-Z]+-[0-9]+-[0-9A-Za-z]+\.html"' | sed -E 's/^href="//; s/"$//' | sort -u)
+            if [ "$n" -eq 0 ]; then
+              echo "::error::alma-errata: parsed 0 advisory pages from ${ERRATA_HTML_BASE}/$v/ index; cannot arbitrate feed drops (page layout changed?)"
+              exit 1
+            fi
+            echo "index $v: $n advisory pages"
+          done
+
+          # Arbitrate the unlisted drops. Fail fast before restoring - if this
+          # trips the run is dying regardless.
+          unexpected=()
+          for rel in "${dropped[@]:+"${dropped[@]}"}"; do
+            v="${rel%%/*}"
+            base="$(basename "$rel" .json)"
+            if [ -n "${html[$v/${base//:/-}.html]:-}" ]; then
+              unexpected+=("$rel")
+            else
+              echo "::warning::alma-errata ${rel}: dropped from the feed and its HTML page is gone; propagating the upstream retirement."
+            fi
+          done
           if [ "${#unexpected[@]}" -gt 0 ]; then
-            printf '::error::alma-errata: %d advisory(ies) dropped from the feed but not in RESTORE_PATHS / ACCEPTED_REMOVAL_PATHS: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
-            echo "If upstream re-curated again, add them to RESTORE_PATHS; if the removals are genuine, add them to ACCEPTED_REMOVAL_PATHS."
+            printf '::error::alma-errata: %d advisory(ies) dropped from the feed while their HTML pages are still published: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
+            echo "Upstream re-curated the feed again; add them to RESTORE_PATHS (see https://bugs.almalinux.org/view.php?id=644)."
             exit 1
           fi
 
@@ -399,6 +428,12 @@ jobs:
             if [ -e "$dir/$rel" ]; then
               echo "::warning::alma-errata ${rel}: carried by the feed again; remove it from RESTORE_PATHS."
               continue
+            fi
+            v="${rel%%/*}"
+            base="$(basename "$rel" .json)"
+            if [ -z "${html[$v/${base//:/-}.html]:-}" ]; then
+              echo "::error::alma-errata ${rel}: in RESTORE_PATHS but upstream retired it (HTML page gone); remove the entry to accept the retirement."
+              exit 1
             fi
             src=""
             for snap in "${snapshots[@]}"; do
