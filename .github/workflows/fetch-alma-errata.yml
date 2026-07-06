@@ -65,22 +65,22 @@ jobs:
       # https://bugs.almalinux.org/view.php?id=644
       #
       # After the fetch rewrites the tree from the current feed, restore exactly
-      # the advisories in RESTORE_PATHS from the pinned pre-purge snapshots, so
-      # the repository keeps carrying everything upstream still publishes (the
-      # HTML/OSV semantics) without ever restoring anything unlisted.
+      # the advisories listed below, each from the pinned pre-purge snapshot its
+      # list block declares (RESTORE_SNAPSHOT_N / RESTORE_PATHS_N pairs; for a
+      # future re-curation, append a new pair pinning the parent of the new
+      # purge commit). Nothing unlisted is ever restored, and every file's
+      # source commit is explicit in this file.
       #
       # The per-version HTML directory index (one GET per version) is the
       # oracle for whether upstream still publishes an advisory:
       #   - a file the pre-fetch HEAD carries but the fresh fetch dropped, and
-      #     that is not in RESTORE_PATHS: still in the index -> feed
-      #     re-curation, fail so a human appends it to RESTORE_PATHS (and, if
-      #     its content is in no pinned snapshot, pins the parent of the new
-      #     purge commit as an additional RESTORE_SNAPSHOTS entry); gone from
+      #     that no list declares: still in the index -> feed re-curation,
+      #     fail so a human appends it to a RESTORE_PATHS_N block; gone from
       #     the index -> genuine upstream retirement, let the deletion
       #     propagate with a warning.
-      #   - a RESTORE_PATHS entry about to be restored that is gone from the
-      #     index -> upstream retired it for real; fail so a human removes the
-      #     entry (removing it is the explicit acceptance of the retirement).
+      #   - a listed entry about to be restored that is gone from the index ->
+      #     upstream retired it for real; fail so a human removes the entry
+      #     (removing it is the explicit acceptance of the retirement).
       # The index is served by the same host the Fetch step just read the feed
       # from, so this adds no new availability dependency; an unreachable or
       # unparsable index fails the job rather than guessing.
@@ -88,64 +88,13 @@ jobs:
         shell: bash
         env:
           ERRATA_HTML_BASE: https://errata.almalinux.org
-          # Pre-purge snapshots to restore RESTORE_PATHS from, first match wins;
-          # freshest content first:
-          #   - 8255896a: parent of e64c5ca88, the last commit carrying the 143
-          #     advisories dropped by the 2026-05-27 re-curation.
-          #   - 593d3bca: parent of cb5d6bc44, the last commit carrying the 102
-          #     advisories dropped by the 2025-11-26 re-curation.
-          # If truncate.yml ever drops them from this tag's history the step
-          # hard-fails - re-point at commits that still carry the advisories
-          # rather than restoring nothing.
-          RESTORE_SNAPSHOTS: |
-            8255896abc588ec077d76d777120a42e10197c38
-            593d3bca20cce143cc3e36a279764a604d2077c6
-          # The 245 advisories the two re-curations dropped from the feed
-          # (current feed + these = the 511-advisory set the OSV export and the
-          # HTML index carry, verified 2026-07-06). An entry that the feed
-          # carries again emits a warning to remove it here.
-          RESTORE_PATHS: |
-            10/ALSA/2025/ALSA-2025:10073.json
-            10/ALSA/2025/ALSA-2025:10195.json
-            10/ALSA/2025/ALSA-2025:10630.json
-            10/ALSA/2025/ALSA-2025:10635.json
-            10/ALSA/2025/ALSA-2025:10873.json
-            10/ALSA/2025/ALSA-2025:11401.json
-            10/ALSA/2025/ALSA-2025:11537.json
-            10/ALSA/2025/ALSA-2025:11797.json
-            10/ALSA/2025/ALSA-2025:11888.json
-            10/ALSA/2025/ALSA-2025:11933.json
-            10/ALSA/2025/ALSA-2025:12064.json
-            10/ALSA/2025/ALSA-2025:12188.json
-            10/ALSA/2025/ALSA-2025:12850.json
-            10/ALSA/2025/ALSA-2025:13429.json
-            10/ALSA/2025/ALSA-2025:13674.json
-            10/ALSA/2025/ALSA-2025:13944.json
-            10/ALSA/2025/ALSA-2025:14137.json
-            10/ALSA/2025/ALSA-2025:14417.json
-            10/ALSA/2025/ALSA-2025:14592.json
-            10/ALSA/2025/ALSA-2025:14625.json
-            10/ALSA/2025/ALSA-2025:14844.json
-            10/ALSA/2025/ALSA-2025:15020.json
-            10/ALSA/2025/ALSA-2025:16109.json
-            10/ALSA/2025/ALSA-2025:16115.json
-            10/ALSA/2025/ALSA-2025:16157.json
-            10/ALSA/2025/ALSA-2025:16428.json
-            10/ALSA/2025/ALSA-2025:16432.json
-            10/ALSA/2025/ALSA-2025:16441.json
-            10/ALSA/2025/ALSA-2025:17119.json
-            10/ALSA/2025/ALSA-2025:17429.json
-            10/ALSA/2025/ALSA-2025:18152.json
-            10/ALSA/2025/ALSA-2025:18153.json
-            10/ALSA/2025/ALSA-2025:18154.json
-            10/ALSA/2025/ALSA-2025:18320.json
-            10/ALSA/2025/ALSA-2025:18824.json
-            10/ALSA/2025/ALSA-2025:19156.json
-            10/ALSA/2025/ALSA-2025:19403.json
-            10/ALSA/2025/ALSA-2025:19435.json
-            10/ALSA/2025/ALSA-2025:19566.json
-            10/ALSA/2025/ALSA-2025:19675.json
-            10/ALSA/2025/ALSA-2025:19772.json
+          # Parent of e64c5ca88, the last commit carrying the 143 advisories
+          # dropped by the 2026-05-27 re-curation. If truncate.yml ever drops a
+          # snapshot from this tag's history the step hard-fails - re-point at
+          # a commit that still carries the advisories rather than restoring
+          # nothing.
+          RESTORE_SNAPSHOT_1: 8255896abc588ec077d76d777120a42e10197c38
+          RESTORE_PATHS_1: |
             10/ALSA/2025/ALSA-2025:20095.json
             10/ALSA/2025/ALSA-2025:20126.json
             10/ALSA/2025/ALSA-2025:20145.json
@@ -179,67 +128,6 @@ jobs:
             10/ALSA/2025/ALSA-2025:23664.json
             10/ALSA/2025/ALSA-2025:23667.json
             10/ALSA/2025/ALSA-2025:23738.json
-            10/ALSA/2025/ALSA-2025:7457.json
-            10/ALSA/2025/ALSA-2025:7459.json
-            10/ALSA/2025/ALSA-2025:7462.json
-            10/ALSA/2025/ALSA-2025:7466.json
-            10/ALSA/2025/ALSA-2025:7467.json
-            10/ALSA/2025/ALSA-2025:7475.json
-            10/ALSA/2025/ALSA-2025:7476.json
-            10/ALSA/2025/ALSA-2025:7478.json
-            10/ALSA/2025/ALSA-2025:7482.json
-            10/ALSA/2025/ALSA-2025:7484.json
-            10/ALSA/2025/ALSA-2025:7489.json
-            10/ALSA/2025/ALSA-2025:7490.json
-            10/ALSA/2025/ALSA-2025:7494.json
-            10/ALSA/2025/ALSA-2025:7496.json
-            10/ALSA/2025/ALSA-2025:7497.json
-            10/ALSA/2025/ALSA-2025:7500.json
-            10/ALSA/2025/ALSA-2025:7502.json
-            10/ALSA/2025/ALSA-2025:7505.json
-            10/ALSA/2025/ALSA-2025:7506.json
-            10/ALSA/2025/ALSA-2025:7507.json
-            10/ALSA/2025/ALSA-2025:7508.json
-            10/ALSA/2025/ALSA-2025:7509.json
-            10/ALSA/2025/ALSA-2025:7510.json
-            10/ALSA/2025/ALSA-2025:7512.json
-            10/ALSA/2025/ALSA-2025:7517.json
-            10/ALSA/2025/ALSA-2025:7524.json
-            10/ALSA/2025/ALSA-2025:7592.json
-            10/ALSA/2025/ALSA-2025:7593.json
-            10/ALSA/2025/ALSA-2025:7599.json
-            10/ALSA/2025/ALSA-2025:7601.json
-            10/ALSA/2025/ALSA-2025:8047.json
-            10/ALSA/2025/ALSA-2025:8125.json
-            10/ALSA/2025/ALSA-2025:8135.json
-            10/ALSA/2025/ALSA-2025:8184.json
-            10/ALSA/2025/ALSA-2025:8196.json
-            10/ALSA/2025/ALSA-2025:8341.json
-            10/ALSA/2025/ALSA-2025:8550.json
-            10/ALSA/2025/ALSA-2025:8608.json
-            10/ALSA/2025/ALSA-2025:8636.json
-            10/ALSA/2025/ALSA-2025:8666.json
-            10/ALSA/2025/ALSA-2025:8814.json
-            10/ALSA/2025/ALSA-2025:8816.json
-            10/ALSA/2025/ALSA-2025:8915.json
-            10/ALSA/2025/ALSA-2025:9063.json
-            10/ALSA/2025/ALSA-2025:9120.json
-            10/ALSA/2025/ALSA-2025:9121.json
-            10/ALSA/2025/ALSA-2025:9148.json
-            10/ALSA/2025/ALSA-2025:9149.json
-            10/ALSA/2025/ALSA-2025:9151.json
-            10/ALSA/2025/ALSA-2025:9156.json
-            10/ALSA/2025/ALSA-2025:9304.json
-            10/ALSA/2025/ALSA-2025:9307.json
-            10/ALSA/2025/ALSA-2025:9317.json
-            10/ALSA/2025/ALSA-2025:9328.json
-            10/ALSA/2025/ALSA-2025:9418.json
-            10/ALSA/2025/ALSA-2025:9420.json
-            10/ALSA/2025/ALSA-2025:9421.json
-            10/ALSA/2025/ALSA-2025:9466.json
-            10/ALSA/2025/ALSA-2025:9623.json
-            10/ALSA/2025/ALSA-2025:A003.json
-            10/ALSA/2025/ALSA-2025:A006.json
             10/ALSA/2026/ALSA-2026:0002.json
             10/ALSA/2026/ALSA-2026:0025.json
             10/ALSA/2026/ALSA-2026:0108.json
@@ -350,30 +238,143 @@ jobs:
             10/ALSA/2026/ALSA-2026:9666.json
             10/ALSA/2026/ALSA-2026:9689.json
             10/ALSA/2026/ALSA-2026:9693.json
+          # Parent of cb5d6bc44, the last commit carrying the 102 advisories
+          # dropped by the 2025-11-26 re-curation.
+          RESTORE_SNAPSHOT_2: 593d3bca20cce143cc3e36a279764a604d2077c6
+          RESTORE_PATHS_2: |
+            10/ALSA/2025/ALSA-2025:10073.json
+            10/ALSA/2025/ALSA-2025:10195.json
+            10/ALSA/2025/ALSA-2025:10630.json
+            10/ALSA/2025/ALSA-2025:10635.json
+            10/ALSA/2025/ALSA-2025:10873.json
+            10/ALSA/2025/ALSA-2025:11401.json
+            10/ALSA/2025/ALSA-2025:11537.json
+            10/ALSA/2025/ALSA-2025:11797.json
+            10/ALSA/2025/ALSA-2025:11888.json
+            10/ALSA/2025/ALSA-2025:11933.json
+            10/ALSA/2025/ALSA-2025:12064.json
+            10/ALSA/2025/ALSA-2025:12188.json
+            10/ALSA/2025/ALSA-2025:12850.json
+            10/ALSA/2025/ALSA-2025:13429.json
+            10/ALSA/2025/ALSA-2025:13674.json
+            10/ALSA/2025/ALSA-2025:13944.json
+            10/ALSA/2025/ALSA-2025:14137.json
+            10/ALSA/2025/ALSA-2025:14417.json
+            10/ALSA/2025/ALSA-2025:14592.json
+            10/ALSA/2025/ALSA-2025:14625.json
+            10/ALSA/2025/ALSA-2025:14844.json
+            10/ALSA/2025/ALSA-2025:15020.json
+            10/ALSA/2025/ALSA-2025:16109.json
+            10/ALSA/2025/ALSA-2025:16115.json
+            10/ALSA/2025/ALSA-2025:16157.json
+            10/ALSA/2025/ALSA-2025:16428.json
+            10/ALSA/2025/ALSA-2025:16432.json
+            10/ALSA/2025/ALSA-2025:16441.json
+            10/ALSA/2025/ALSA-2025:17119.json
+            10/ALSA/2025/ALSA-2025:17429.json
+            10/ALSA/2025/ALSA-2025:18152.json
+            10/ALSA/2025/ALSA-2025:18153.json
+            10/ALSA/2025/ALSA-2025:18154.json
+            10/ALSA/2025/ALSA-2025:18320.json
+            10/ALSA/2025/ALSA-2025:18824.json
+            10/ALSA/2025/ALSA-2025:19156.json
+            10/ALSA/2025/ALSA-2025:19403.json
+            10/ALSA/2025/ALSA-2025:19435.json
+            10/ALSA/2025/ALSA-2025:19566.json
+            10/ALSA/2025/ALSA-2025:19675.json
+            10/ALSA/2025/ALSA-2025:19772.json
+            10/ALSA/2025/ALSA-2025:7457.json
+            10/ALSA/2025/ALSA-2025:7459.json
+            10/ALSA/2025/ALSA-2025:7462.json
+            10/ALSA/2025/ALSA-2025:7466.json
+            10/ALSA/2025/ALSA-2025:7467.json
+            10/ALSA/2025/ALSA-2025:7475.json
+            10/ALSA/2025/ALSA-2025:7476.json
+            10/ALSA/2025/ALSA-2025:7478.json
+            10/ALSA/2025/ALSA-2025:7482.json
+            10/ALSA/2025/ALSA-2025:7484.json
+            10/ALSA/2025/ALSA-2025:7489.json
+            10/ALSA/2025/ALSA-2025:7490.json
+            10/ALSA/2025/ALSA-2025:7494.json
+            10/ALSA/2025/ALSA-2025:7496.json
+            10/ALSA/2025/ALSA-2025:7497.json
+            10/ALSA/2025/ALSA-2025:7500.json
+            10/ALSA/2025/ALSA-2025:7502.json
+            10/ALSA/2025/ALSA-2025:7505.json
+            10/ALSA/2025/ALSA-2025:7506.json
+            10/ALSA/2025/ALSA-2025:7507.json
+            10/ALSA/2025/ALSA-2025:7508.json
+            10/ALSA/2025/ALSA-2025:7509.json
+            10/ALSA/2025/ALSA-2025:7510.json
+            10/ALSA/2025/ALSA-2025:7512.json
+            10/ALSA/2025/ALSA-2025:7517.json
+            10/ALSA/2025/ALSA-2025:7524.json
+            10/ALSA/2025/ALSA-2025:7592.json
+            10/ALSA/2025/ALSA-2025:7593.json
+            10/ALSA/2025/ALSA-2025:7599.json
+            10/ALSA/2025/ALSA-2025:7601.json
+            10/ALSA/2025/ALSA-2025:8047.json
+            10/ALSA/2025/ALSA-2025:8125.json
+            10/ALSA/2025/ALSA-2025:8135.json
+            10/ALSA/2025/ALSA-2025:8184.json
+            10/ALSA/2025/ALSA-2025:8196.json
+            10/ALSA/2025/ALSA-2025:8341.json
+            10/ALSA/2025/ALSA-2025:8550.json
+            10/ALSA/2025/ALSA-2025:8608.json
+            10/ALSA/2025/ALSA-2025:8636.json
+            10/ALSA/2025/ALSA-2025:8666.json
+            10/ALSA/2025/ALSA-2025:8814.json
+            10/ALSA/2025/ALSA-2025:8816.json
+            10/ALSA/2025/ALSA-2025:8915.json
+            10/ALSA/2025/ALSA-2025:9063.json
+            10/ALSA/2025/ALSA-2025:9120.json
+            10/ALSA/2025/ALSA-2025:9121.json
+            10/ALSA/2025/ALSA-2025:9148.json
+            10/ALSA/2025/ALSA-2025:9149.json
+            10/ALSA/2025/ALSA-2025:9151.json
+            10/ALSA/2025/ALSA-2025:9156.json
+            10/ALSA/2025/ALSA-2025:9304.json
+            10/ALSA/2025/ALSA-2025:9307.json
+            10/ALSA/2025/ALSA-2025:9317.json
+            10/ALSA/2025/ALSA-2025:9328.json
+            10/ALSA/2025/ALSA-2025:9418.json
+            10/ALSA/2025/ALSA-2025:9420.json
+            10/ALSA/2025/ALSA-2025:9421.json
+            10/ALSA/2025/ALSA-2025:9466.json
+            10/ALSA/2025/ALSA-2025:9623.json
+            10/ALSA/2025/ALSA-2025:A003.json
+            10/ALSA/2025/ALSA-2025:A006.json
         run: |
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata"
 
-          snapshots=()
-          while IFS= read -r line; do
-            line="${line//[[:space:]]/}"
-            [ -n "$line" ] || continue
-            if ! git -C "$dir" rev-parse --verify -q "${line}^{commit}" >/dev/null; then
-              echo "::error::restore snapshot ${line} is not present in $dir (gc'd out of history?); re-point RESTORE_SNAPSHOTS at a good commit"
+          # src[<path>] = the snapshot commit its list block declares.
+          declare -A src
+          i=1
+          while :; do
+            snapvar="RESTORE_SNAPSHOT_${i}"
+            pathsvar="RESTORE_PATHS_${i}"
+            snap="${!snapvar:-}"
+            [ -n "$snap" ] || break
+            snap="${snap//[[:space:]]/}"
+            if ! git -C "$dir" rev-parse --verify -q "${snap}^{commit}" >/dev/null; then
+              echo "::error::restore snapshot ${snap} (${snapvar}) is not present in $dir (gc'd out of history?); re-point it at a good commit"
               exit 1
             fi
-            snapshots+=("$line")
-          done <<< "${RESTORE_SNAPSHOTS}"
-
-          declare -A restore
-          while IFS= read -r line; do
-            line="${line//[[:space:]]/}"
-            [ -n "$line" ] || continue
-            restore["$line"]=1
-          done <<< "${RESTORE_PATHS}"
+            while IFS= read -r line; do
+              line="${line//[[:space:]]/}"
+              [ -n "$line" ] || continue
+              if [ -n "${src[$line]:-}" ]; then
+                echo "::error::alma-errata ${line}: listed under more than one RESTORE_PATHS_N block; keep exactly one entry per path"
+                exit 1
+              fi
+              src["$line"]="$snap"
+            done <<< "${!pathsvar:-}"
+            i=$((i + 1))
+          done
 
           # Files the pre-fetch HEAD carries (this step runs before Commit)
-          # that the fresh fetch did not write and RESTORE_PATHS does not list.
+          # that the fresh fetch did not write and no list block declares.
           dropped=()
           while IFS= read -r rel; do
             case "$rel" in
@@ -381,7 +382,7 @@ jobs:
               *) continue ;;
             esac
             [ ! -e "$dir/$rel" ] || continue
-            [ -z "${restore[$rel]:-}" ] || continue
+            [ -z "${src[$rel]:-}" ] || continue
             dropped+=("$rel")
           done < <(git -C "$dir" ls-tree -r --name-only HEAD)
 
@@ -391,7 +392,7 @@ jobs:
           # that parses to zero entries likewise.
           declare -A html versions
           for rel in "${dropped[@]:+"${dropped[@]}"}"; do versions["${rel%%/*}"]=1; done
-          for rel in "${!restore[@]}"; do [ -e "$dir/$rel" ] || versions["${rel%%/*}"]=1; done
+          for rel in "${!src[@]}"; do [ -e "$dir/$rel" ] || versions["${rel%%/*}"]=1; done
           for v in "${!versions[@]}"; do
             n=0
             while IFS= read -r f; do
@@ -419,39 +420,33 @@ jobs:
           done
           if [ "${#unexpected[@]}" -gt 0 ]; then
             printf '::error::alma-errata: %d advisory(ies) dropped from the feed while their HTML pages are still published: %s\n' "${#unexpected[@]}" "${unexpected[*]}"
-            echo "Upstream re-curated the feed again; add them to RESTORE_PATHS (see https://bugs.almalinux.org/view.php?id=644)."
+            echo "Upstream re-curated the feed again; add them to a RESTORE_PATHS_N block (see https://bugs.almalinux.org/view.php?id=644)."
             exit 1
           fi
 
           restored=0
-          for rel in "${!restore[@]}"; do
+          for rel in "${!src[@]}"; do
             if [ -e "$dir/$rel" ]; then
-              echo "::warning::alma-errata ${rel}: carried by the feed again; remove it from RESTORE_PATHS."
+              echo "::warning::alma-errata ${rel}: carried by the feed again; remove it from its RESTORE_PATHS_N block."
               continue
             fi
             v="${rel%%/*}"
             base="$(basename "$rel" .json)"
             if [ -z "${html[$v/${base//:/-}.html]:-}" ]; then
-              echo "::error::alma-errata ${rel}: in RESTORE_PATHS but upstream retired it (HTML page gone); remove the entry to accept the retirement."
+              echo "::error::alma-errata ${rel}: listed for restore but upstream retired it (HTML page gone); remove the entry to accept the retirement."
               exit 1
             fi
-            src=""
-            for snap in "${snapshots[@]}"; do
-              if git -C "$dir" cat-file -e "${snap}:${rel}" 2>/dev/null; then
-                src="$snap"
-                break
-              fi
-            done
-            if [ -z "$src" ]; then
-              # Listed for restore yet present in no snapshot: we cannot keep
-              # the dataset complete -> fail, don't commit a silently-incomplete
-              # tree.
-              echo "::error::alma-errata ${rel}: in RESTORE_PATHS but absent from every RESTORE_SNAPSHOTS entry; cannot restore (dataset would be incomplete)."
+            snap="${src[$rel]}"
+            if ! git -C "$dir" cat-file -e "${snap}:${rel}" 2>/dev/null; then
+              # Listed under a snapshot that does not carry it: the list is
+              # wrong and we cannot keep the dataset complete -> fail, don't
+              # commit a silently-incomplete tree.
+              echo "::error::alma-errata ${rel}: declared under snapshot ${snap} but absent from it; fix the RESTORE_PATHS_N assignment."
               exit 1
             fi
             # Restore to both the index and the worktree so the recovered file
             # is committed even if the later Commit step's staging changes.
-            git -C "$dir" restore --staged --worktree --source="$src" -- "$rel"
+            git -C "$dir" restore --staged --worktree --source="$snap" -- "$rel"
             restored=$((restored + 1))
           done
 
