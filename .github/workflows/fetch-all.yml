@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - "alma-errata"
           - "alma-osv"
           - "alma-oval"
           - "alpine-osv"
@@ -179,6 +178,13 @@ jobs:
       packages: write
     with:
       target: ${{ matrix.target }}
+
+  fetch-alma-errata:
+    name: Fetch vuls-data-raw-alma-errata
+    uses: ./.github/workflows/fetch-alma-errata.yml
+    permissions:
+      contents: read
+      packages: write
 
   fetch-cisco-json:
     name: Fetch vuls-data-raw-cisco-json
@@ -342,6 +348,7 @@ jobs:
     needs:
       [
         fetch-main,
+        fetch-alma-errata,
         fetch-cisco-json,
         fetch-cisco-cvrf-or-csaf,
         fetch-enisa-euvd-list,

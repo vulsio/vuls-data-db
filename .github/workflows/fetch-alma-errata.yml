@@ -1,0 +1,154 @@
+name: Fetch Alma (Errata)
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  fetch:
+    name: Fetch vuls-data-raw-alma-errata
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    env:
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
+        with:
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+          remove-large-packages: "true"
+          remove-cached-tools: "true"
+          remove-swapfile: "true"
+
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global maintenance.auto false
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-alma-errata
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-alma-errata
+
+      - name: Fetch
+        run: vuls-data-update fetch alma-errata --dir ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata
+
+      # AlmaLinux periodically re-curates errata.full.json and drops published
+      # advisories from the feed, while the corresponding HTML pages
+      # (https://errata.almalinux.org/10/) and the official OSV export
+      # (AlmaLinux/osv-database) keep carrying them. Observed re-curations, both
+      # AlmaLinux 10: 2025-11-26 (-102 advisories) and 2026-05-27 (-143
+      # advisories, ~376 CVEs losing coverage). Upstream inquiry:
+      # https://bugs.almalinux.org/view.php?id=644
+      #
+      # Keep this repository as the union of everything upstream has ever
+      # published (the HTML/OSV semantics): after the fetch rewrites the tree
+      # from the current feed, restore any file that a restore source still
+      # carries but the fresh fetch no longer does. Unlike paloalto-json there
+      # is no upstream list to validate against, so the check is looser: no
+      # allowlist, and upstream deletions never propagate on their own. If an
+      # advisory ever needs to be genuinely removed, delete it from the dotgit
+      # manually and it will stay gone only if it is also absent from HEAD and
+      # the pinned snapshots below.
+      - name: Restore advisories dropped from the upstream feed
+        shell: bash
+        env:
+          # Restore sources, first match wins; freshest content first.
+          #   - HEAD: the pre-fetch state (this step runs before Commit), so once
+          #     a file has been fetched or restored it stays protected.
+          #   - 8255896a: parent of e64c5ca88, the last commit carrying the 143
+          #     advisories dropped by the 2026-05-27 re-curation.
+          #   - 593d3bca: parent of cb5d6bc44, the last commit carrying the 102
+          #     advisories dropped by the 2025-11-26 re-curation.
+          # HEAD ∪ both snapshots ∪ current feed = the 511-advisory set the
+          # OSV export carries (verified 2026-07-06). The pinned snapshots only
+          # matter until their files are committed back once; after that HEAD
+          # alone keeps the union. If truncate.yml ever drops them from this
+          # tag's history the step hard-fails — re-point at commits that still
+          # carry the advisories rather than restoring nothing.
+          RESTORE_SOURCES: |
+            HEAD
+            8255896abc588ec077d76d777120a42e10197c38
+            593d3bca20cce143cc3e36a279764a604d2077c6
+        run: |
+          set -euo pipefail
+          dir="ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata"
+
+          sources=()
+          while IFS= read -r line; do
+            line="${line//[[:space:]]/}"
+            [ -n "$line" ] || continue
+            if ! git -C "$dir" rev-parse --verify -q "${line}^{commit}" >/dev/null; then
+              echo "::error::restore source ${line} is not present in $dir (gc'd out of history?); re-point RESTORE_SOURCES at a good commit"
+              exit 1
+            fi
+            sources+=("$line")
+          done <<< "${RESTORE_SOURCES}"
+
+          restored=0
+          for src in "${sources[@]}"; do
+            # Files the source carries but the fresh fetch did not write (and no
+            # earlier source has restored). List every path and filter for .json
+            # in-shell: a `-- '*.json'` pathspec would not match, since its `*`
+            # does not cross `/`, so nested advisories would be missed.
+            while IFS= read -r rel; do
+              case "$rel" in
+                *.json) ;;
+                *) continue ;;
+              esac
+              [ ! -e "$dir/$rel" ] || continue
+              # Restore to both the index and the worktree so the recovered file
+              # is committed even if the later Commit step's staging changes.
+              git -C "$dir" restore --staged --worktree --source="$src" -- "$rel"
+              echo "restored $rel from $src"
+              restored=$((restored + 1))
+            done < <(git -C "$dir" ls-tree -r --name-only "$src")
+          done
+
+          if [ "$restored" -gt 0 ]; then
+            echo "::warning::alma-errata: restored ${restored} advisory(ies) dropped from the upstream feed; if this number keeps growing across runs, upstream re-curated again (see https://bugs.almalinux.org/view.php?id=644)"
+          fi
+
+      - name: Set Git remote
+        run: |
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-alma-errata
+          else
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-alma-errata
+          fi
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          fi
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-alma-errata
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-alma-errata vuls-data-raw-alma-errata.tar.zst
