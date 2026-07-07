@@ -12,7 +12,6 @@ on:
         required: true
         type: choice
         options:
-          - alma-errata
           - alma-osv
           - alma-oval
           - alpine-osv
