@@ -162,6 +162,7 @@ jobs:
             # Reuse the precomputed log-page link (falls back to the run URL).
             job_url="${JOB_URL["$job_name"]:-$url}"
 
+            echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "---" >> "$GITHUB_STEP_SUMMARY"
             echo "#### [$(md_escape "$job_name")](${job_url})" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
