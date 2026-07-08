@@ -30,12 +30,12 @@ Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. Th
 ## 2. Pin both anchors
 
 **Target** (the failed candidate, untagged):
-- Read the run summary's "Pushed candidate image" section, or scrape `digest=` from the `Push vuls.db to GHCR (tagless, digest-only)` step's log.
-- Form the ref: `ghcr.io/vulsio/vuls-nightly-db@sha256:<digest>`.
+- Read the run summary's "Pushed candidate image" section, or scrape `digest=` from the `Push vuls.db to GHCR (tagless, digest-only)` step's log. `<digest>` below always means the full `sha256:<64hex>` string exactly as it appears there.
+- Form the ref: `ghcr.io/vulsio/vuls-nightly-db@<digest>`.
 - The image is intentionally untagged on failure — promotion to `:<schema_version>` / `:nightly` is gated on diff-guard passing.
 
 **Baseline** (what `:<tag>` was pointing to at the moment diff-guard ran):
-- Tag promotions happen via two paths, and the baseline is the digest from whichever promotion completed most recently **before** the failed run started — check both:
+- Tag promotions happen via two paths, and the baseline is the digest from whichever promotion completed most recently **before the failed run's diff-guard step executed** (a tag can be moved by another run while the failed run is in progress) — check both:
   - Automatic: a **successful** DB / DB(Nightly) run's own `Promote digest to :latest and :<schema_version>` (or `:nightly`) step. The failed run's own step is **skipped**, but an earlier successful run of the same workflow may have moved the tag this way. Find it and read the promoted digest from its "Pushed candidate image" summary / promote step log:
     ```sh
     gh run list --repo vulsio/vuls-data-db --workflow <db-main.yml|db-nightly.yml> --status success --limit 5 --json createdAt,databaseId,displayTitle
@@ -44,9 +44,9 @@ Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. Th
     ```sh
     gh run list --repo vulsio/vuls-data-db --workflow promote-digest.yml --limit 20 --json createdAt,displayTitle,conclusion
     ```
-    The `displayTitle` is `Promote :<tag> <- sha256:<digest> by @<actor>` (see `run-name` in `promote-digest.yml`).
-- The most recent of the two is the baseline. Form the ref the same way: `ghcr.io/vulsio/vuls-nightly-db@sha256:<digest>`.
-- When in doubt, confirm against the registry itself: `gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions` — pick the most recent version whose `tags` contained the desired tag at the failed run's start time.
+    The `displayTitle` is `Promote :<tag> <- <digest> by @<actor>` (see `run-name` in `promote-digest.yml`).
+- The most recent of the two is the baseline. Form the ref the same way: `ghcr.io/vulsio/vuls-nightly-db@<digest>`.
+- When in doubt, confirm against the registry itself: `gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions` — pick the most recent version whose `tags` contained the desired tag at the moment the failed run's diff-guard step executed.
 
 ## 3. Extract anchors from each DB
 
@@ -131,7 +131,7 @@ If raw also changed → upstream is the source of truth. If raw is unchanged but
 
 Output the verdict as one of:
 
-- **upstream-driven** — raw moved, extractor unchanged, builder unchanged. Show the smoking-gun raw status flip (e.g., `needs-triage → needed`) on a representative file. Usually legitimate; consider per-target threshold override (see below).
+- **upstream-driven** — raw moved, no vuls-data-update extractor/fetch code changes in the window (step 4b), builder unchanged. Show the smoking-gun raw status flip (e.g., `needs-triage → needed`) on a representative file. Usually legitimate; consider per-target threshold override (see below).
 - **extractor-driven** — raw unchanged but extracted moved. Show a same-file diff between `<baseline_ext>` and `<target_ext>` and link to the offending commit in `pkg/extract/<source>/`.
 - **vuls2-builder-driven** — anchors unchanged but `created_by` differs. Link to the vuls2 commit in the date range.
 - **threshold-only** — small baseline (e.g. `ubuntu_2604` with baseline ~200 detections) tripping the global threshold on routine noise. Recommend a per-file or per-ecosystem override:
