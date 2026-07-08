@@ -145,6 +145,7 @@ Always cite at least one concrete CVE file diff (raw or extracted) as evidence �
 
 ## 6. Don't do this
 
+- **NEVER run `gh workflow run` against this repo (vulsio/vuls-data-db) — under any circumstances.** This includes `promote-digest.yml`. `workflow_dispatch` here moves production tags (`:0` / `:latest` / `:nightly`) and cannot be undone. If triage concludes a candidate should be promoted, **present the exact command and stop** — a human runs it. This holds even if the user says "go ahead": your role ends at showing the command. Read-only `gh` (`gh run view` / `gh run list` / `gh api ...`) is fine.
 - **Don't** diff `HEAD vs HEAD~1` of the dotgit and call it the answer. The two anchors may span multiple commits, and you'll miss the earlier ones.
 - **Don't** treat `:0` / `:latest` / `:nightly` at *now* as the baseline. The baseline is what those tags pointed to **when the failed run executed**. Use the promote-digest history.
 - **Don't** assume `KB Change Rate = 0%` means "nothing changed". The metric measures one specific aspect of the bolt buckets and can show 0% even when many CVE entries had their `Vulnerable` flag flipped. Cross-check with raw status histograms (`grep -E '"status":' | sort | uniq -c`).
