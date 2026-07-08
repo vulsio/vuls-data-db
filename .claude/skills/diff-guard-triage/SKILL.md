@@ -1,6 +1,6 @@
 ---
 name: diff-guard-triage
-description: "Triage a failed DB workflow run on vulsio/vuls-data-db where the diff-guard step (vuls diff detection / vuls diff db) failed. Classify the cause as upstream-driven, extractor-driven, vuls2-builder-driven, or threshold-tuning, and cite a smoking-gun raw/extracted diff. Trigger when the user pastes a failed vuls-data-db DB run URL and asks why it failed or to investigate upstream/raw/extracted changes."
+description: "Triage a failed DB workflow run on vulsio/vuls-data-db where the diff-guard step (vuls diff detection / vuls diff db) failed. Classify the cause as upstream-driven, extractor-driven, vuls2-builder-driven, or threshold-only, and cite a smoking-gun raw/extracted diff. Trigger when the user pastes a failed vuls-data-db DB run URL and asks why it failed or to investigate upstream/raw/extracted changes."
 ---
 
 # Diff guard triage
@@ -20,10 +20,10 @@ The DB workflow exists in two flavors. The baseline tag differs:
 
 | Workflow file | Baseline tag | Notes |
 | --- | --- | --- |
-| `.github/workflows/db-main.yml` (workflow name: **DB**) | `ghcr.io/vulsio/vuls-nightly-db:<schema_version>` (computed at build time, currently `:0`) | Promoted to `:latest` and `:<schema_version>` on pass |
+| `.github/workflows/db-main.yml` (workflow name: **DB**) | `ghcr.io/vulsio/vuls-nightly-db:<schema_version>` (computed at build time, e.g. `:0`) | Promoted to `:latest` and `:<schema_version>` on pass |
 | `.github/workflows/db-nightly.yml` (workflow name: **DB(Nightly)**) | `ghcr.io/vulsio/vuls-nightly-db:nightly` (literal) | Promoted to `:nightly` on pass |
 
-Read the failed run's workflow name from `gh run view --json workflowName` and pick the right baseline tag. The `schema_version` comes from a `Save vuls.db schema_version` step that runs `vuls db search metadata --dbpath ./vuls.db | jq .schema_version` — re-derive it from the run's logs if you need the exact value at the time.
+Read the failed run's workflow name from `gh run view <run-id> --repo vulsio/vuls-data-db --json workflowName` and pick the right baseline tag. The `schema_version` comes from a `Save vuls.db schema_version` step that runs `vuls db search metadata --dbpath ./vuls.db | jq .schema_version` — re-derive it from the run's logs if you need the exact value at the time.
 
 Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. The "nightly" in the repo name is a historical artifact — `db-main.yml` also publishes to it.
 
