@@ -7,10 +7,10 @@ description: "Triage a failed DB workflow run on vulsio/vuls-data-db where the d
 
 ## 0. Prerequisites
 
-- `vuls` (vuls2), `vuls-data-update`, `gh`, `jq`, and `git` on PATH. Install the first two from the same refs CI uses:
+- `vuls` (vuls2), `vuls-data-update`, `gh`, `jq`, and `git` on PATH. Install the first two from the same refs CI uses — `@main` for **DB** (`db-main.yml`), `@nightly` for **DB(Nightly)** (`db-nightly.yml`):
   ```sh
-  go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
-  go install github.com/MaineK00n/vuls2/cmd/vuls@main
+  go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main  # @nightly when triaging a DB(Nightly) run
+  go install github.com/MaineK00n/vuls2/cmd/vuls@main                         # @nightly when triaging a DB(Nightly) run
   ```
 - Local checkouts of vuls2 / vuls-data-update are **optional**. The steps that inspect their commit history rule out via the GitHub API first, and clone on demand only when a deep dive is needed.
 
@@ -21,7 +21,7 @@ The DB workflow exists in two flavors. The baseline tag differs:
 | Workflow file | Baseline tag | Notes |
 | --- | --- | --- |
 | `.github/workflows/db-main.yml` (workflow name: **DB**) | `ghcr.io/vulsio/vuls-nightly-db:<schema_version>` (computed at build time, currently `:0`) | Promoted to `:latest` and `:<schema_version>` on pass |
-| `.github/workflows/db-nightly.yml` (workflow name: **DB Nightly**) | `ghcr.io/vulsio/vuls-nightly-db:nightly` (literal) | Promoted to `:nightly` on pass |
+| `.github/workflows/db-nightly.yml` (workflow name: **DB(Nightly)**) | `ghcr.io/vulsio/vuls-nightly-db:nightly` (literal) | Promoted to `:nightly` on pass |
 
 Read the failed run's workflow name from `gh run view --json workflowName` and pick the right baseline tag. The `schema_version` comes from a `Save vuls.db schema_version` step that runs `vuls db search metadata --dbpath ./vuls.db | jq .schema_version` — re-derive it from the run's logs if you need the exact value at the time.
 
