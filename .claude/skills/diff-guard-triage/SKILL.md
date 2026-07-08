@@ -38,15 +38,16 @@ Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. Th
 - Tag promotions happen via two paths, and the baseline is the digest from whichever promotion completed most recently **before the failed run's diff-guard step executed** (a tag can be moved by another run while the failed run is in progress) — check both:
   - Automatic: a **successful** DB / DB(Nightly) run's own `Promote digest to :latest and :<schema_version>` (or `:nightly`) step. The failed run's own step is **skipped**, but an earlier successful run of the same workflow may have moved the tag this way. Find it and read the promoted digest from its "Pushed candidate image" summary / promote step log:
     ```sh
-    gh run list --repo vulsio/vuls-data-db --workflow <db-main.yml|db-nightly.yml> --status success --limit 5 --json createdAt,databaseId,displayTitle
+    gh run list --repo vulsio/vuls-data-db --workflow db-main.yml --status success --limit 5 --json createdAt,databaseId,displayTitle
     ```
+    (use `--workflow db-nightly.yml` when triaging a DB(Nightly) run)
   - Manual: the `DB(Promote Digest)` workflow (`.github/workflows/promote-digest.yml`), invoked via `workflow_dispatch`, with target tag matching the workflow (e.g., `:0` for db-main, `:nightly` for db-nightly):
     ```sh
     gh run list --repo vulsio/vuls-data-db --workflow promote-digest.yml --limit 20 --json createdAt,displayTitle,conclusion
     ```
     The `displayTitle` is `Promote :<tag> <- <digest> by @<actor>` (see `run-name` in `promote-digest.yml`).
 - The most recent of the two is the baseline. Form the ref the same way: `ghcr.io/vulsio/vuls-nightly-db@<digest>`.
-- When in doubt, confirm against the registry itself: `gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions` — pick the most recent version whose `tags` contained the desired tag at the moment the failed run's diff-guard step executed.
+- Note the registry API (`gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions`) only reflects **current** tag→digest associations — use it to sanity-check the present state, not to reconstruct where a tag pointed in the past. Historical baselines must come from the Actions promotion history above.
 
 ## 3. Extract anchors from each DB
 
