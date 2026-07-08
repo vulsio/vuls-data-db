@@ -35,17 +35,18 @@ Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. Th
 - The image is intentionally untagged on failure — promotion to `:<schema_version>` / `:nightly` is gated on diff-guard passing.
 
 **Baseline** (what `:<tag>` was pointing to at the moment diff-guard ran):
-- Tag promotions happen via two paths:
-  - Automatic: the failed run's own `Promote digest to :latest and :<schema_version>` (or `:nightly`) step — **skipped if diff-guard fails**, so it doesn't affect the baseline you want.
-  - Manual: the `DB(Promote Digest)` workflow (`.github/workflows/promote-digest.yml`), invoked via `workflow_dispatch`.
-- Find the most recent successful `DB(Promote Digest)` run with target tag matching the workflow (e.g., `:0` for db-main, `:nightly` for db-nightly) that completed **before** the failed run started:
-  ```sh
-  gh run list --repo vulsio/vuls-data-db --workflow promote-digest.yml --limit 20 --json createdAt,displayTitle,conclusion
-  ```
-  The `displayTitle` is `Promote :<tag> <- sha256:<digest> by @<actor>` (see `run-name` in `promote-digest.yml`).
-- The matching digest is the baseline. Form the ref the same way: `ghcr.io/vulsio/vuls-nightly-db@sha256:<digest>`.
-
-If the target run pre-dates any manual promote run for that tag, fall back to inspecting `gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions` and pick the most recent version whose `tags` contained the desired tag at run time. This is rare; usually the promote-digest history is sufficient.
+- Tag promotions happen via two paths, and the baseline is the digest from whichever promotion completed most recently **before** the failed run started — check both:
+  - Automatic: a **successful** DB / DB(Nightly) run's own `Promote digest to :latest and :<schema_version>` (or `:nightly`) step. The failed run's own step is **skipped**, but an earlier successful run of the same workflow may have moved the tag this way. Find it and read the promoted digest from its "Pushed candidate image" summary / promote step log:
+    ```sh
+    gh run list --repo vulsio/vuls-data-db --workflow <db-main.yml|db-nightly.yml> --status success --limit 5 --json createdAt,databaseId,displayTitle
+    ```
+  - Manual: the `DB(Promote Digest)` workflow (`.github/workflows/promote-digest.yml`), invoked via `workflow_dispatch`, with target tag matching the workflow (e.g., `:0` for db-main, `:nightly` for db-nightly):
+    ```sh
+    gh run list --repo vulsio/vuls-data-db --workflow promote-digest.yml --limit 20 --json createdAt,displayTitle,conclusion
+    ```
+    The `displayTitle` is `Promote :<tag> <- sha256:<digest> by @<actor>` (see `run-name` in `promote-digest.yml`).
+- The most recent of the two is the baseline. Form the ref the same way: `ghcr.io/vulsio/vuls-nightly-db@sha256:<digest>`.
+- When in doubt, confirm against the registry itself: `gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions` — pick the most recent version whose `tags` contained the desired tag at the failed run's start time.
 
 ## 3. Extract anchors from each DB
 
@@ -74,7 +75,7 @@ For ubuntu specifically, only one source is enabled (`ubuntu-cve-tracker`). For 
 Compare `created_by` strings. If identical, builder is ruled out. If they differ, list vuls2's commits in the date range between the two strings' embedded timestamps before drawing conclusions:
 
 ```sh
-gh api "repos/MaineK00n/vuls2/commits?since=<baseline_ts>&until=<target_ts>" \
+gh api --paginate "repos/MaineK00n/vuls2/commits?per_page=100&since=<baseline_ts>&until=<target_ts>" \
   --jq '.[] | .sha[0:7] + " " + .commit.committer.date + " " + (.commit.message | split("\n")[0])'
 ```
 
@@ -86,7 +87,7 @@ The extractor binary that produced the extracted dotgit isn't recorded in the DB
 
 ```sh
 for p in pkg/extract/<source> pkg/fetch/<source>; do
-  gh api "repos/MaineK00n/vuls-data-update/commits?path=$p&since=<baseline_ext_date>&until=<target_ext_date>" \
+  gh api --paginate "repos/MaineK00n/vuls-data-update/commits?per_page=100&path=$p&since=<baseline_ext_date>&until=<target_ext_date>" \
     --jq '.[] | .sha[0:7] + " " + .commit.committer.date + " " + (.commit.message | split("\n")[0])'
 done
 ```
