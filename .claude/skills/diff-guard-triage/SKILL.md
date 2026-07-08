@@ -42,7 +42,7 @@ Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. Th
   ```sh
   gh run list --repo vulsio/vuls-data-db --workflow promote-digest.yml --limit 20 --json createdAt,displayTitle,conclusion
   ```
-  The `displayTitle` is `Promote sha256:<digest> -> :<tag> by @<actor>`.
+  The `displayTitle` is `Promote :<tag> <- sha256:<digest> by @<actor>` (see `run-name` in `promote-digest.yml`).
 - The matching digest is the baseline. Form the ref the same way: `ghcr.io/vulsio/vuls-nightly-db@sha256:<digest>`.
 
 If the target run pre-dates any manual promote run for that tag, fall back to inspecting `gh api /orgs/vulsio/packages/container/vuls-nightly-db/versions` and pick the most recent version whose `tags` contained the desired tag at run time. This is rare; usually the promote-digest history is sufficient.
@@ -105,18 +105,20 @@ Read each candidate commit's diff and the surrounding extraction logic (the curr
 ### c. extracted dotgit
 
 ```sh
-vuls-data-update dotgit pull --dir /tmp/ex --restore ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-<source>
+vuls-data-update dotgit pull --dir /tmp/ex --checkout <main|nightly> --restore ghcr.io/vulsio/vuls-data-db:vuls-data-extracted-<source>
 EX=/tmp/ex/ghcr.io/vulsio/vuls-data-db/vuls-data-extracted-<source>
 git -C "$EX" log --format='%h %ci' <baseline_ext>..<target_ext>
 git -C "$EX" diff --shortstat <baseline_ext>..<target_ext>
 ```
+
+`--checkout` must match the triaged workflow's branch — `main` for **DB**, `nightly` for **DB(Nightly)** (its build runs `make -f db-nightly.mk ... BRANCH=nightly`). The default is `main`, and the anchor commits from step 3 may only exist on the matching branch. The same applies to the raw dotgit pull below.
 
 The range may span multiple commits. If it does, examine **each step**, not just the cumulative diff — different commits often represent different upstream activities (schema expansion vs. bulk triage, etc.).
 
 ### d. raw dotgit
 
 ```sh
-vuls-data-update dotgit pull --dir /tmp/raw --restore ghcr.io/vulsio/vuls-data-db:vuls-data-raw-<source>
+vuls-data-update dotgit pull --dir /tmp/raw --checkout <main|nightly> --restore ghcr.io/vulsio/vuls-data-db:vuls-data-raw-<source>
 RAW=/tmp/raw/ghcr.io/vulsio/vuls-data-db/vuls-data-raw-<source>
 git -C "$RAW" log --format='%h %ci' <baseline_raw>..<target_raw>
 git -C "$RAW" diff --shortstat <baseline_raw>..<target_raw>
