@@ -1,5 +1,7 @@
 name: Cleanup
 
+run-name: "Cleanup untagged images in ${{ inputs.package }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

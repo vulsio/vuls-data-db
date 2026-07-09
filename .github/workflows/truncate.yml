@@ -1,5 +1,7 @@
 name: Truncate
 
+run-name: "Truncate ${{ inputs.tag }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

@@ -1,5 +1,7 @@
 name: Archive
 
+run-name: "Archive ${{ inputs.tag }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

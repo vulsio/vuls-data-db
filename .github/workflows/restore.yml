@@ -1,5 +1,7 @@
 name: Restore
 
+run-name: "Restore ${{ inputs.repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} -> ${{ github.repository }}:${{ inputs.tag }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

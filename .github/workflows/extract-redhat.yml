@@ -1,5 +1,7 @@
 name: Extract RedHat
 
+run-name: "Extract vuls-data-extracted-${{ inputs.target }}@${{ inputs.branch }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

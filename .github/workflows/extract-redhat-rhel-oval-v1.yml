@@ -1,5 +1,7 @@
 name: Extract RedHat RHEL Only (OVALv1)
 
+run-name: "Extract vuls-data-extracted-redhat-oval-v1-rhel@${{ inputs.branch }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

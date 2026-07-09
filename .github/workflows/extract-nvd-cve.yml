@@ -1,5 +1,7 @@
 name: Extract NVD CVE (API, Feed v2)
 
+run-name: "Extract vuls-data-extracted-${{ inputs.target }}@${{ inputs.branch }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:
