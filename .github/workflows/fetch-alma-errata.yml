@@ -1,5 +1,7 @@
 name: Fetch Alma (Errata)
 
+run-name: "Fetch vuls-data-raw-alma-errata by @${{ github.actor }}"
+
 on:
   workflow_call:
   workflow_dispatch:

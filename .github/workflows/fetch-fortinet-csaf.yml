@@ -1,5 +1,7 @@
 name: Fetch Fortinet CSAF
 
+run-name: "Fetch vuls-data-raw-fortinet-csaf${{ inputs.fetch_all && ' (all)' || '' }} by @${{ github.actor }}"
+
 on:
   workflow_call:
   workflow_dispatch:
