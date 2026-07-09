@@ -1,5 +1,7 @@
 name: Fetch VulnCheck
 
+run-name: "Fetch vuls-data-raw-${{ inputs.target }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

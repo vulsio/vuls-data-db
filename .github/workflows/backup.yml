@@ -1,5 +1,7 @@
 name: Backup
 
+run-name: "Backup ${{ inputs.src-repository }}:${{ inputs.tag }} -> ${{ inputs.dest-repository }}:${{ inputs.tag }}-${{ inputs.tag-suffix }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

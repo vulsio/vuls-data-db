@@ -1,5 +1,7 @@
 name: Extract RedHat RHEL Only (CSAF, VEX)
 
+run-name: "Extract vuls-data-extracted-${{ inputs.target }}-rhel@${{ inputs.branch }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

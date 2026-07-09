@@ -1,5 +1,7 @@
 name: Extract EOL
 
+run-name: "Extract vuls-data-extracted-eol@${{ inputs.branch }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

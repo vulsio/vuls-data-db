@@ -1,5 +1,7 @@
 name: Fetch RedHat Package Manifest
 
+run-name: "Fetch vuls-data-raw-redhat-package-manifest by @${{ github.actor }}"
+
 on:
   workflow_call:
   workflow_dispatch:

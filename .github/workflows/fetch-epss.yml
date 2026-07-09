@@ -1,5 +1,7 @@
 name: Fetch EPSS
 
+run-name: "Fetch vuls-data-raw-epss by @${{ github.actor }}"
+
 on:
   workflow_call:
   workflow_dispatch:

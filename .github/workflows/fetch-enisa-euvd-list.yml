@@ -1,5 +1,7 @@
 name: Fetch EUVD List
 
+run-name: "Fetch vuls-data-raw-enisa-euvd-list${{ inputs.fetch_single && ' (single)' || '' }} by @${{ github.actor }}"
+
 on:
   workflow_call:
   workflow_dispatch:

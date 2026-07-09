@@ -1,5 +1,7 @@
 name: Fetch Fedora
 
+run-name: "Fetch vuls-data-raw-fedora-api by @${{ github.actor }}"
+
 on:
   workflow_call:
   workflow_dispatch:

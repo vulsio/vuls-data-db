@@ -1,5 +1,7 @@
 name: Fetch Nuclei API
 
+run-name: "Fetch vuls-data-raw-nuclei-api by @${{ github.actor }}"
+
 on:
   workflow_call:
     secrets:

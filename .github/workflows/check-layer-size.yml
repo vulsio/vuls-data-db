@@ -1,5 +1,7 @@
 name: Check if layer size exceeds threshold
 
+run-name: "Check Layer Size ${{ inputs.repository }}:${{ inputs.tag }} by @${{ github.actor }}"
+
 on:
   workflow_call:
     inputs:

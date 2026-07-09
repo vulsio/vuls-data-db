@@ -1,5 +1,7 @@
 name: Fetch Cisco JSON
 
+run-name: "Fetch vuls-data-raw-cisco-json by @${{ github.actor }}"
+
 on:
   workflow_call:
     secrets:

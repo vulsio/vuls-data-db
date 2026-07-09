@@ -1,5 +1,7 @@
 name: Restore All
 
+run-name: "Restore All (${{ inputs.tag-suffix }}) by @${{ github.actor }}"
+
 on:
   workflow_dispatch:
     inputs:
