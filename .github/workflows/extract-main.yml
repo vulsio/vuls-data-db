@@ -19,7 +19,7 @@ on:
         options:
           - alma-errata
           - alma-osv
-          # - alma-oval
+          - alma-oval
           - alpine-secdb
           - alpine-osv
           - amazon
