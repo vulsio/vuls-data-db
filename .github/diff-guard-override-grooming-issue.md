@@ -12,7 +12,7 @@ The override lists were seeded (#152, #153) from a **failure-only** triage, whic
 
 **Input** — all `db-main` + `db-nightly` builds over the trailing ~2 months, **pass and fail alike**. PASS builds are the essential part: they are what reveal an override is no longer needed. The diff report prints a change-rate row for every target on every run, so each overridden target's full distribution over the window is directly observable.
 
-**Scope** — the whole override list is re-derived, not just appended to. The guard judges per (ecosystem, data source) for `diff db` and per (scan-result file, data source) for `diff detection`; override keys may be ecosystem-/file-wide (`<ecosystem>=<rate>`, `<file>=<rate>`) or slash-qualified to a single source (`cpe/cisco-json=30`, `cpe_jvn/jvn-feed-rss=25` — the narrower key wins). Prefer the narrowest key that covers the churn. For each existing entry, against the target's observed distribution over the window:
+**Scope** — the whole override list is re-derived, not just appended to. The guard judges per (ecosystem, data source) for `diff db` and per (scan-result file, data source) for `diff detection`; override keys may be ecosystem-/file-wide (`<ecosystem>=<rate>`, `<file-basename>=<rate>`) or slash-qualified to a single source (`cpe/cisco-json=30`, `cpe_jvn/jvn-feed-rss=25` — the narrower key wins). Prefer the narrowest key that covers the churn. For each existing entry, against the target's observed distribution over the window:
 
 - max observed ≤ the **default** threshold (db 10% / detection 5%) → **drop** the override;
 - would pass at a value below the current one → **narrow** it to (observed peak + headroom);

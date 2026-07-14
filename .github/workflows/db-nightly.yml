@@ -44,8 +44,8 @@ on:
           Overrides of `vuls diff detection` threshold, as multi-line
           entries of "<file-basename>=<rate>" (all data sources in the
           file) or "<file-basename>/<source>=<rate>" (single source,
-          e.g. "cpe_jvn/jvn-feed-rss=25", wins over the file key). Leave empty to
-          use the persistent list in the build job's
+          e.g. "cpe_jvn/jvn-feed-rss=25", wins over the file key).
+          Leave empty to use the persistent list in the build job's
           DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty
           value here replaces it for this dispatch only. A
           whitespace-only value still counts as non-empty, so it
