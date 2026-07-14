@@ -23,10 +23,10 @@ jobs:
       matrix:
         target:
           - "alma-errata"
-          - "alma-osv"
+          # - "alma-osv" # extractor is not implemented yet (stub since MaineK00n/vuls-data-update#177)
           # - "alma-oval"
           - "alpine-secdb"
-          - "alpine-osv"
+          # - "alpine-osv" # extractor is not implemented yet (stub since MaineK00n/vuls-data-update#177)
           - "amazon"
           # - "android-osv"
           - "arch"
@@ -159,10 +159,10 @@ jobs:
       matrix:
         target:
           - "alma-errata"
-          - "alma-osv"
+          # - "alma-osv" # extractor is not implemented yet (stub since MaineK00n/vuls-data-update#177)
           # - "alma-oval"
           - "alpine-secdb"
-          - "alpine-osv"
+          # - "alpine-osv" # extractor is not implemented yet (stub since MaineK00n/vuls-data-update#177)
           - "amazon"
           # - "android-osv"
           - "arch"
