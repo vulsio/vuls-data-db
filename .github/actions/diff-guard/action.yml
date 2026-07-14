@@ -268,11 +268,12 @@ runs:
         # Drop windows from this older-binary set until `vuls0_old_ref` is
         # bumped past that change.
         #
-        # cpe_* (pseudo servers with cpeNames) is likewise removed: the pinned
-        # older vuls0 predates "detect CPE with vuls2" and routes CPE URIs to
-        # an unconfigured go-cve-dictionary, which errors out. Drop these
-        # until `vuls0_old_ref` is bumped past the vuls2 CPE routing changes
-        # (NVD/VulnCheck/JVN/Fortinet/Cisco/PaloAlto).
+        # Every cpe_*.json (pseudo servers with cpeNames) is likewise removed:
+        # the pinned older vuls0 predates "detect CPE with vuls2" and routes
+        # CPE URIs to an unconfigured go-cve-dictionary, which errors out.
+        # Drop these until `vuls0_old_ref` is bumped past the commits that
+        # moved NVD, VulnCheck, JVN, Fortinet, Cisco and Palo Alto CPE
+        # detection to vuls2.
         mkdir -p ./scan-results-old
         cp ./scan-results/*.json ./scan-results-old/
         rm -f \
