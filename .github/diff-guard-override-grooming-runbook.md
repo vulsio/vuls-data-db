@@ -21,10 +21,19 @@ Two workflows run the diff guard, each on a 6-hour cron:
 
 Each workflow's `build` job carries two override lists in its `env:` block:
 
-- `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` — `<ecosystem>=<rate>` lines, for
-  `vuls diff db` (default threshold `DB_CHANGE_RATE_THRESHOLD`, 10%).
-- `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` — `<scan-result-file>=<rate>`
-  lines, for `vuls diff detection` (default `DETECTION_CHANGE_RATE_THRESHOLD`, 5%).
+- `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` — for `vuls diff db` (default threshold
+  `DB_CHANGE_RATE_THRESHOLD`, 10%). Keys are `<ecosystem>` (all data sources
+  in that ecosystem) or `<ecosystem>/<source>` (a single source, e.g.
+  `cpe/cisco-json` — wins over the ecosystem key).
+- `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` — for `vuls diff detection`
+  (default `DETECTION_CHANGE_RATE_THRESHOLD`, 5%). Keys are
+  `<scan-result-file>` (all data sources detected in that file) or
+  `<scan-result-file>/<source>` (a single source, e.g.
+  `cpe_jvn/jvn-feed-rss` — wins over the file key).
+
+The guard judges pass/fail per (ecosystem, source) / (file, source) — "target"
+below means that pair, and the report prints one row per pair. Both key
+vocabularies use the vuls2 source IDs (e.g. `cisco-json`, `jvn-feed-rss`).
 
 Goal: re-derive both lists from the last ~2 months of data so they neither go
 stale (overrides for targets that have calmed down) nor miss newly-recurring
@@ -112,8 +121,12 @@ the report-table rows instead.
 The `Run diff guard` step prints a markdown report per diff. Column layouts vary
 slightly by `vuls` version, so read the header row to map columns. Typical:
 
-- **`vuls diff detection`** — `| Name | Baseline | Target | Added | Removed | Change Rate | [Threshold] | Result |`
-- **`vuls diff db`** — `| Ecosystem | Detection Change Rate | KB Change Rate | [Threshold] | Result |`
+- **`vuls diff detection`** — `| Name | Source | Baseline | Target | Added | Removed | Change Rate | [Threshold] | Result |`
+- **`vuls diff db`** — `| Ecosystem | Source | Detection Change Rate | KB Change Rate | [Threshold] | Result |`
+
+(Reports from vuls2 builds predating the per-source split lack the `Source`
+column and carry one row per ecosystem/file — map columns from the header row
+and treat those rows as the ecosystem-/file-wide aggregate.)
 
 For each sampled run, record per target: name, change rate(s), and Result
 (PASS / FAIL). The report lists *every* target, so one sampled run yields the
@@ -163,6 +176,10 @@ Edit the `env:` blocks in **both** `.github/workflows/db-main.yml` and
 - One `<key>=<rate>` per line. **No `#` comments inside the lists** — vuls2's
   override parser rejects them. Per-entry rationale goes in the PR description,
   not the YAML.
+- Prefer the **narrowest key that covers the churn**: if only one source in an
+  ecosystem (or in a file) is churning, use the slash-qualified key
+  (`cpe/jvn-feed-rss=…`, `cpe_jvn/jvn-feed-rss=…`) instead of loosening the
+  whole ecosystem/file — a wide key re-masks the other sources sharing it.
 - The two pipelines have independent data (different data branch, different
   `vuls` version, baseline-age effects), so their lists legitimately differ —
   but where the **same** target is overridden in both, keep the **value

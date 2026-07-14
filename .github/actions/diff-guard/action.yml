@@ -66,31 +66,35 @@ inputs:
     description: OCI reference (repo:tag) to fetch the baseline vuls.db from.
     required: true
   db_change_rate_threshold:
-    description: "`vuls diff db` default change rate (%) threshold per ecosystem."
+    description: "`vuls diff db` default change rate (%) threshold per (ecosystem, data source)."
     required: true
   db_change_rate_threshold_overrides:
     description: |
-      Per-ecosystem overrides of the `vuls diff db` change rate threshold.
-      One "<ecosystem>=<rate>" entry per line (e.g. "ubuntu:26.04=25");
-      blank/whitespace-only lines are dropped. Empty value means "no
-      overrides" — every ecosystem uses db_change_rate_threshold.
+      Overrides of the `vuls diff db` change rate threshold. One entry per
+      line, either "<ecosystem>=<rate>" (e.g. "ubuntu:26.04=25", applies to
+      every data source in that ecosystem) or "<ecosystem>/<source>=<rate>"
+      (e.g. "cpe/cisco-json=30", single source, wins over the ecosystem key).
+      Blank/whitespace-only lines are dropped. Empty value means "no
+      overrides" — every (ecosystem, source) uses db_change_rate_threshold.
     required: false
     default: ""
   detection_change_rate_threshold:
-    description: "`vuls diff detection` default change rate (%) threshold per scan result."
+    description: "`vuls diff detection` default change rate (%) threshold per (scan result, data source)."
     required: true
   detection_change_rate_threshold_overrides:
     description: |
-      Per-file overrides of the `vuls diff detection` change rate threshold.
-      One "<file-basename>=<rate>" entry per line (e.g. "debian_13=8") where
-      the basename is the scan-result file name without ".json".
-      Blank/whitespace-only lines are dropped.
+      Overrides of the `vuls diff detection` change rate threshold. One entry
+      per line, either "<file-basename>=<rate>" (e.g. "debian_13=8", applies
+      to every data source detected in that file) or
+      "<file-basename>/<source>=<rate>" (e.g. "cpe_jvn/jvn-feed-rss=25",
+      single source, wins over the file key). The basename is the scan-result
+      file name without ".json". Blank/whitespace-only lines are dropped.
     required: false
     default: ""
   integration_ref:
     description: vulsio/integration commit SHA to pin scan-result fixtures to.
     required: false
-    default: 6547c4cb34bb42669b2f9bbc388d9b966b462c36
+    default: a612a993a1158c5079439adc4cb3422baaf595d8
   vuls0_old_ref:
     description: future-architect/vuls commit SHA for the older-binary detection check.
     required: false
@@ -263,10 +267,17 @@ runs:
         # still routes Windows to gost, so it does not exercise the vuls2 DB.
         # Drop windows from this older-binary set until `vuls0_old_ref` is
         # bumped past that change.
+        #
+        # cpe_* (pseudo servers with cpeNames) is likewise removed: the pinned
+        # older vuls0 predates "detect CPE with vuls2" and routes CPE URIs to
+        # an unconfigured go-cve-dictionary, which errors out. Drop these
+        # until `vuls0_old_ref` is bumped past the vuls2 CPE routing changes
+        # (NVD/VulnCheck/JVN/Fortinet/Cisco/PaloAlto).
         mkdir -p ./scan-results-old
         cp ./scan-results/*.json ./scan-results-old/
         rm -f \
-          ./scan-results-old/windows_*.json
+          ./scan-results-old/windows_*.json \
+          ./scan-results-old/cpe_*.json
         ls -1 ./scan-results-old
 
     - name: Diff detection with older vuls0 binary (baseline vs target DB)

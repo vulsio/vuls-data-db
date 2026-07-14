@@ -7,18 +7,20 @@ on:
     inputs:
       db_change_rate_threshold:
         description: |
-          `vuls diff db` default change rate (%) threshold per ecosystem;
-          diff fails if exceeded. Leave empty to use the build job's
-          DB_CHANGE_RATE_THRESHOLD env; a value here replaces it for this
-          dispatch only.
+          `vuls diff db` default change rate (%) threshold per
+          (ecosystem, data source); diff fails if exceeded. Leave empty
+          to use the build job's DB_CHANGE_RATE_THRESHOLD env; a value
+          here replaces it for this dispatch only.
         required: false
         type: string
         default: ""
       db_change_rate_threshold_overrides:
         description: |
-          Per-ecosystem overrides of `vuls diff db` threshold, as
-          multi-line "<ecosystem>=<rate>" entries. Leave empty to use the
-          persistent list in the build job's
+          Overrides of `vuls diff db` threshold, as multi-line entries of
+          "<ecosystem>=<rate>" (all sources in the ecosystem) or
+          "<ecosystem>/<source>=<rate>" (single source, e.g.
+          "cpe/cisco-json=30", wins over the ecosystem key). Leave empty
+          to use the persistent list in the build job's
           DB_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty value here
           replaces it for this dispatch only. A whitespace-only value
           still counts as non-empty, so it replaces the env list with
@@ -31,17 +33,19 @@ on:
       detection_change_rate_threshold:
         description: |
           `vuls diff detection` default change rate (%) threshold per
-          scan result; diff fails if exceeded. Leave empty to use the
-          build job's DETECTION_CHANGE_RATE_THRESHOLD env; a value here
-          replaces it for this dispatch only.
+          (scan result, data source); diff fails if exceeded. Leave
+          empty to use the build job's DETECTION_CHANGE_RATE_THRESHOLD
+          env; a value here replaces it for this dispatch only.
         required: false
         type: string
         default: ""
       detection_change_rate_threshold_overrides:
         description: |
-          Per-scan-result-file overrides of `vuls diff detection`
-          threshold, as multi-line "<file-basename>=<rate>" entries.
-          Leave empty to use the persistent list in the build job's
+          Overrides of `vuls diff detection` threshold, as multi-line
+          entries of "<file-basename>=<rate>" (all data sources in the
+          file) or "<file-basename>/<source>=<rate>" (single source,
+          e.g. "cpe_jvn/jvn-feed-rss=25", wins over the file key). Leave empty to
+          use the persistent list in the build job's
           DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES env; a non-empty
           value here replaces it for this dispatch only. A
           whitespace-only value still counts as non-empty, so it
