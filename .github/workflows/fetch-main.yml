@@ -16,6 +16,7 @@ on:
         options:
           - alma-osv
           - alma-oval
+          - alma-updateinfo
           - alpine-osv
           - alpine-secdb
           - alt-oval
@@ -133,6 +134,7 @@ on:
           - redhat-vex-v2
           - rocky-errata
           - rocky-osv
+          - rocky-updateinfo
           # - rubygems-db
           - rubygems-ghsa
           - rubygems-glsa

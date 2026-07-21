@@ -84,6 +84,7 @@ on:
           - vuls-data-raw-alma-errata
           - vuls-data-raw-alma-osv
           - vuls-data-raw-alma-oval
+          - vuls-data-raw-alma-updateinfo
           - vuls-data-raw-alpine-osv
           - vuls-data-raw-alpine-secdb
           - vuls-data-raw-alt-oval
@@ -226,6 +227,7 @@ on:
           - vuls-data-raw-redhat-vex-v2
           - vuls-data-raw-rocky-errata
           - vuls-data-raw-rocky-osv
+          - vuls-data-raw-rocky-updateinfo
           - vuls-data-raw-rootio
           # - vuls-data-raw-rubygems-db
           - vuls-data-raw-rubygems-ghsa
