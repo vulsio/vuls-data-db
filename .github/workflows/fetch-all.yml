@@ -22,6 +22,7 @@ jobs:
         target:
           - "alma-osv"
           - "alma-oval"
+          - "alma-updateinfo"
           - "alpine-osv"
           - "alpine-secdb"
           - "alt-oval"
@@ -146,6 +147,7 @@ jobs:
           - "redhat-vex-v2"
           - "rocky-errata"
           - "rocky-osv"
+          - "rocky-updateinfo"
           - "rootio"
           # - "rubygems-db"
           - "rubygems-ghsa"

@@ -20,6 +20,7 @@ on:
           - alma-errata
           - alma-osv
           # - alma-oval
+          # - alma-updateinfo
           - alpine-secdb
           - alpine-osv
           - amazon
@@ -117,6 +118,7 @@ on:
           # - redhat-osv
           - rocky-errata
           # - rocky-osv
+          # - rocky-updateinfo
           # - rubygems-ghsa
           # - rubygems-glsa
           # - rubygems-osv
