@@ -56,10 +56,13 @@ fi
 
 # Builtin-only sleep: `read -t` on a FIFO opened read-write never sees
 # data, so it just times out — no per-iteration fork (see header note).
-fifo=$(mktemp -u)
-mkfifo "$fifo"
-exec 9<>"$fifo"
-rm -f "$fifo"
+# The FIFO lives in a fresh mktemp -d directory (created atomically,
+# mode 0700) rather than at a mktemp -u name, so no other process can
+# race the path; it is unlinked as soon as fd 9 holds it open.
+fifo_dir=$(mktemp -d)
+mkfifo "$fifo_dir/tick"
+exec 9<>"$fifo_dir/tick"
+rm -rf "$fifo_dir"
 
 i=0
 while :; do
