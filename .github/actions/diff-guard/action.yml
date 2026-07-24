@@ -58,6 +58,19 @@ description: |
     rendered as `MISSING` in the summary table, surfaced as `?` in the
     diagnostic line, and counted as failure (exit rc=1).
 
+  Memory telemetry:
+    Several DB runs have been killed mid-diff-guard with SIGTERM
+    (exit 143, run shown as "cancelled", no cancelling actor in the
+    audit log) — the signature of the hosted runner VM becoming
+    unhealthy under memory pressure, not of a threshold trip. Each
+    heavy diff step therefore runs memmon.sh (same directory) as an
+    in-step sidecar streaming `[memmon]`/`[oom-watch]` lines into the
+    step log, and passes `--debug` to `vuls diff` so per-task
+    start/done lines (scan-result file + role, or ecosystem) land in
+    the same timestamped log for correlation. See memmon.sh's header
+    for the design constraints (stdout-only, fork-free sampling) and
+    for how to read the lines.
+
 inputs:
   target_db:
     description: Path to the freshly built vuls.db to validate.
@@ -209,6 +222,13 @@ runs:
         set +e
         set -o pipefail
 
+        # Memory telemetry sidecar; see the `Memory telemetry` section
+        # in the action description. `--debug` below makes `vuls diff`
+        # emit per-task start/done lines (stderr, so the tee'd report
+        # stays clean) that correlate with the sidecar's samples.
+        "${{ github.action_path }}/memmon.sh" &
+        memmon_pid=$!
+
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
         # step. Passed verbatim: vuls2's StringSlice flag parses an empty
         # value into an empty override list, so the no-overrides path
@@ -219,8 +239,10 @@ runs:
           "$TARGET_DB" "$VULS0" \
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
           --change-rate-threshold-override "$OVERRIDES_CSV" \
+          --debug \
           | tee ./diff-detection-report.md
         rc=$?
+        kill "$memmon_pid" 2>/dev/null
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
@@ -296,6 +318,10 @@ runs:
         set +e
         set -o pipefail
 
+        # Memory telemetry sidecar + `--debug`; see diff_detection_master.
+        "${{ github.action_path }}/memmon.sh" &
+        memmon_pid=$!
+
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
         # step. See diff_detection_master for the verbatim-pass rationale.
         vuls diff detection \
@@ -304,8 +330,10 @@ runs:
           "$TARGET_DB" "$VULS0_OLD" \
           --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
           --change-rate-threshold-override "$OVERRIDES_CSV" \
+          --debug \
           | tee ./diff-detection-old-report.md
         rc=$?
+        kill "$memmon_pid" 2>/dev/null
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
@@ -331,13 +359,19 @@ runs:
         set +e
         set -o pipefail
 
+        # Memory telemetry sidecar + `--debug`; see diff_detection_master.
+        "${{ github.action_path }}/memmon.sh" &
+        memmon_pid=$!
+
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
         # step. See diff_detection_master for the verbatim-pass rationale.
         vuls diff db ./baseline.db "$TARGET_DB" \
           --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
           --change-rate-threshold-override "$OVERRIDES_CSV" \
+          --debug \
           | tee ./diff-report.md
         rc=$?
+        kill "$memmon_pid" 2>/dev/null
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
