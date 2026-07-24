@@ -33,9 +33,18 @@ cleanup() {
   trap - TERM INT EXIT
   # The dmesg watcher is root-owned (sudo), so a plain kill would get
   # EPERM; route its kill through sudo. Its sed prefixer then exits on
-  # EOF by itself.
-  if [ -n "${dmesg_pid:-}" ]; then
-    sudo -n kill "$dmesg_pid" 2>/dev/null
+  # EOF by itself. Guard against PID reuse (the watcher may have exited
+  # early, e.g. unsupported dmesg option): only kill if the PID is
+  # still a child of this script whose comm is sudo/dmesg.
+  # /proc/<pid>/stat reads "pid (comm) state ppid ..."; comm for
+  # sudo/dmesg contains no spaces, so a whitespace read is safe here.
+  if [ -n "${dmesg_pid:-}" ] && [ -r "/proc/${dmesg_pid}/stat" ]; then
+    read -r _ watcher_comm _ watcher_ppid _ <"/proc/${dmesg_pid}/stat" || watcher_ppid=""
+    if [ "$watcher_ppid" = "$$" ]; then
+      case "$watcher_comm" in
+        "(sudo)" | "(dmesg)") sudo -n kill "$dmesg_pid" 2>/dev/null ;;
+      esac
+    fi
   fi
   jobs -p | xargs -r kill 2>/dev/null
   exit 0
