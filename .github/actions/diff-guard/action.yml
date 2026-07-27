@@ -58,6 +58,23 @@ description: |
     rendered as `MISSING` in the summary table, surfaced as `?` in the
     diagnostic line, and counted as failure (exit rc=1).
 
+  Memory budget:
+    `vuls diff detection` fans out up to NumCPU (4 on hosted runners)
+    concurrent vuls0 processes, each detecting one scan-result file
+    against an ~11 GiB DB. Task order is randomized (Go map iteration),
+    and profiling against the 2026-07-24 DB pair showed 16 of 150 tasks
+    peak above 3 GiB of anonymous memory (sles15 alone peaks at ~6 GiB;
+    live heap ~3 GiB, the rest GC slack). An unlucky co-schedule of the
+    heaviest tasks sums to ~18 GiB anon — past the 16 GiB runner — which
+    evicts the page cache, thrashes, and gets the job cancelled
+    server-side (runs on 2026-06-09 / 07-19 / 07-24 died this way:
+    SIGTERM mid-detection, "cancelled", no cancelling actor).
+    GOMEMLIMIT=3GiB on the detection steps caps each vuls0 at ~3.6 GiB
+    anon (worst-case 4-task sum ~13.7 GiB, inside budget) at the cost of
+    extra GC only in the few tasks that exceed the limit (~+11% on the
+    step, measured). `vuls diff db` is a single process and is left
+    uncapped.
+
 inputs:
   target_db:
     description: Path to the freshly built vuls.db to validate.
@@ -202,6 +219,11 @@ runs:
         TARGET_DB: ${{ inputs.target_db }}
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.detection_csv }}
+        # Caps each vuls0 worker's Go heap so an unlucky co-schedule of
+        # the heaviest scan-result files stays inside the 16 GiB runner.
+        # Inherited by the vuls0 child processes via the environment.
+        # See the `Memory budget` section in the action description.
+        GOMEMLIMIT: 3GiB
       run: |
         # No `set -e` after `rc=$?` — the rest of the step must reach
         # the final `echo "rc=..." >> $GITHUB_OUTPUT` so the aggregator
@@ -291,6 +313,8 @@ runs:
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.detection_csv }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
+        # See diff_detection_master and the `Memory budget` section.
+        GOMEMLIMIT: 3GiB
       run: |
         # Stay in `set +e` for the entire step. See note above.
         set +e
