@@ -59,9 +59,10 @@ description: |
     diagnostic line, and counted as failure (exit rc=1).
 
   Memory budget:
-    `vuls diff detection` fans out up to NumCPU (4 on hosted runners)
-    concurrent vuls0 processes, each detecting one scan-result file
-    against an ~11 GiB DB. Task order is randomized (Go map iteration),
+    `vuls diff detection` fans out up to NumCPU concurrent vuls0
+    processes (currently 4 on the standard ubuntu-latest runners this
+    repo builds on), each detecting one scan-result file against an
+    ~11 GiB DB. Task order is randomized (Go map iteration),
     and profiling against the 2026-07-24 DB pair showed 16 of 150 tasks
     peak above 3 GiB of anonymous memory (sles15 alone peaks at ~6 GiB;
     live heap ~3 GiB, the rest GC slack). An unlucky co-schedule of the
@@ -69,11 +70,12 @@ description: |
     evicts the page cache, thrashes, and gets the job cancelled
     server-side (runs on 2026-06-09 / 07-19 / 07-24 died this way:
     SIGTERM mid-detection, "cancelled", no cancelling actor).
-    GOMEMLIMIT=3GiB on the detection steps caps each vuls0 at ~3.6 GiB
-    anon (worst-case 4-task sum ~13.7 GiB, inside budget) at the cost of
-    extra GC only in the few tasks that exceed the limit (~+11% on the
-    step, measured). `vuls diff db` is a single process and is left
-    uncapped.
+    GOMEMLIMIT=3GiB on the detection steps is a soft target for the Go
+    heap, not a hard cap on process memory; in profiling it kept each
+    vuls0 around ~3.6 GiB anon (worst-case 4-task sum ~13.7 GiB, inside
+    budget) at the cost of extra GC only in the few tasks whose natural
+    heap exceeds the target (~+11% on the step, measured). `vuls diff
+    db` is a single process and is left unlimited.
 
 inputs:
   target_db:
@@ -219,10 +221,11 @@ runs:
         TARGET_DB: ${{ inputs.target_db }}
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.detection_csv }}
-        # Caps each vuls0 worker's Go heap so an unlucky co-schedule of
-        # the heaviest scan-result files stays inside the 16 GiB runner.
-        # Inherited by the vuls0 child processes via the environment.
-        # See the `Memory budget` section in the action description.
+        # Soft-limits each vuls0 worker's Go heap so an unlucky
+        # co-schedule of the heaviest scan-result files stays inside
+        # the 16 GiB runner. Inherited by the vuls0 child processes via
+        # the environment. See the `Memory budget` section in the
+        # action description.
         GOMEMLIMIT: 3GiB
       run: |
         # No `set -e` after `rc=$?` — the rest of the step must reach
@@ -313,7 +316,7 @@ runs:
         DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.detection_csv }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
-        # See diff_detection_master and the `Memory budget` section.
+        # See the `Memory budget` section in the action description.
         GOMEMLIMIT: 3GiB
       run: |
         # Stay in `set +e` for the entire step. See note above.
