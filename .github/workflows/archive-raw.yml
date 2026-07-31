@@ -123,6 +123,7 @@ jobs:
           - "nvd-api-cpe"
           - "nvd-api-cpematch"
           - "nvd-api-cve"
+          - "nvd-api-cvehistory"
           # - "nvd-feed-cpe-v1"
           # - "nvd-feed-cpematch-v1"
           # - "nvd-feed-cve-v1"

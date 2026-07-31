@@ -276,6 +276,7 @@ jobs:
           - "nvd-api-cve"
           - "nvd-api-cpe"
           - "nvd-api-cpematch"
+          - "nvd-api-cvehistory"
     uses: ./.github/workflows/fetch-nvd-api.yml
     permissions:
       contents: read

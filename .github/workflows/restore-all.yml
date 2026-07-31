@@ -187,6 +187,7 @@ jobs:
           - vuls-data-raw-nvd-api-cpe
           - vuls-data-raw-nvd-api-cpematch
           - vuls-data-raw-nvd-api-cve
+          - vuls-data-raw-nvd-api-cvehistory
           - vuls-data-raw-nvd-feed-cpe-v1
           - vuls-data-raw-nvd-feed-cpematch-v1
           - vuls-data-raw-nvd-feed-cve-v1
