@@ -20,6 +20,7 @@ on:
           - nvd-api-cve
           - nvd-api-cpe
           - nvd-api-cpematch
+          - nvd-api-cvehistory
 
 permissions: {}
 
