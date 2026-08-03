@@ -88,17 +88,17 @@ jobs:
       # entry and its rationale. `#` comments are NOT allowed inside
       # these lists (vuls2's override parser would reject them).
       DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
-        ubuntu:26.04=30
+        cpe/cisco-json=25
+        fedora:45=100
         microsoft/microsoft-msuc=35
         microsoft/microsoft-wsusscn2=35
-        fedora:45=100
-        cpe/cisco-json=25
+        ubuntu:26.04=30
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
-        debian_13=15
-        ubuntu_2604=50
-        rocky_10=15
-        opensuse_tumbleweed=15
         cpe_kernel/vulncheck-nist-nvd2=25
+        debian_13=15
+        opensuse_tumbleweed=15
+        rocky_10=15
+        ubuntu_2604=50
         windows_10_1809/microsoft-cvrf=10
         windows_10_20h2/microsoft-cvrf=25
         windows_10_21h1/microsoft-cvrf=15
