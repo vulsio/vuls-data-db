@@ -91,7 +91,7 @@ jobs:
         ubuntu:26.04=30
         microsoft/microsoft-msuc=35
         microsoft/microsoft-wsusscn2=35
-        fedora:45=300
+        fedora:45=100
         cpe/cisco-json=25
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         debian_13=15
@@ -99,24 +99,24 @@ jobs:
         rocky_10=15
         opensuse_tumbleweed=15
         cpe_kernel/vulncheck-nist-nvd2=25
-        windows_10_1809/microsoft-cvrf=10
-        windows_10_20h2/microsoft-cvrf=30
-        windows_10_21h1/microsoft-cvrf=15
+        windows_10_1809/microsoft-cvrf=9
+        windows_10_20h2/microsoft-cvrf=25
+        windows_10_21h1/microsoft-cvrf=13
         windows_10_21h2/microsoft-cvrf=10
-        windows_10_21h2_old/microsoft-cvrf=10
-        windows_10_22h2/microsoft-cvrf=15
-        windows_11_21h2/microsoft-cvrf=35
-        windows_11_22h2/microsoft-cvrf=35
-        windows_11_23h2/microsoft-cvrf=30
-        windows_11_24h2/microsoft-cvrf=30
-        windows_11_25h2/microsoft-cvrf=30
-        windows_server_2012/microsoft-cvrf=20
-        windows_server_2012_r2/microsoft-cvrf=20
-        windows_server_2016/microsoft-cvrf=25
-        windows_server_2019/microsoft-cvrf=30
-        windows_server_2022/microsoft-cvrf=25
-        windows_server_2022_sql_server_2019/microsoft-cvrf=20
-        windows_server_2025/microsoft-cvrf=25
+        windows_10_21h2_old/microsoft-cvrf=9
+        windows_10_22h2/microsoft-cvrf=12
+        windows_11_21h2/microsoft-cvrf=29
+        windows_11_22h2/microsoft-cvrf=28
+        windows_11_23h2/microsoft-cvrf=23
+        windows_11_24h2/microsoft-cvrf=24
+        windows_11_25h2/microsoft-cvrf=24
+        windows_server_2012/microsoft-cvrf=17
+        windows_server_2012_r2/microsoft-cvrf=17
+        windows_server_2016/microsoft-cvrf=19
+        windows_server_2019/microsoft-cvrf=26
+        windows_server_2022/microsoft-cvrf=21
+        windows_server_2022_sql_server_2019/microsoft-cvrf=16
+        windows_server_2025/microsoft-cvrf=19
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
