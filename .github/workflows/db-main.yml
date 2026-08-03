@@ -89,7 +89,6 @@ jobs:
       # these lists (vuls2's override parser would reject them).
       DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
         cpe/cisco-json=25
-        fedora:45=100
         microsoft/microsoft-msuc=35
         microsoft/microsoft-wsusscn2=35
         ubuntu:26.04=30
