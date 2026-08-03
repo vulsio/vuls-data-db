@@ -77,12 +77,12 @@ jobs:
       # Default per-target change-rate thresholds (%).
       DB_CHANGE_RATE_THRESHOLD: "10"
       DETECTION_CHANGE_RATE_THRESHOLD: "5"
-      # Per-target threshold overrides. Each entry covers recurring
-      # upstream-driven churn (new-distro / rolling-release / monthly
-      # vendor-data / small-baseline cycles) surfaced by db-nightly
-      # diff-guard failures. Entries are added by failure triage and
-      # periodically re-derived from the full pass+fail history by the
-      # diff-guard-grooming re-triage
+      # Per-target threshold overrides (DB and detection lists alike).
+      # Each entry covers recurring upstream-driven churn (new-distro /
+      # rolling-release / monthly vendor-data / small-baseline cycles)
+      # surfaced by db-nightly diff-guard failures. Entries are added by
+      # failure triage and periodically re-derived from the full
+      # pass+fail history per the override grooming runbook
       # (.github/diff-guard-override-grooming-runbook.md). Run
       # `git blame` on these lines for the commit that introduced each
       # entry and its rationale. `#` comments are NOT allowed inside
