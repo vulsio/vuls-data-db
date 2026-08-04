@@ -77,51 +77,45 @@ jobs:
       # Default per-target change-rate thresholds (%).
       DB_CHANGE_RATE_THRESHOLD: "10"
       DETECTION_CHANGE_RATE_THRESHOLD: "5"
-      # Per-target threshold overrides. Each entry covers recurring
-      # upstream-driven churn (new-distro / rolling-release / monthly
-      # vendor-data / small-baseline cycles) surfaced by db-nightly
-      # diff-guard failures; entries are added incrementally as new
-      # sources of churn appear. Run `git blame` on these lines for
-      # the commit that introduced each entry and its rationale. `#`
-      # comments are NOT allowed inside these lists (vuls2's override
-      # parser would reject them).
+      # Per-target threshold overrides (DB and detection lists alike).
+      # Each entry covers recurring upstream-driven churn (new-distro /
+      # rolling-release / monthly vendor-data / small-baseline cycles)
+      # surfaced by db-nightly diff-guard failures. Entries are added by
+      # failure triage and periodically re-derived from the full
+      # pass+fail history per the override grooming runbook
+      # (.github/diff-guard-override-grooming-runbook.md). Run
+      # `git blame` on these lines for the commit that introduced each
+      # entry and its rationale. `#` comments are NOT allowed inside
+      # these lists (vuls2's override parser would reject them).
       DB_CHANGE_RATE_THRESHOLD_OVERRIDES: |
+        cpe/cisco-json=25
+        microsoft/microsoft-msuc=35
+        microsoft/microsoft-wsusscn2=35
         ubuntu:26.04=30
-        ubuntu:snap=30
-        microsoft=35
-        fedora:45=50
       DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES: |
-        debian_13=20
-        ubuntu_2604=50
-        rocky_10=20
+        cpe_kernel/vulncheck-nist-nvd2=25
+        debian_13=15
         opensuse_tumbleweed=15
-        windows_7=10
-        windows_81=10
-        windows_10_1709=10
-        windows_10_1803=10
-        windows_10_1809=10
-        windows_10_1903=10
-        windows_10_1909=10
-        windows_10_2004=10
-        windows_10_20h2=10
-        windows_10_21h1=10
-        windows_10_21h2=10
-        windows_10_21h2_old=10
-        windows_10_22h2=10
-        windows_11_21h2=10
-        windows_11_22h2=10
-        windows_11_23h2=20
-        windows_11_24h2=20
-        windows_11_25h2=20
-        windows_server_2008=10
-        windows_server_2008_r2=10
-        windows_server_2012=10
-        windows_server_2012_r2=10
-        windows_server_2016=10
-        windows_server_2019=10
-        windows_server_2022=20
-        windows_server_2022_sql_server_2019=20
-        windows_server_2025=20
+        rocky_10=15
+        ubuntu_2604=50
+        windows_10_1809/microsoft-cvrf=10
+        windows_10_20h2/microsoft-cvrf=25
+        windows_10_21h1/microsoft-cvrf=15
+        windows_10_21h2/microsoft-cvrf=10
+        windows_10_21h2_old/microsoft-cvrf=10
+        windows_10_22h2/microsoft-cvrf=15
+        windows_11_21h2/microsoft-cvrf=30
+        windows_11_22h2/microsoft-cvrf=30
+        windows_11_23h2/microsoft-cvrf=25
+        windows_11_24h2/microsoft-cvrf=25
+        windows_11_25h2/microsoft-cvrf=25
+        windows_server_2012/microsoft-cvrf=20
+        windows_server_2012_r2/microsoft-cvrf=20
+        windows_server_2016/microsoft-cvrf=20
+        windows_server_2019/microsoft-cvrf=25
+        windows_server_2022/microsoft-cvrf=20
+        windows_server_2022_sql_server_2019/microsoft-cvrf=15
+        windows_server_2025/microsoft-cvrf=20
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
