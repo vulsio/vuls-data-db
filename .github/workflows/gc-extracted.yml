@@ -92,6 +92,8 @@ jobs:
             pack-threads: 2
             pack-windowMemory: 4g
           - tag: vuls-data-extracted-microsoft-msuc
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-microsoft-servicing
             pack-threads: 2
             pack-windowMemory: 4g
