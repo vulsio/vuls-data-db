@@ -78,6 +78,7 @@ jobs:
           - vuls-data-raw-amazon
           - vuls-data-raw-android-osv
           - vuls-data-raw-anolis-oval
+          - vuls-data-raw-apple-security-releases
           - vuls-data-raw-arch
           - vuls-data-raw-bitnami-osv
           - vuls-data-raw-bottlerocket
