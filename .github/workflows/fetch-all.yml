@@ -251,6 +251,13 @@ jobs:
       contents: read
       packages: write
 
+  fetch-microsoft-servicing:
+    name: Fetch vuls-data-raw-microsoft-servicing
+    uses: ./.github/workflows/fetch-microsoft-servicing.yml
+    permissions:
+      contents: read
+      packages: write
+
   fetch-msuc:
     name: Fetch vuls-data-raw-microsoft-msuc
     uses: ./.github/workflows/fetch-msuc.yml
@@ -361,6 +368,7 @@ jobs:
         fetch-fortinet-csaf,
         fetch-fortinet-cvrf,
         fetch-nvd-api,
+        fetch-microsoft-servicing,
         fetch-msuc,
         fetch-nuclei-api,
         fetch-paloalto-json-or-csaf,

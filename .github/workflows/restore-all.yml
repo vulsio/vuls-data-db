@@ -51,6 +51,7 @@ jobs:
           - vuls-data-extracted-microsoft-bulletin
           - vuls-data-extracted-microsoft-cvrf
           - vuls-data-extracted-microsoft-msuc
+          - vuls-data-extracted-microsoft-servicing
           - vuls-data-extracted-microsoft-wsusscn2
           - vuls-data-extracted-mitre-attack
           - vuls-data-extracted-mitre-capec
@@ -159,6 +160,7 @@ jobs:
           - vuls-data-raw-microsoft-cvrf
           - vuls-data-raw-microsoft-deployment
           - vuls-data-raw-microsoft-msuc
+          - vuls-data-raw-microsoft-servicing
           - vuls-data-raw-microsoft-product
           - vuls-data-raw-microsoft-vulnerability
           - vuls-data-raw-microsoft-wsusscn2

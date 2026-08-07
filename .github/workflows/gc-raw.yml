@@ -257,6 +257,9 @@ jobs:
           - tag: vuls-data-raw-microsoft-msuc
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-microsoft-servicing
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-microsoft-product
             pack-threads: 2
             pack-windowMemory: 4g
