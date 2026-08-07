@@ -1,4 +1,4 @@
-name: Fetch Servicing
+name: Fetch Microsoft Servicing
 
 run-name: "Fetch vuls-data-raw-microsoft-servicing by @${{ github.actor }}"
 
@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
   list-names:
-    name: List Servicing target names
+    name: List Microsoft Servicing target names
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
       - id: list
         run: |
-          include="$(jq -c . .github/workflows/servicing-targets.json)"
+          include="$(jq -c . .github/workflows/microsoft-servicing-targets.json)"
           echo "include=${include}" >> "$GITHUB_OUTPUT"
 
   fetch:
