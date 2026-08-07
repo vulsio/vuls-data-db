@@ -137,7 +137,9 @@ gh api --paginate "repos/vulsio/vuls-data-db/commits?per_page=100&path=.github/w
   --jq '.[] | .sha[0:7] + " " + .commit.committer.date + " " + (.commit.message | split("\n")[0])'
 ```
 
-Hits touching seed/target files are candidates. Verify by intersecting the seeds a PR added with the IDs added in the raw/extracted diff (IDs from `git diff --diff-filter=A --name-only <baseline>..<target>` vs `gh pr diff <n>` — `comm -12` on the sorted lists). A high overlap is the verdict.
+`<baseline_raw_date>` / `<target_raw_date>` are the raw anchor commits' timestamps — already shown in the step 3 datasource records, or recoverable with `git -C "$RAW" show -s --format=%cI <baseline_raw|target_raw>`.
+
+Hits touching seed/target files are candidates. Verify by intersecting the seed IDs a PR added (from `gh pr diff <n>`) with the basenames — path and extension stripped — of files added in the extracted diff (`git -C "$EX" diff --diff-filter=A --name-only <baseline_ext>..<target_ext>`): `comm -12` on the two sorted lists. A high overlap is the verdict.
 
 ## 5. Classify and cite
 
