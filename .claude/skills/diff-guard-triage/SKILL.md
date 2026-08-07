@@ -139,17 +139,12 @@ gh api --paginate "repos/vulsio/vuls-data-db/commits?per_page=100&path=.github/w
 
 Hits touching seed/target files are candidates. Verify by intersecting the seeds a PR added with the IDs added in the raw/extracted diff (IDs from `git diff --diff-filter=A --name-only <baseline>..<target>` vs `gh pr diff <n>` — `comm -12` on the sorted lists). A high overlap is the verdict.
 
-Two timing traps:
-
-- Seed PRs often land as **stacks merged across several days** — attribute against every PR in the raw window, not just the newest one. A PR whose seeds show ~0 overlap with this run's additions was either already crawled into the baseline (merged well before `<baseline_raw>`) or **not crawled yet** (merged just before `<target_raw>`).
-- The not-crawled-yet case means **another spike is queued**: warn that a subsequent run will trip the same guard when that PR's seeds land, even after this candidate is promoted.
-
 ## 5. Classify and cite
 
 Output the verdict as one of:
 
 - **upstream-driven** — raw moved, no vuls-data-update extractor/fetch code changes in the window (step 4b), no fetch-orchestration changes in vuls-data-db (step 4e), builder unchanged. Show the smoking-gun raw status flip (e.g., `needs-triage → needed`) on a representative file. Usually legitimate; consider per-target threshold override (see below).
-- **orchestration-driven** — raw moved because vuls-data-db changed what gets fetched (step 4e: seed/target registration, fetch workflow scope). Cite the vuls-data-db PR(s) and the seed↔added-ID overlap count. Usually an intentional one-time expansion: promote after inspection rather than adjusting thresholds, and flag any still-queued seed waves from stacked PRs.
+- **orchestration-driven** — raw moved because vuls-data-db changed what gets fetched (step 4e: seed/target registration, fetch workflow scope). Cite the vuls-data-db PR(s) and the seed↔added-ID overlap count. Usually an intentional one-time expansion: promote after inspection rather than adjusting thresholds.
 - **extractor-driven** — raw unchanged but extracted moved. Show a same-file diff between `<baseline_ext>` and `<target_ext>` and link to the offending commit in `pkg/extract/<source>/`.
 - **vuls2-builder-driven** — anchors unchanged but `created_by` differs. Link to the vuls2 commit in the date range.
 - **threshold-only** — small baseline (e.g. `ubuntu_2604` with baseline ~200 detections) tripping the global threshold on routine noise. Recommend a per-file or per-ecosystem override:
