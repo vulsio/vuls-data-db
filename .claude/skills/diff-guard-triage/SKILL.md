@@ -126,7 +126,7 @@ git -C "$RAW" log --format='%h %ci' <baseline_raw>..<target_raw>
 git -C "$RAW" diff --shortstat <baseline_raw>..<target_raw>
 ```
 
-If raw is unchanged but extracted moved → extractor is the source. If raw also changed → check e before concluding "upstream": the raw repo records what the fetch *config* asked for, and that config lives in vuls-data-db itself.
+If raw is unchanged but extracted moved → extractor is the source. If raw also changed → check step 4e before concluding "upstream": the raw repo records what the fetch *config* asked for, and that config lives in vuls-data-db itself.
 
 ### e. vuls-data-db fetch orchestration
 
@@ -137,7 +137,7 @@ gh api --paginate "repos/vulsio/vuls-data-db/commits?per_page=100&since=<baselin
   --jq '.[] | .sha[0:7] + " " + .commit.committer.date + " " + (.commit.message | split("\n")[0])'
 ```
 
-`<baseline_raw_date>` / `<target_raw_date>` are the raw anchor commits' timestamps — already shown in the step 3 datasource records, or recoverable with `git -C "$RAW" show -s --format=%cI <baseline_raw|target_raw>`.
+`<baseline_raw_date>` / `<target_raw_date>` are the raw anchor commits' timestamps — already shown in the step 3 datasource records, or recoverable with `git -C "$RAW" show -s --format=%cI <baseline_raw|target_raw>`. The query reads vuls-data-db's default branch (`main`), which is correct for both workflows — the `main|nightly` split applies to the dotgit repos and builder refs, not to this repo; both DB and DB(Nightly) run from `main`.
 
 Drill into hits in priority order: seed/target `.json` → `fetch-*.yml` → `*.mk`; anything touching the failed source's fetch path is a candidate. Verify by intersecting the seed IDs a PR added (from `gh pr diff <n>`) with the basenames — path and extension stripped — of files added in the extracted diff (`git -C "$EX" diff --diff-filter=A --name-only <baseline_ext>..<target_ext>`): `comm -12` on the two sorted lists. A high overlap is the verdict.
 
