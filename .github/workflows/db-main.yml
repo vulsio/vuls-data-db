@@ -168,7 +168,17 @@ jobs:
           SCHEMA_VERSION: ${{ steps.save_schema_version.outputs.schema_version }}
         run: |
           set -euo pipefail
-          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
+          # Annotations identify which pipeline produced an (initially
+          # untagged) candidate digest; they are readable without pulling
+          # the 250MB layer:
+          #   oras manifest fetch ghcr.io/vulsio/vuls-nightly-db@<digest> | jq .annotations
+          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" \
+            --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
+            --annotation "io.vuls.db.branch=main" \
+            --annotation "io.vuls.db.schema-version=${SCHEMA_VERSION}" \
+            --annotation "io.vuls.db.build.run-url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}" \
+            ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
           {
             echo "## Pushed candidate image (untagged, digest-only)"
