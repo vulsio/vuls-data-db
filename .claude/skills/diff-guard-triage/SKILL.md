@@ -130,16 +130,16 @@ If raw is unchanged but extracted moved → extractor is the source. If raw also
 
 ### e. vuls-data-db fetch orchestration
 
-Raw movement is only "upstream" if nobody changed what we fetch. Fetch scope lives in vuls-data-db (`.github/workflows/*-targets.json` seed lists — e.g. `msuc-targets.json` — and the fetch workflow files). Check for merged changes in the **raw** anchor window:
+Raw movement is only "upstream" if nobody changed what we fetch — and fetch scope lives in vuls-data-db itself: seed lists (`.github/workflows/*-targets.json`, e.g. `msuc-targets.json`), inline seed derivation in fetch workflow shell steps (e.g. the RSS pipeline and exclusion regex in `fetch-fortinet-cvrf.yml`), fetch schedules, and source enablement in the root `db-*.mk` files. List **all** merged commits in the **raw** anchor window — no path filter; the repo's merge volume is low enough that this is one API call and a handful of rows:
 
 ```sh
-gh api --paginate "repos/vulsio/vuls-data-db/commits?per_page=100&path=.github/workflows&since=<baseline_raw_date>&until=<target_raw_date>" \
+gh api --paginate "repos/vulsio/vuls-data-db/commits?per_page=100&since=<baseline_raw_date>&until=<target_raw_date>" \
   --jq '.[] | .sha[0:7] + " " + .commit.committer.date + " " + (.commit.message | split("\n")[0])'
 ```
 
 `<baseline_raw_date>` / `<target_raw_date>` are the raw anchor commits' timestamps — already shown in the step 3 datasource records, or recoverable with `git -C "$RAW" show -s --format=%cI <baseline_raw|target_raw>`.
 
-Hits touching seed/target files are candidates. Verify by intersecting the seed IDs a PR added (from `gh pr diff <n>`) with the basenames — path and extension stripped — of files added in the extracted diff (`git -C "$EX" diff --diff-filter=A --name-only <baseline_ext>..<target_ext>`): `comm -12` on the two sorted lists. A high overlap is the verdict.
+Drill into hits in priority order: seed/target `.json` → `fetch-*.yml` → `*.mk`; anything touching the failed source's fetch path is a candidate. Verify by intersecting the seed IDs a PR added (from `gh pr diff <n>`) with the basenames — path and extension stripped — of files added in the extracted diff (`git -C "$EX" diff --diff-filter=A --name-only <baseline_ext>..<target_ext>`): `comm -12` on the two sorted lists. A high overlap is the verdict.
 
 ## 5. Classify and cite
 
