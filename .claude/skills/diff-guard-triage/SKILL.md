@@ -1,6 +1,6 @@
 ---
 name: diff-guard-triage
-description: "Triage a failed DB workflow run on vulsio/vuls-data-db where the diff-guard step (vuls diff detection / vuls diff db) failed. Classify the cause as upstream-driven, extractor-driven, vuls2-builder-driven, or threshold-only, and cite a smoking-gun raw/extracted diff. Trigger when the user pastes a failed vuls-data-db DB run URL and asks why it failed or to investigate upstream/raw/extracted changes."
+description: "Triage a failed DB workflow run on vulsio/vuls-data-db where the diff-guard step (vuls diff detection / vuls diff db) failed. Classify the cause as upstream-driven, orchestration-driven, extractor-driven, vuls2-builder-driven, or threshold-only, and cite a smoking-gun raw/extracted diff. Trigger when the user pastes a failed vuls-data-db DB run URL and asks why it failed or to investigate upstream/raw/extracted changes."
 ---
 
 # Diff guard triage
@@ -69,7 +69,7 @@ The `<source>` is the datasource id from `db-main.mk` / `db-nightly.mk` — e.g.
 
 For ubuntu specifically, only one source is enabled (`ubuntu-cve-tracker`). For other OS families, multiple sources may need to be checked.
 
-## 4. Diff in the right order (rule out builder → extractor → upstream)
+## 4. Diff in the right order (rule out builder → extractor → orchestration → upstream)
 
 ### a. vuls2 builder
 
@@ -126,13 +126,27 @@ git -C "$RAW" log --format='%h %ci' <baseline_raw>..<target_raw>
 git -C "$RAW" diff --shortstat <baseline_raw>..<target_raw>
 ```
 
-If raw also changed → upstream is the source of truth. If raw is unchanged but extracted moved → extractor is the source.
+If raw is unchanged but extracted moved → extractor is the source. If raw also changed → check step 4e before concluding "upstream": the raw repo records what the fetch *config* asked for, and that config lives in vuls-data-db itself.
+
+### e. vuls-data-db fetch orchestration
+
+Raw movement is only "upstream" if nobody changed what we fetch — and fetch scope lives in vuls-data-db itself: seed lists (`.github/workflows/*-targets.json`, e.g. `msuc-targets.json`), inline seed derivation in fetch workflow shell steps (e.g. the RSS pipeline and exclusion regex in `fetch-fortinet-cvrf.yml`), fetch schedules, and source enablement in the root `db-*.mk` files. List **all** merged commits in the **raw** anchor window — no path filter; the repo's merge volume is low enough that this is one API call and a handful of rows:
+
+```sh
+gh api --paginate "repos/vulsio/vuls-data-db/commits?per_page=100&since=<baseline_raw_date>&until=<target_raw_date>" \
+  --jq '.[] | .sha[0:7] + " " + .commit.committer.date + " " + (.commit.message | split("\n")[0])'
+```
+
+`<baseline_raw_date>` / `<target_raw_date>` are the raw anchor commits' timestamps — already shown in the step 3 datasource records, or recoverable with `git -C "$RAW" show -s --format=%cI <baseline_raw|target_raw>`. The query reads vuls-data-db's default branch (`main`), which is correct for both workflows — the `main|nightly` split applies to the dotgit repos and builder refs, not to this repo; both DB and DB(Nightly) run from `main`.
+
+Drill into hits in priority order: seed/target `.json` → `fetch-*.yml` → `*.mk`; anything touching the failed source's fetch path is a candidate. Verify by intersecting the seed IDs a PR added (from `gh pr diff <n>`) with the basenames — path and extension stripped — of files added in the extracted diff (`git -C "$EX" diff --diff-filter=A --name-only <baseline_ext>..<target_ext>`): `comm -12` on the two sorted lists. A high overlap is the verdict.
 
 ## 5. Classify and cite
 
 Output the verdict as one of:
 
-- **upstream-driven** — raw moved, no vuls-data-update extractor/fetch code changes in the window (step 4b), builder unchanged. Show the smoking-gun raw status flip (e.g., `needs-triage → needed`) on a representative file. Usually legitimate; consider per-target threshold override (see below).
+- **upstream-driven** — raw moved, no vuls-data-update extractor/fetch code changes in the window (step 4b), no fetch-orchestration changes in vuls-data-db (step 4e), builder unchanged. Show the smoking-gun raw status flip (e.g., `needs-triage → needed`) on a representative file. Usually legitimate; consider per-target threshold override (see below).
+- **orchestration-driven** — raw moved because vuls-data-db changed what gets fetched (step 4e: seed/target registration, fetch workflow scope). Cite the vuls-data-db PR(s) and the seed↔added-ID overlap count. Usually an intentional one-time expansion: promote after inspection rather than adjusting thresholds.
 - **extractor-driven** — raw unchanged but extracted moved. Show a same-file diff between `<baseline_ext>` and `<target_ext>` and link to the offending commit in `pkg/extract/<source>/`.
 - **vuls2-builder-driven** — anchors unchanged but `created_by` differs. Link to the vuls2 commit in the date range.
 - **threshold-only** — small baseline (e.g. `ubuntu_2604` with baseline ~200 detections) tripping the global threshold on routine noise. Recommend a per-file or per-ecosystem override:
