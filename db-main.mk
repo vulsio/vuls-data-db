@@ -25,6 +25,8 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-bulletin BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-cvrf BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-msuc BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+# Held back until nightly has run it. Uncomment to add it here too.
+#	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-servicing BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-microsoft-wsusscn2 BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-attack BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-mitre-capec BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}

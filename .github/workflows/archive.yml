@@ -98,6 +98,7 @@ on:
           - vuls-data-raw-microsoft-cvrf
           - vuls-data-raw-microsoft-deployment
           - vuls-data-raw-microsoft-msuc
+          - vuls-data-raw-microsoft-servicing
           - vuls-data-raw-microsoft-product
           - vuls-data-raw-microsoft-vulnerability
           - vuls-data-raw-microsoft-wsusscn2

@@ -96,6 +96,7 @@ jobs:
           - "microsoft-cvrf"
           - "microsoft-deployment"
           - "microsoft-msuc"
+          - "microsoft-servicing"
           - "microsoft-product"
           - "microsoft-vulnerability"
           - "microsoft-wsusscn2"

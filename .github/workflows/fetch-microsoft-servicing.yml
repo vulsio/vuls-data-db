@@ -1,0 +1,155 @@
+name: Fetch Microsoft Servicing
+
+run-name: "Fetch vuls-data-raw-microsoft-servicing by @${{ github.actor }}"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  list-names:
+    name: List Microsoft Servicing target names
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      include: ${{ steps.list.outputs.include }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+      - id: list
+        run: |
+          include="$(jq -c . .github/workflows/microsoft-servicing-targets.json)"
+          echo "include=${include}" >> "$GITHUB_OUTPUT"
+
+  fetch:
+    name: Fetch vuls-data-raw-microsoft-servicing ${{ matrix.name }}
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    needs: [list-names]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.list-names.outputs.include) }}
+    env:
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
+        with:
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+          remove-large-packages: "true"
+          remove-cached-tools: "true"
+          remove-swapfile: "true"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Fetch
+        run: |
+          mkdir vuls-data-raw-microsoft-servicing
+          vuls-data-update fetch microsoft-servicing --dir vuls-data-raw-microsoft-servicing ${{ join(matrix.target, ' ') }}
+
+      - name: Create tarball
+        run: tar --remove-files -acf vuls-data-raw-microsoft-servicing.tar.zst vuls-data-raw-microsoft-servicing || [[ $? == 1 ]]
+
+      - name: Push ghcr.io/vulsio/vuls-data-db:microsoft-servicing-data-${{ matrix.name }}
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:microsoft-servicing-data-${{ matrix.name }} vuls-data-raw-microsoft-servicing.tar.zst
+
+  commit:
+    name: Commit vuls-data-raw-microsoft-servicing
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    if: ${{ success() || failure() }}
+    needs: [list-names, fetch]
+    env:
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
+        with:
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+          remove-large-packages: "true"
+          remove-cached-tools: "true"
+          remove-swapfile: "true"
+
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global maintenance.auto false
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing
+
+      - name: Aggregate microsoft-servicing-data-*
+        run: |
+          include='${{ needs.list-names.outputs.include }}'
+          if [[ -z "$include" ]]; then
+            echo "::error::list-names output is empty"
+            exit 1
+          fi
+          while read -r name; do
+            vuls-data-update dotgit pull --dir . --checkout "" "ghcr.io/${{ github.repository }}:microsoft-servicing-data-${name}"
+            if ls "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}/"* >/dev/null 2>&1; then
+              mv "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}/"* "ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing/"
+            fi
+            rmdir "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}"
+          done < <(echo "$include" | jq -r '.[].name')
+
+      - name: Set Git remote
+        run: |
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing
+          else
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing
+          fi
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          fi
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing vuls-data-raw-microsoft-servicing.tar.zst
+
