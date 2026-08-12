@@ -104,6 +104,7 @@ on:
           # - nvd-feed-cve-v2
           # - nvd-feed-cpe-v2
           # - nvd-feed-cpematch-v2
+          # - openssh-security
           # - openssl-secjson
           - oracle-linux
           # - oss-fuzz-osv
