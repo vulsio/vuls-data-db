@@ -480,5 +480,23 @@
       "KB5102202",
       "KB5120747"
     ]
+  },
+  {
+    "name": "os-unlisted",
+    "comment": "articles their own series listing omits, so no seed expands into them; they render no listing themselves either, so each is named. February 2021 for os/server-2008, os/server-2012, os/windows-10, os/windows-7 and os/windows-8-1",
+    "target": [
+      "KB4601319",
+      "KB4601331",
+      "KB4601345",
+      "KB4601347",
+      "KB4601348",
+      "KB4601349",
+      "KB4601354",
+      "KB4601357",
+      "KB4601360",
+      "KB4601363",
+      "KB4601366",
+      "KB4601384"
+    ]
   }
 ]
