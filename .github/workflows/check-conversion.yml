@@ -1,0 +1,119 @@
+name: Check Conversion
+
+run-name: "Check conversion is current by @${{ github.actor }}"
+
+# Some raw sources are not fully produced by their fetch. The fetch stores what
+# upstream published -- prose a parser cannot read -- and a separate, manual
+# step converts it into raw/. Nothing in the pipeline notices when that step is
+# skipped: the fetch succeeds, the commit lands, the extract runs clean over the
+# raw/ it already has, and the source simply goes on missing whatever upstream
+# added. Every signal stays green while the data goes stale.
+#
+# This is the signal. For each target it asks whether anything the conversion
+# reads has changed since the conversion last ran, and fails while the answer is
+# yes -- so the run stays red until somebody converts, rather than going quiet
+# after one notification.
+#
+# Adding a source is an entry in conversion-targets.json:
+#
+#   name  -- the source, i.e. the vuls-data-raw-<name> repository
+#   paths -- git pathspecs for what the conversion reads. Name the inputs, not
+#            the whole tree: evidence a source stores for citation (release
+#            notes, CVE records) is revised upstream on its own schedule and
+#            listing it here would fail this check every time one gained a
+#            reference, teaching everyone to ignore it.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  list-targets:
+    name: List conversion targets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      include: ${{ steps.list.outputs.include }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+      - id: list
+        run: |
+          include="$(jq -c . .github/workflows/conversion-targets.json)"
+          echo "include=${include}" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: Check vuls-data-raw-${{ matrix.name }} conversion
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-latest
+    needs: [list-targets]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.list-targets.outputs.include) }}
+    env:
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.name }}
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ matrix.name }}
+
+      - name: Check conversion is current
+        env:
+          # Interpolated through the environment rather than into the script, so
+          # that a target entry cannot become shell.
+          REPO: ghcr.io/${{ github.repository }}/vuls-data-raw-${{ matrix.name }}
+          NAME: ${{ matrix.name }}
+          PATHS: ${{ matrix.paths }}
+        run: |
+          set -euo pipefail
+
+          # When the conversion last ran is not recorded anywhere, and does not
+          # need to be: raw/ is written by that step and nothing else, so the
+          # commit that last touched it is the conversion.
+          base="$(git -C "$REPO" log -1 --format=%H -- raw/)"
+          if [[ -z "$base" ]]; then
+            {
+              echo "### :x: \`${NAME}\`: never converted"
+              echo
+              echo "\`raw/\` is empty, so the source extracts to nothing."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::${NAME}: raw/ has never been converted"
+            exit 1
+          fi
+
+          # $PATHS is deliberately unquoted: it is a list of pathspecs.
+          changed="$(git -C "$REPO" diff --name-only "${base}..HEAD" -- $PATHS)"
+          if [[ -z "$changed" ]]; then
+            echo "${NAME}: conversion is current (converted at ${base})"
+            exit 0
+          fi
+
+          {
+            echo "### :x: \`${NAME}\`: conversion is stale"
+            echo
+            echo "Converted at \`${base}\`. Changed since, among what the conversion reads:"
+            echo
+            echo '```'
+            echo "$changed"
+            echo '```'
+            echo
+            echo "Convert with the skill in the raw repository"
+            echo "(\`.claude/skills/\`), commit \`raw/\`, and this goes green."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::error::${NAME}: conversion is stale; changed since ${base}: $(echo ${changed} | tr '\n' ' ')"
+          exit 1
