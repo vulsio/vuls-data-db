@@ -126,10 +126,11 @@ jobs:
           fi
           while read -r name; do
             vuls-data-update dotgit pull --dir . --checkout "" "ghcr.io/${{ github.repository }}:microsoft-servicing-data-${name}"
+            # every shard writes the same top-level origin/ and raw/, so merge instead of mv
             if ls "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}/"* >/dev/null 2>&1; then
-              mv "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}/"* "ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing/"
+              cp -a "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}/"* "ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing/"
             fi
-            rmdir "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}"
+            rm -rf "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}"
           done < <(echo "$include" | jq -r '.[].name')
 
       - name: Set Git remote
