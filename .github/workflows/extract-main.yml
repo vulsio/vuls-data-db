@@ -25,7 +25,7 @@ on:
           - alpine-osv
           - amazon
           # - android-osv
-          # - apple-security-releases
+          - apple-security-releases
           - arch
           # - bitnami-osv
           # - cargo-ghsa

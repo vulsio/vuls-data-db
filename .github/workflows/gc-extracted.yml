@@ -28,6 +28,9 @@ jobs:
           - tag: vuls-data-extracted-amazon
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-extracted-apple-security-releases
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-extracted-arch
             pack-threads: 2
             pack-windowMemory: 4g

@@ -25,6 +25,7 @@ on:
           - vuls-data-extracted-alpine-osv
           - vuls-data-extracted-alpine-secdb
           - vuls-data-extracted-amazon
+          - vuls-data-extracted-apple-security-releases
           - vuls-data-extracted-arch
           - vuls-data-extracted-cargo-ghsa
           - vuls-data-extracted-cisa-kev
