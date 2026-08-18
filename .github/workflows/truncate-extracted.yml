@@ -20,6 +20,7 @@ jobs:
           - alpine-osv
           - alpine-secdb
           - amazon
+          - apple-security-releases
           - arch
           - cargo-ghsa
           - cisa-kev
