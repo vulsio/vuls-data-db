@@ -374,6 +374,9 @@ jobs:
           - tag: vuls-data-raw-openeuler-cvrf
             pack-threads: 2
             pack-windowMemory: 4g
+          - tag: vuls-data-raw-openssh-security
+            pack-threads: 2
+            pack-windowMemory: 4g
           - tag: vuls-data-raw-openssl-secjson
             pack-threads: 2
             pack-windowMemory: 4g
