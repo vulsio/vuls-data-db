@@ -19,6 +19,17 @@ description: |
        failure is easier to interpret because the earlier detection checks
        already established detection stability.
 
+  Step-summary layout strategy:
+    The job summary is rendered in step order, so the aggregate
+    "Diff guard summary" table unavoidably comes last. To keep it visible
+    without scrolling, everything above it is kept short: binary/fixture
+    metadata blocks are collapsed into <details>, and each diff section
+    shows only an excerpt (the report's overall **Result** line plus the
+    FAIL rows of its Summary table) with the full report collapsed into
+    <details>. The rendering is shared by all three diff steps via
+    render-excerpt.sh next to this manifest; its header comment documents
+    the vuls2 report-format properties the excerpt relies on.
+
   Failure-handling strategy:
     All three diff steps record their exit code as a step output (`rc`) and
     continue rather than aborting the job. A final aggregation step reads
@@ -109,11 +120,17 @@ runs:
         # Diff behavior (thresholds, output format) can change across vuls2
         # nightlies, so capture the exact binary being used to drive
         # `vuls diff ...` alongside the vuls0 binaries recorded below.
+        # Collapsed (like every metadata block below) so the aggregate
+        # "Diff guard summary" table at the bottom stays within the first
+        # screen of the job summary. See "Step-summary layout strategy".
         {
-          echo "## vuls (vuls2) driving diff checks"
+          echo "<details><summary>vuls (vuls2) driving diff checks</summary>"
+          echo ""
           echo '```text'
           go version -m "$(command -v vuls)" 2>&1 | awk '$1=="mod" && $2=="github.com/MaineK00n/vuls2"' || true
           echo '```'
+          echo ""
+          echo "</details>"
         } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Fetch baseline vuls.db
@@ -133,10 +150,13 @@ runs:
         # timestamp and short commit hash
         # (e.g. `v0.38.7-0.YYYYMMDDHHMMSS-<shorthash>`).
         {
-          echo "## vuls0 under test (master HEAD)"
+          echo "<details><summary>vuls0 under test (master HEAD)</summary>"
+          echo ""
           echo '```text'
           go version -m /tmp/vuls0-bin/vuls0 2>&1 | awk '$1=="mod" && $2=="github.com/future-architect/vuls"' || true
           echo '```'
+          echo ""
+          echo "</details>"
         } >> "$GITHUB_STEP_SUMMARY"
 
     # Pin vulsio/integration to a specific commit so scan-result fixtures used
@@ -161,8 +181,13 @@ runs:
         ls -1 ./scan-results
 
         integration_sha=$(git -C ./integration rev-parse HEAD)
-        echo "## Scan-result fixtures source" >> "$GITHUB_STEP_SUMMARY"
-        echo "- vulsio/integration @ \`${integration_sha}\`" >> "$GITHUB_STEP_SUMMARY"
+        {
+          echo "<details><summary>Scan-result fixtures source</summary>"
+          echo ""
+          echo "- vulsio/integration @ \`${integration_sha}\`"
+          echo ""
+          echo "</details>"
+        } >> "$GITHUB_STEP_SUMMARY"
 
     # Centralizes the multi-line `_overrides` input parsing for all three
     # diff steps below. Rule: `awk 'NF'` drops blank/whitespace-only lines
@@ -224,11 +249,10 @@ runs:
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        if [ -s ./diff-detection-report.md ]; then
-          head -n 100 ./diff-detection-report.md >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        # Excerpt (Result line + FAIL rows) with the full report collapsed
+        # into <details>; rendering is shared with the other two diff
+        # steps via render-excerpt.sh (see its header comment).
+        bash "${GITHUB_ACTION_PATH}/render-excerpt.sh" ./diff-detection-report.md 100 >> "$GITHUB_STEP_SUMMARY"
         # Defer failure: final "Aggregate diff results" step exits non-zero
         # if any diff tripped its threshold, so that all three diffs always
         # run and their summaries are available for triage.
@@ -247,10 +271,13 @@ runs:
         echo "VULS0_OLD=/tmp/vuls0-old-bin/vuls0-old" >> "$GITHUB_ENV"
 
         {
-          echo "## vuls0 under test (older pinned @${VULS0_OLD_REF:0:7})"
+          echo "<details><summary>vuls0 under test (older pinned @${VULS0_OLD_REF:0:7})</summary>"
+          echo ""
           echo '```text'
           go version -m /tmp/vuls0-old-bin/vuls0-old 2>&1 | awk '$1=="mod" && $2=="github.com/future-architect/vuls"' || true
           echo '```'
+          echo ""
+          echo "</details>"
         } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Prepare scan results for older-binary check (drop families unsupported by older vuls0)
@@ -309,11 +336,8 @@ runs:
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        if [ -s ./diff-detection-old-report.md ]; then
-          head -n 100 ./diff-detection-old-report.md >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        # Shared excerpt rendering; see render-excerpt.sh.
+        bash "${GITHUB_ACTION_PATH}/render-excerpt.sh" ./diff-detection-old-report.md 100 >> "$GITHUB_STEP_SUMMARY"
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
@@ -341,11 +365,8 @@ runs:
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        if [ -s ./diff-report.md ]; then
-          head -n 300 ./diff-report.md >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        # Shared excerpt rendering; see render-excerpt.sh.
+        bash "${GITHUB_ACTION_PATH}/render-excerpt.sh" ./diff-report.md 300 >> "$GITHUB_STEP_SUMMARY"
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 

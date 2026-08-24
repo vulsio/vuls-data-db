@@ -170,8 +170,12 @@ jobs:
           set -euo pipefail
           digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+          # Collapsed so the diff-guard sections below (and their terminal
+          # "Diff guard summary" table) stay within the first screen of the
+          # job summary.
           {
-            echo "## Pushed candidate image (untagged, digest-only)"
+            echo "<details><summary>Pushed candidate image (untagged, digest-only)</summary>"
+            echo ""
             echo '```text'
             echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${digest}"
             echo '```'
@@ -187,6 +191,8 @@ jobs:
             echo '```sh'
             echo " gh workflow run promote-digest.yml -R ${{ github.repository }} -f digest=${digest} -f tag=latest"
             echo '```'
+            echo ""
+            echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
 
       # Runs on every scheduled and manually dispatched invocation.
