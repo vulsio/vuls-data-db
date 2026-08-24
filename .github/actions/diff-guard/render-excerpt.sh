@@ -25,12 +25,19 @@ set -euo pipefail
 report="$1"
 head_n="$2"
 
+case "$head_n" in
+  '' | *[!0-9]* | 0)
+    echo "render-excerpt.sh: head_n must be a positive integer, got '${head_n}'" >&2
+    exit 2
+    ;;
+esac
+
 if [ ! -s "$report" ]; then
   echo "_(no report content — diff exited before producing output)_"
   exit 0
 fi
 
-awk '
+excerpt=$(awk '
   /^## Summary$/ { s = 1; next }
   /^## /         { if (s) exit; next }
   !s             { next }
@@ -39,7 +46,12 @@ awk '
     if (h < 2) { hdr[h++] = $0 }
     else if (/\*\*FAIL\*\*/) { if (!p) { print hdr[0]; print hdr[1]; p = 1 }; print }
   }
-' "$report"
+' "$report")
+if [ -n "$excerpt" ]; then
+  printf '%s\n' "$excerpt"
+else
+  echo "_(no Summary excerpt — the report did not match the expected vuls2 layout; see the full report below)_"
+fi
 echo ""
 echo "<details><summary>Full report (first ${head_n} lines)</summary>"
 echo ""
