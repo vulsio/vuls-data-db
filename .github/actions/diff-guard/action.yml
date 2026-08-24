@@ -26,9 +26,9 @@ description: |
     metadata blocks are collapsed into <details>, and each diff section
     shows only an excerpt (the report's overall **Result** line plus the
     FAIL rows of its Summary table) with the full report collapsed into
-    <details>. The excerpt relies on two properties of the vuls2 report
-    format: Summary rows are sorted FAIL-first, and only FAIL rows carry
-    the literal `**FAIL**` marker in the Result column.
+    <details>. The rendering is shared by all three diff steps via
+    render-excerpt.sh next to this manifest; its header comment documents
+    the vuls2 report-format properties the excerpt relies on.
 
   Failure-handling strategy:
     All three diff steps record their exit code as a step output (`rc`) and
@@ -249,36 +249,10 @@ runs:
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff detection (vuls0 master HEAD) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        if [ -s ./diff-detection-report.md ]; then
-          {
-            # Visible excerpt: the report's overall **Result** line plus
-            # the FAIL rows of its `## Summary` table; the full report is
-            # collapsed into <details> below. The awk relies on the vuls2
-            # report format (Summary rows FAIL-first, `**FAIL**` marker
-            # only on FAIL rows) — see "Step-summary layout strategy" in
-            # the action description. The table header is only emitted
-            # when at least one FAIL row exists, so an all-PASS report
-            # excerpts to just its Result line.
-            awk '
-              /^## Summary$/ { s = 1; next }
-              /^## /         { if (s) exit; next }
-              !s             { next }
-              /^\*\*Result\*\*/ { print; print ""; next }
-              /^\|/ {
-                if (h < 2) { hdr[h++] = $0 }
-                else if (/\*\*FAIL\*\*/) { if (!p) { print hdr[0]; print hdr[1]; p = 1 }; print }
-              }
-            ' ./diff-detection-report.md
-            echo ""
-            echo "<details><summary>Full report (first 100 lines)</summary>"
-            echo ""
-            head -n 100 ./diff-detection-report.md
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        # Excerpt (Result line + FAIL rows) with the full report collapsed
+        # into <details>; rendering is shared with the other two diff
+        # steps via render-excerpt.sh (see its header comment).
+        bash "${GITHUB_ACTION_PATH}/render-excerpt.sh" ./diff-detection-report.md 100 >> "$GITHUB_STEP_SUMMARY"
         # Defer failure: final "Aggregate diff results" step exits non-zero
         # if any diff tripped its threshold, so that all three diffs always
         # run and their summaries are available for triage.
@@ -362,30 +336,8 @@ runs:
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        if [ -s ./diff-detection-old-report.md ]; then
-          {
-            # Excerpt + collapsed full report; see the note on the same
-            # awk in diff_detection_master.
-            awk '
-              /^## Summary$/ { s = 1; next }
-              /^## /         { if (s) exit; next }
-              !s             { next }
-              /^\*\*Result\*\*/ { print; print ""; next }
-              /^\|/ {
-                if (h < 2) { hdr[h++] = $0 }
-                else if (/\*\*FAIL\*\*/) { if (!p) { print hdr[0]; print hdr[1]; p = 1 }; print }
-              }
-            ' ./diff-detection-old-report.md
-            echo ""
-            echo "<details><summary>Full report (first 100 lines)</summary>"
-            echo ""
-            head -n 100 ./diff-detection-old-report.md
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        # Shared excerpt rendering; see render-excerpt.sh.
+        bash "${GITHUB_ACTION_PATH}/render-excerpt.sh" ./diff-detection-old-report.md 100 >> "$GITHUB_STEP_SUMMARY"
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
@@ -413,33 +365,8 @@ runs:
 
         echo "---" >> "$GITHUB_STEP_SUMMARY"
         echo "## Diff vuls.db — rc=${rc}" >> "$GITHUB_STEP_SUMMARY"
-        if [ -s ./diff-report.md ]; then
-          {
-            # Excerpt + collapsed full report; see the note on the same
-            # awk in diff_detection_master. The DB report's `## Detection`
-            # and `## KB` tables share the Summary table's shape, so
-            # exiting at the first `## ` heading after `## Summary` is
-            # what keeps them out of the excerpt.
-            awk '
-              /^## Summary$/ { s = 1; next }
-              /^## /         { if (s) exit; next }
-              !s             { next }
-              /^\*\*Result\*\*/ { print; print ""; next }
-              /^\|/ {
-                if (h < 2) { hdr[h++] = $0 }
-                else if (/\*\*FAIL\*\*/) { if (!p) { print hdr[0]; print hdr[1]; p = 1 }; print }
-              }
-            ' ./diff-report.md
-            echo ""
-            echo "<details><summary>Full report (first 300 lines)</summary>"
-            echo ""
-            head -n 300 ./diff-report.md
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "_(no report content — diff exited before producing output)_" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        # Shared excerpt rendering; see render-excerpt.sh.
+        bash "${GITHUB_ACTION_PATH}/render-excerpt.sh" ./diff-report.md 300 >> "$GITHUB_STEP_SUMMARY"
         # Defer failure to "Aggregate diff results" step. See note above.
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
 
