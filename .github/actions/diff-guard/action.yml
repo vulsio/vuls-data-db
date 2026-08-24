@@ -260,9 +260,9 @@ runs:
             # when at least one FAIL row exists, so an all-PASS report
             # excerpts to just its Result line.
             awk '
-              /^## / { s++; next }
-              s > 1  { exit }
-              s != 1 { next }
+              /^## Summary$/ { s = 1; next }
+              /^## /         { if (s) exit; next }
+              !s             { next }
               /^\*\*Result\*\*/ { print; print ""; next }
               /^\|/ {
                 if (h < 2) { hdr[h++] = $0 }
@@ -367,9 +367,9 @@ runs:
             # Excerpt + collapsed full report; see the note on the same
             # awk in diff_detection_master.
             awk '
-              /^## / { s++; next }
-              s > 1  { exit }
-              s != 1 { next }
+              /^## Summary$/ { s = 1; next }
+              /^## /         { if (s) exit; next }
+              !s             { next }
               /^\*\*Result\*\*/ { print; print ""; next }
               /^\|/ {
                 if (h < 2) { hdr[h++] = $0 }
@@ -417,12 +417,13 @@ runs:
           {
             # Excerpt + collapsed full report; see the note on the same
             # awk in diff_detection_master. The DB report's `## Detection`
-            # and `## KB` tables share the Summary table's shape, so the
-            # `s > 1 { exit }` guard is what keeps them out of the excerpt.
+            # and `## KB` tables share the Summary table's shape, so
+            # exiting at the first `## ` heading after `## Summary` is
+            # what keeps them out of the excerpt.
             awk '
-              /^## / { s++; next }
-              s > 1  { exit }
-              s != 1 { next }
+              /^## Summary$/ { s = 1; next }
+              /^## /         { if (s) exit; next }
+              !s             { next }
               /^\*\*Result\*\*/ { print; print ""; next }
               /^\|/ {
                 if (h < 2) { hdr[h++] = $0 }
