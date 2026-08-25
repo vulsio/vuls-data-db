@@ -92,10 +92,24 @@ jobs:
         run: |
           vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-' | tr '\n' ' ')
 
+      # The fetch empties the tree before it writes, so whatever it fails to
+      # write back reads as a deletion -- and the advisory list it fetches is
+      # seeded from the files already on disk, so a dropped file also drops out
+      # of every later seed and never comes back on its own. This ran only on
+      # the RSS side until run 32317321410, which left the fetch-all side free
+      # to commit whatever it happened to lose: one advisory at a time from
+      # 2026-01-22 on, then all 181 at once when the advisory pages started
+      # answering with an interstitial. None of those advisories had actually
+      # been withdrawn: FG-IR-25-260 was dropped by the fetch-all run on
+      # 2026-04-07 and refetched by an RSS run the same day. So restore on both
+      # sides. An advisory upstream really does withdraw is rare enough to
+      # remove by hand.
       - name: Restore all deleted files
-        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf restore $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files --deleted)
+          deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files --deleted)
+          if [[ -n "${deleted}" ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf restore -- ${deleted}
+          fi
 
       - name: Set Git remote
         run: |
