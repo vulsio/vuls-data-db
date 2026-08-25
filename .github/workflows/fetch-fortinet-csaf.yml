@@ -83,9 +83,39 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
 
+      # The advisory list to refresh was the RSS window plus whatever CSAF the
+      # repository already held, which can only ever shrink: an advisory that
+      # drops out of the tree drops out of the seed, and one that gains a CSAF
+      # after leaving the RSS window is never asked for at all. Seed from the
+      # CVRF repository instead, which holds every advisory Fortinet has
+      # published -- 1127 against the 187 CSAF held here, and a sample of the
+      # difference found a CSAF for 13 of 14. The RSS window still goes in, for
+      # advisories newer than the last CVRF fetch, and so does the CSAF already
+      # held, so that holding an advisory is on its own enough to keep asking
+      # for it.
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+
+      # A CSAF is named after its advisory's title, and an advisory this
+      # repository holds no CSAF for has no title here to name it with. The CVRF
+      # carries one, so pass it along with the ID rather than let the fetch ask
+      # upstream for a title per advisory -- the host it would ask is the one
+      # already answering /psirt/<ID> with an interstitial. Advisories already
+      # held name themselves out of their own CSAF and need no title passed.
+      #
+      # Titles hold spaces, so the arguments go through an array rather than
+      # word splitting. awk keeps the first line each ID appears on, which is
+      # why the titled ones are listed first.
       - name: Fetch All
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
-        run: vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | tr '\n' ' ')
+        run: |
+          readarray -t args < <(cat \
+            <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat | jq -r '.documenttracking.identification.id + "=" + .document_title') \
+            <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') \
+            <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
+            | awk -F= 'NF && !seen[$1]++' | sort)
+          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s "${args[@]}"
 
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
