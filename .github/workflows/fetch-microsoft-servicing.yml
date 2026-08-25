@@ -34,8 +34,6 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.list-names.outputs.include) }}
-    env:
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -82,8 +80,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() || failure() }}
     needs: [list-names, fetch]
-    env:
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5

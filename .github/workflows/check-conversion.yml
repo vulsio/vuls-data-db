@@ -56,8 +56,6 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.list-targets.outputs.include) }}
-    env:
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
