@@ -36,7 +36,6 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     env:
-      GOEXPERIMENT: jsonv2
       CPEMATCH: ${{ inputs.target == 'nvd-api-cve' && 'vuls-data-raw-nvd-api-cpematch' || 'vuls-data-raw-nvd-feed-cpematch-v2' }}
     steps:
       - name: Maximize build space
