@@ -167,9 +167,17 @@ jobs:
           rm -f "$log_err"
 
           # Neutralize what --allow-escape-sequences let through: drop CSI
-          # sequences, any stray ESC bytes, and carriage returns so none of
-          # them reach the rendered step summary.
-          sed -i -e 's/\x1b\[[0-9;:?]*[ -/]*[@-~]//g' -e 's/\x1b//g' -e 's/\r//g' "$log_file"
+          # sequences (7-bit ESC[ and 8-bit 0x9b forms, with the full ECMA-48
+          # parameter-byte range 0x30-0x3f), any stray ESC bytes, and the
+          # remaining C0 controls and DEL (except tab and newline, which the
+          # TSV format needs) so none of them reach the rendered step summary.
+          # LC_ALL=C makes sed operate on bytes, keeping the classes exact.
+          LC_ALL=C sed -i \
+            -e 's/\x1b\[[0-9:;<=>?]*[ -/]*[@-~]//g' \
+            -e 's/\x9b[0-9:;<=>?]*[ -/]*[@-~]//g' \
+            -e 's/\x1b//g' \
+            -e 's/[\x00-\x08\x0b-\x1f\x7f]//g' \
+            "$log_file"
 
           while IFS= read -r job_name; do
             # Reuse the precomputed log-page link (falls back to the run URL).
