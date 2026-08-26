@@ -112,7 +112,12 @@ jobs:
               [[ -n "$job_id" && "$job_id" != "null" ]] || continue
 
               job_log=$(mktemp)
-              if gh api "repos/${GH_REPO}/actions/jobs/${job_id}/logs" > "$job_log" 2>> "$log_err"; then
+              # --allow-escape-sequences: since gh 2.97.0 (escape-sequence
+              # injection hardening), gh api refuses to emit a response that
+              # contains terminal escape sequences — which job logs routinely
+              # do (colored tool output) — even when redirected to a file.
+              # The sequences are stripped below before rendering.
+              if gh api --allow-escape-sequences "repos/${GH_REPO}/actions/jobs/${job_id}/logs" > "$job_log" 2>> "$log_err"; then
                 # Parse per-job log: extract step names from ##[group] markers
                 # and construct TSV format: job_name\tstep_name\tline
                 awk -v job="$job_name" '
@@ -135,7 +140,10 @@ jobs:
             else
               # Fallback 2: download run-level log archive
               log_zip=$(mktemp -u).zip
-              if gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}/logs" > "$log_zip" 2>> "$log_err"; then
+              # --allow-escape-sequences: the response is a ZIP archive, whose
+              # compressed bytes can contain 0x1b and trip the same gh >= 2.97
+              # escape-sequence guard as above.
+              if gh api --allow-escape-sequences "repos/${GH_REPO}/actions/runs/${RUN_ID}/logs" > "$log_zip" 2>> "$log_err"; then
                 log_dir=$(mktemp -d)
                 unzip -q -o "$log_zip" -d "$log_dir" 2>/dev/null || true
                 for job_dir in "$log_dir"/*/; do
@@ -157,6 +165,11 @@ jobs:
             fi
           fi
           rm -f "$log_err"
+
+          # Neutralize what --allow-escape-sequences let through: drop CSI
+          # sequences, any stray ESC bytes, and carriage returns so none of
+          # them reach the rendered step summary.
+          sed -i -e 's/\x1b\[[0-9;:?]*[ -/]*[@-~]//g' -e 's/\x1b//g' -e 's/\r//g' "$log_file"
 
           while IFS= read -r job_name; do
             # Reuse the precomputed log-page link (falls back to the run URL).
