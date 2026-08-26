@@ -32,6 +32,13 @@ jobs:
     needs: [list-names]
     strategy:
       fail-fast: false
+      # Legs come back empty across runners at once, so what the catalog
+      # throttles on is the rate the whole matrix adds up to rather than any
+      # one runner's. 5 is what the matrix already averaged, so capping there
+      # trims its peak of 10 without lengthening the run. Read with `--wait`
+      # below: the rate is the product of the two. `git blame` for the run
+      # both were measured on.
+      max-parallel: 5
       matrix:
         include: ${{ fromJson(needs.list-names.outputs.include) }}
     env:
@@ -63,10 +70,14 @@ jobs:
       - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
+      # `--wait` is the pause each worker takes after its own request, so a leg
+      # asks at concurrency/(latency + wait) per second: 2s takes a leg from
+      # ~3.7/s to ~2.1/s, and the matrix of 5 from ~37/s to ~11/s. Changing
+      # either this or max-parallel moves that product, so weigh them together.
       - name: Fetch
         run: |
           mkdir vuls-data-raw-microsoft-msuc
-          vuls-data-update fetch microsoft-msuc --dir vuls-data-raw-microsoft-msuc ${{ join(matrix.target, ' ') }}
+          vuls-data-update fetch microsoft-msuc --dir vuls-data-raw-microsoft-msuc --wait 2s ${{ join(matrix.target, ' ') }}
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-microsoft-msuc.tar.zst vuls-data-raw-microsoft-msuc || [[ $? == 1 ]]
