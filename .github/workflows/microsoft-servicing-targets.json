@@ -150,7 +150,7 @@
   },
   {
     "name": "dotnet-framework",
-    "comment": "the .NET Framework monthly line, in 22 series, one per host OS build: dotnetframework/windows-10/1607 through 22h2, dotnetframework/windows-11/21h2 through 26h1, dotnetframework/microsoft-server/2022, /23h2 and /hci, and the bare dotnetframework line. The servicing path spells the product unhyphenated; the group name follows msuc-targets.json. They stay in one shard because splitting a family cannot make a series smaller -- it can only make one reachable from two shards. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "comment": "the .NET Framework monthly line, in 22 series, one per host OS build: dotnetframework/windows-10/1607 through 22h2, dotnetframework/windows-11/21h2 through 26h1, dotnetframework/microsoft-server/2022, /23h2 and /hci, and the bare dotnetframework line. The servicing path spells the product unhyphenated; the group name follows msuc-targets.json. They stay in one shard because splitting a family cannot make a series smaller -- it can only make one reachable from two shards. KB5019758, an Exchange Server update, is seeded here because its article is served from this product. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
     "target": [
       "KB3035487",
       "KB3035488",
@@ -183,6 +183,7 @@
       "KB5013627",
       "KB5017499",
       "KB5017500",
+      "KB5019758",
       "KB5020686",
       "KB5020801",
       "KB5021086",
@@ -326,7 +327,7 @@
   },
   {
     "name": "office",
-    "comment": "Office and SharePoint: office, office/hotfix and office/update/2026. Microsoft serves the SharePoint articles from the office product, so they are seeded here rather than in a shard of their own -- the family a KB is seeded under is the one its article is served from. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "comment": "Office and SharePoint: office, office/hotfix and office/update/2026. Microsoft serves the SharePoint articles from the office product, so they are seeded here rather than in a shard of their own -- the family a KB is seeded under is the one its article is served from -- which is also why the Exchange Server updates KB5094140, KB5094142 and KB5094144 are here. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
     "target": [
       "KB2701659",
       "KB2701663",
@@ -342,12 +343,15 @@
       "KB5002101",
       "KB5002891",
       "KB5002892",
-      "KB5094139"
+      "KB5094139",
+      "KB5094140",
+      "KB5094142",
+      "KB5094144"
     ]
   },
   {
     "name": "exchange",
-    "comment": "Exchange Server, in 10 series: exchange/server and its hotfix, troubleshooting and update lines, and exchange/update. The Update Catalog does not carry Exchange at all, so the article is the only record of its update and every KB is named rather than reached from a seed. Grouped by product family like the rest of this file, though the reason the other groups have does not apply here: nothing expands, so no shard can duplicate another's work and the split is free. Family keeps it consistent with the groups where it is not.",
+    "comment": "Exchange Server, in 10 series: exchange/server and its hotfix, troubleshooting and update lines, and exchange/update. The Update Catalog does not carry Exchange at all, so the article is the only record of its update and every KB is named rather than reached from a seed. Enumerated from the Exchange Server build numbers and release dates table on learn.microsoft.com, which links every SU and HU row to support.microsoft.com/help/<KB>, rather than from the msuc corpus, which carries neither the hotfix waves nor the older security updates. Grouped by product family like the rest of this file, though the reason the other groups have does not apply here: nothing expands, so no shard can duplicate another's work and the split is free. Family keeps it consistent with the groups where it is not.",
     "target": [
       "KB2874216",
       "KB3040856",
@@ -365,8 +369,20 @@
       "KB5007012",
       "KB5007409",
       "KB5008631",
+      "KB5012698",
+      "KB5014261",
+      "KB5015322",
+      "KB5019077",
+      "KB5022143",
+      "KB5022193",
+      "KB5023038",
+      "KB5024296",
+      "KB5025903",
+      "KB5026261",
+      "KB5029388",
       "KB5030524",
       "KB5030877",
+      "KB5032146",
       "KB5032147",
       "KB5036386",
       "KB5036401",
@@ -378,6 +394,9 @@
       "KB5050672",
       "KB5050673",
       "KB5050674",
+      "KB5057651",
+      "KB5057652",
+      "KB5057653",
       "KB5063221",
       "KB5063222",
       "KB5063223",
@@ -386,12 +405,27 @@
       "KB5066367",
       "KB5066368",
       "KB5066369",
+      "KB5066370",
+      "KB5066371",
+      "KB5066372",
+      "KB5066373",
       "KB5071873",
       "KB5071874",
       "KB5071875",
       "KB5071876",
       "KB5074992",
-      "KB5103212"
+      "KB5074993",
+      "KB5074994",
+      "KB5074995",
+      "KB5081755",
+      "KB5103212",
+      "KB5103213",
+      "KB5103214",
+      "KB5103215",
+      "KB5121573",
+      "KB5121574",
+      "KB5121575",
+      "KB5121576"
     ]
   },
   {
