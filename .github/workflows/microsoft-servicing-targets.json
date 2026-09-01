@@ -1,11 +1,161 @@
 [
   {
-    "name": "dotnetframework",
-    "comment": "one seed per line pulls its whole series; covers 27 lines",
+    "name": "os-windows-legacy",
+    "comment": "Windows NT 4.0 through Windows 8.1 and Windows Server 2003 through 2012 R2, and the KBs no input records a product for: os/server-2008, os/server-2012, os/windows-7 and os/windows-8-1, and with them the os/windows and os/windows-server notice lines, which render no listing and collect the pre-Windows-10 one-offs. Windows is the one family split further, by OS line, because a line is a series boundary under os/ and the family is too large for one shard. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB2546250",
+      "KB3102939",
+      "KB3105579",
+      "KB3108371",
+      "KB3184943",
+      "KB3187754",
+      "KB3208481",
+      "KB3218362",
+      "KB4012204",
+      "KB4340583",
+      "KB4341832",
+      "KB4487396",
+      "KB4519108",
+      "KB4534312",
+      "KB4601275",
+      "KB4601347",
+      "KB4601348",
+      "KB4601349",
+      "KB4601357",
+      "KB4601360",
+      "KB4601363",
+      "KB4601366",
+      "KB4601384",
+      "KB5017220",
+      "KB5034176",
+      "KB5065425",
+      "KB5065432",
+      "KB5065507",
+      "KB5065509",
+      "KB5066780",
+      "KB5066782",
+      "KB5066873",
+      "KB5066875",
+      "KB5068908",
+      "KB5068909",
+      "KB5070879",
+      "KB5070881",
+      "KB5070882",
+      "KB5070883",
+      "KB5070884",
+      "KB5070886",
+      "KB5070887",
+      "KB5071506",
+      "KB5071507",
+      "KB5073699",
+      "KB5073700"
+    ]
+  },
+  {
+    "name": "os-windows-10",
+    "comment": "Windows 10: os/windows-10, one series of about 300 articles, so every seed for it belongs in one shard. Windows is the one family split further, by OS line, because a line is a series boundary under os/ and the family is too large for one shard. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB4075200",
+      "KB4088779",
+      "KB4093109",
+      "KB4571741",
+      "KB4577041",
+      "KB4580328",
+      "KB4586819",
+      "KB4592449",
+      "KB4594443",
+      "KB4599208",
+      "KB4601319",
+      "KB4601330",
+      "KB4601331",
+      "KB4601345",
+      "KB4601354",
+      "KB5000812",
+      "KB5001565",
+      "KB5001634",
+      "KB5003174",
+      "KB5007186",
+      "KB5007253",
+      "KB5008212",
+      "KB5011485",
+      "KB5012591",
+      "KB5013945",
+      "KB5020435",
+      "KB5020953",
+      "KB5021233",
+      "KB5023773",
+      "KB5025221",
+      "KB5026361",
+      "KB5062561",
+      "KB5063889",
+      "KB5065427",
+      "KB5065429",
+      "KB5065430",
+      "KB5066187",
+      "KB5066188",
+      "KB5066198",
+      "KB5066586",
+      "KB5066791",
+      "KB5066836"
+    ]
+  },
+  {
+    "name": "os-windows-11",
+    "comment": "Windows 11 and Windows Server 2022 and newer: os/windows-11, the six os/hotpatch lines and os/windows/winre. Windows is the one family split further, by OS line, because a line is a series boundary under os/ and the family is too large for one shard. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB5005007",
+      "KB5005108",
+      "KB5007386",
+      "KB5008286",
+      "KB5017321",
+      "KB5040435",
+      "KB5041571",
+      "KB5041592",
+      "KB5043067",
+      "KB5043080",
+      "KB5044280",
+      "KB5046398",
+      "KB5046399",
+      "KB5046400",
+      "KB5052105",
+      "KB5053636",
+      "KB5065431",
+      "KB5066189",
+      "KB5066793",
+      "KB5066835",
+      "KB5067036",
+      "KB5067112",
+      "KB5068221",
+      "KB5070773",
+      "KB5087424",
+      "KB5089548",
+      "KB5091470",
+      "KB5095051",
+      "KB5101649",
+      "KB5120228",
+      "KB5123273",
+      "KB5123607"
+    ]
+  },
+  {
+    "name": "servicing-stack",
+    "comment": "servicing stack updates: os/windows/ssu. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB5003974",
+      "KB5004748",
+      "KB5099542",
+      "KB5106412",
+      "KB5106414"
+    ]
+  },
+  {
+    "name": "dotnet-framework",
+    "comment": "the .NET Framework monthly line, in 22 series, one per host OS build: dotnetframework/windows-10/1607 through 22h2, dotnetframework/windows-11/21h2 through 26h1, dotnetframework/microsoft-server/2022, /23h2 and /hci, and the bare dotnetframework line. The servicing path spells the product unhyphenated; the group name follows msuc-targets.json. They stay in one shard because splitting a family cannot make a series smaller -- it can only make one reachable from two shards. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
     "target": [
       "KB3035487",
       "KB3035488",
       "KB3035489",
+      "KB4514359",
       "KB4514602",
       "KB4534976",
       "KB4535102",
@@ -21,6 +171,7 @@
       "KB4578971",
       "KB4578972",
       "KB4578974",
+      "KB4579977",
       "KB4601050",
       "KB4601052",
       "KB4601054",
@@ -37,6 +188,7 @@
       "KB5021086",
       "KB5021087",
       "KB5022727",
+      "KB5034272",
       "KB5037037",
       "KB5041020",
       "KB5044092",
@@ -73,196 +225,17 @@
       "KB5101004",
       "KB5101007",
       "KB5102201",
+      "KB5102202",
       "KB5102203",
       "KB5102204",
       "KB5102205",
       "KB5102206",
-      "KB5104032",
-      "KB5104033",
-      "KB5104034"
-    ]
-  },
-  {
-    "name": "exchange",
-    "comment": "one seed per line pulls its whole series; covers 1 lines",
-    "target": [
-      "KB5074992",
-      "KB5094139",
-      "KB5103212"
-    ]
-  },
-  {
-    "name": "internet-explorer",
-    "comment": "one seed per line pulls its whole series; covers 1 lines",
-    "target": [
-      "KB3208481",
-      "KB3218362",
-      "KB4012204"
-    ]
-  },
-  {
-    "name": "office",
-    "comment": "one seed per line pulls its whole series; covers 4 lines",
-    "target": [
-      "KB2701659",
-      "KB2701663",
-      "KB2701664",
-      "KB4011705",
-      "KB4011707",
-      "KB4011711",
-      "KB5002099",
-      "KB5002100",
-      "KB5002101",
-      "KB5002891",
-      "KB5002892",
-      "KB5029497"
-    ]
-  },
-  {
-    "name": "os-catalog",
-    "comment": "one seed per line pulls its whole series; covers 3 lines",
-    "target": [
-      "KB2542054",
-      "KB2546250",
-      "KB2548826",
-      "KB3102939",
-      "KB3105579",
-      "KB3108371",
-      "KB5087090",
-      "KB5087424",
-      "KB5104852"
-    ]
-  },
-  {
-    "name": "os-current",
-    "comment": "one seed per line pulls its whole series; covers 21 lines",
-    "target": [
-      "KB4075200",
-      "KB4088779",
-      "KB4093109",
-      "KB4571741",
-      "KB4577041",
-      "KB4580328",
-      "KB4586819",
-      "KB4592449",
-      "KB4594443",
-      "KB4599208",
-      "KB4601330",
-      "KB5000812",
-      "KB5001565",
-      "KB5001634",
-      "KB5003174",
-      "KB5007186",
-      "KB5007253",
-      "KB5008212",
-      "KB5011485",
-      "KB5012591",
-      "KB5013945",
-      "KB5020435",
-      "KB5020953",
-      "KB5021233",
-      "KB5023773",
-      "KB5025221",
-      "KB5026361",
-      "KB5041592",
-      "KB5043067",
-      "KB5044280",
-      "KB5062561",
-      "KB5063889",
-      "KB5065425",
-      "KB5065427",
-      "KB5065429",
-      "KB5065430",
-      "KB5065431",
-      "KB5065432",
-      "KB5066187",
-      "KB5066188",
-      "KB5066189",
-      "KB5066198",
-      "KB5066586",
-      "KB5066780",
-      "KB5066782",
-      "KB5066791",
-      "KB5066793",
-      "KB5066835",
-      "KB5066836",
-      "KB5067036",
-      "KB5067112",
-      "KB5068221",
-      "KB5070773",
-      "KB5070879",
-      "KB5070881",
-      "KB5070882",
-      "KB5070883",
-      "KB5070884"
-    ]
-  },
-  {
-    "name": "os-legacy",
-    "comment": "one seed per line pulls its whole series; covers 4 lines",
-    "target": [
-      "KB5065507",
-      "KB5065509",
-      "KB5066873",
-      "KB5066875",
-      "KB5068908",
-      "KB5068909",
-      "KB5070886",
-      "KB5070887",
-      "KB5071506",
-      "KB5071507",
-      "KB5073699",
-      "KB5073700"
-    ]
-  },
-  {
-    "name": "os-other",
-    "comment": "one seed per line pulls its whole series; covers 7 lines",
-    "target": [
-      "KB3115480",
-      "KB3127898",
-      "KB3127962",
-      "KB3184943",
-      "KB3187754",
-      "KB4340583",
-      "KB4341832",
-      "KB4487396",
-      "KB4519108",
-      "KB4579977",
-      "KB4601275",
-      "KB5003974",
-      "KB5004748",
-      "KB5017220",
-      "KB5017321",
-      "KB5040435",
-      "KB5041571",
-      "KB5043080",
-      "KB5089548",
-      "KB5095051",
-      "KB5101649"
-    ]
-  },
-  {
-    "name": "servicing-stack",
-    "comment": "one seed per line pulls its whole series; covers 1 lines",
-    "target": [
-      "KB5099542",
-      "KB5106412",
-      "KB5106414"
-    ]
-  },
-  {
-    "name": "sqlserver",
-    "comment": "one seed per line pulls its whole series; covers 1 lines",
-    "target": [
-      "KB5102338",
-      "KB5102339",
-      "KB5102340"
+      "KB5120747"
     ]
   },
   {
     "name": "dotnet-runtime",
-    "comment": "series the msuc-derived seeds do not reach: the .NET runtime lines. net-8 and newer render a listing so a seed pulls the line (that is how the catalog-expired KB5038352, .NET 8.0.5, comes back); net-7 and older render none, so every KB is named. Covers developer/update, dotnet/net-10, dotnet/net-5, dotnet/net-6, dotnet/net-7, dotnet/net-8, dotnet/net-9, dotnet/net-core-3-1",
+    "comment": ".NET Core and .NET 5 and newer, in 11 series: dotnet/net-5 through net-10, dotnet/net-core-3-1 and developer/update. net-8 and newer render a listing, so a seed pulls the whole line -- that is how KB5038352 (.NET 8.0.5), expired in the Update Catalog, comes back. net-7 and older render none, so every KB is named. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
     "target": [
       "KB4598457",
       "KB4598458",
@@ -343,14 +316,38 @@
       "KB5071066",
       "KB5071067",
       "KB5072928",
+      "KB5104032",
+      "KB5104033",
+      "KB5104034",
       "KB5122104",
       "KB5122105",
       "KB5122106"
     ]
   },
   {
-    "name": "exchange-uncovered",
-    "comment": "series the msuc-derived seeds do not reach: Exchange, which renders no listing and which the Update Catalog does not carry at all, so each article is the only record of its update and every KB is named. Covers exchange/server, exchange/server/hotfix, exchange/server/troubleshooting, exchange/update",
+    "name": "office",
+    "comment": "Office and SharePoint: office, office/hotfix and office/update/2026. Microsoft serves the SharePoint articles from the office product, so they are seeded here rather than in a shard of their own -- the family a KB is seeded under is the one its article is served from. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB2701659",
+      "KB2701663",
+      "KB2701664",
+      "KB3115480",
+      "KB3127898",
+      "KB3127962",
+      "KB4011705",
+      "KB4011707",
+      "KB4011711",
+      "KB5002099",
+      "KB5002100",
+      "KB5002101",
+      "KB5002891",
+      "KB5002892",
+      "KB5094139"
+    ]
+  },
+  {
+    "name": "exchange",
+    "comment": "Exchange Server, in 10 series: exchange/server and its hotfix, troubleshooting and update lines, and exchange/update. The Update Catalog does not carry Exchange at all, so the article is the only record of its update and every KB is named rather than reached from a seed. Grouped by product family like the rest of this file, though the reason the other groups have does not apply here: nothing expands, so no shard can duplicate another's work and the split is free. Family keeps it consistent with the groups where it is not.",
     "target": [
       "KB2874216",
       "KB3040856",
@@ -392,12 +389,34 @@
       "KB5071873",
       "KB5071874",
       "KB5071875",
-      "KB5071876"
+      "KB5071876",
+      "KB5074992",
+      "KB5103212"
+    ]
+  },
+  {
+    "name": "sql",
+    "comment": "SQL Server: the sql/sql-server-2016 and sql/sql-server-2017 general distribution release lines. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB5102338",
+      "KB5102339",
+      "KB5102340"
+    ]
+  },
+  {
+    "name": "visual-studio",
+    "comment": "Visual Studio and the developer tooling that ships with it: visual-studio/update. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
+    "target": [
+      "KB2542054",
+      "KB2548826",
+      "KB2565063",
+      "KB5025792",
+      "KB5029497"
     ]
   },
   {
     "name": "dynamics",
-    "comment": "series the msuc-derived seeds do not reach: Dynamics 365 / CRM update articles (no listing). Covers dynamics/business-central/update, dynamics/crm/update",
+    "comment": "Dynamics 365 and CRM: dynamics/business-central/update and dynamics/crm/update. Neither renders a listing, so every KB is named. Grouped by product family like the rest of this file, though the reason the other groups have does not apply here: nothing expands, so no shard can duplicate another's work and the split is free. Family keeps it consistent with the groups where it is not.",
     "target": [
       "KB5023894",
       "KB5023896",
@@ -442,61 +461,18 @@
     ]
   },
   {
-    "name": "os-uncovered",
-    "comment": "series the msuc-derived seeds do not reach: os/* series the existing seeds miss: server-2008 (145 articles) and the hotpatch and recovery-environment lines. Covers os/hotpatch/preview/azure-automanage-windows-server, os/hotpatch/preview/windows-server-2022, os/hotpatch/windows-11, os/hotpatch/windows-server-2025, os/server-2008, os/windows/winre",
+    "name": "apps",
+    "comment": "the remaining one-off lines: azure/update, azure/file-sync and its update lines, host-integration-server/his-2020/cu2 and servers/power-bi-report-server/hotfix. Azure File Sync is seeded from the CVRF KBs that redirect into it, because its own agent-release articles carry no KB number at all. Grouped by product family, not by product version as msuc-targets.json is: a seed pulls its whole series listing, shards do not share what a run has already stored, so a series two shards can both reach is fetched twice -- and family is the coarsest key that keeps a series whole.",
     "target": [
-      "KB4534312",
-      "KB5005007",
-      "KB5005108",
-      "KB5007386",
-      "KB5008286",
-      "KB5034176",
-      "KB5046398",
-      "KB5046399",
-      "KB5046400",
-      "KB5052105",
-      "KB5053636",
-      "KB5091470",
-      "KB5120228",
-      "KB5123273",
-      "KB5123607"
-    ]
-  },
-  {
-    "name": "misc",
-    "comment": "series the msuc-derived seeds do not reach: the remaining one-off lines (Visual Studio, Azure File Sync and Azure, Host Integration Server, Power BI Report Server, and the .NET Framework sub-lines the msuc-derived seeds skip). Azure File Sync is seeded from the CVRF KBs that redirect into it, since its own agent-release articles carry no KB number at all. Covers azure/file-sync/update, azure/update, dotnetframework/microsoft-server/hci, dotnetframework/windows-10/1909, dotnetframework/windows-10/21h2, dotnetframework/windows-11/3-5, host-integration-server/his-2020/cu2, servers/power-bi-report-server/hotfix, visual-studio/update",
-    "target": [
-      "KB2565063",
-      "KB4514359",
       "KB5023052",
       "KB5023054",
       "KB5023058",
       "KB5023884",
-      "KB5025792",
       "KB5032921",
-      "KB5034272",
       "KB5034599",
       "KB5039814",
-      "KB5102202",
-      "KB5120747"
-    ]
-  },
-  {
-    "name": "os-unlisted",
-    "comment": "articles their own series listing omits, so no seed expands into them; they render no listing themselves either, so each is named. February 2021 for os/server-2008, os/server-2012, os/windows-10, os/windows-7 and os/windows-8-1",
-    "target": [
-      "KB4601319",
-      "KB4601331",
-      "KB4601345",
-      "KB4601347",
-      "KB4601348",
-      "KB4601349",
-      "KB4601354",
-      "KB4601357",
-      "KB4601360",
-      "KB4601363",
-      "KB4601366",
-      "KB4601384"
+      "KB5087090",
+      "KB5104852"
     ]
   }
 ]
