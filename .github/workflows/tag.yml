@@ -1,0 +1,114 @@
+name: Tag
+
+# Puts a tag on a registry dotgit image, by digest. This is the inverse of
+# untag.yml and the way to undo one: that run's summary records the digest of
+# the image it untagged, which is the whole of what this needs.
+#
+# The digest is the whole handle. If the image has already been collected by
+# the untagged sweep in cleanup-vuls-data-db.yml, it is restored first: GitHub
+# keeps a deleted package version restorable for 30 days and lists it under
+# state=deleted with the digest as its name.
+#
+# Past 30 days, restore.yml from vuls-data-db-backup covers vuls-data-raw-* and
+# vuls-data-extracted-*, and a <source>-data-* shard tag is rebuilt by re-running
+# its fetch.
+
+run-name: "Tag ${{ inputs.repository }}@${{ inputs.digest }} as ${{ inputs.tag }} by @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        required: true
+        default: "vulsio/vuls-data-db"
+        type: choice
+        options:
+          - vulsio/vuls-data-db
+          - vulsio/vuls-data-db-archive
+          - vulsio/vuls-data-db-backup
+      digest:
+        description: "Digest to tag, sha256:..."
+        required: true
+        type: string
+      tag:
+        description: "Tag to give it"
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  tag:
+    name: Tag ${{ inputs.repository }}
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    env:
+      # vuls-data-update's registry code imports encoding/json/v2
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
+      - name: Tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ inputs.repository }}
+          DIGEST: ${{ inputs.digest }}
+          TAG: ${{ inputs.tag }}
+          # GitHub keeps a deleted package version restorable for 30 days
+          RESTORE_WINDOW: "30 days ago"
+        run: |
+          set -euo pipefail
+
+          # Checked here rather than left to the registry, because a malformed
+          # digest would otherwise reach the lookup below and be reported as an
+          # image too old to restore.
+          if ! grep -qE '^sha256:[0-9a-f]{64}$' <<< "${DIGEST}"; then
+            echo "::error::${DIGEST} is not a sha256 digest. The untag run's summary records the digest of what it removed."
+            exit 1
+          fi
+
+          tag() {
+            vuls-data-update dotgit registry tag --token "${GH_TOKEN}" "ghcr.io/${REPOSITORY}@${DIGEST}" "${TAG}"
+          }
+
+          if ! tag; then
+            # Not in the registry, so look for it among the deleted versions.
+            # They are listed newest first, which puts an image the untagged
+            # sweep has just collected on the first page. Reading stops at the
+            # end of the list, or on the page that reaches past the restore
+            # window -- its oldest entry predating the cutoff means every later
+            # page does too, and nothing there could be restored anyway.
+            versions="/orgs/${REPOSITORY%%/*}/packages/container/${REPOSITORY#*/}/versions"
+            cutoff="$(date -u -d "${RESTORE_WINDOW}" +%Y-%m-%dT%H:%M:%SZ)"
+            id=""
+            page=1
+            while :; do
+              # per_page is capped at 100 by the API, whatever is asked for.
+              body="$(gh api "${versions}?state=deleted&per_page=100&page=${page}")"
+              if [[ "$(jq 'length' <<< "${body}")" -eq 0 ]]; then break; fi
+              id="$(jq -r --arg digest "${DIGEST}" 'first(.[] | select(.name == $digest) | .id) // empty' <<< "${body}")"
+              if [[ -n "${id}" ]]; then break; fi
+              if [[ "$(jq -r 'map(.deleted_at) | min' <<< "${body}")" < "${cutoff}" ]]; then break; fi
+              page=$((page + 1))
+            done
+
+            if [[ -z "${id}" ]]; then
+              echo "::error::${DIGEST} is neither in the registry nor among the versions deleted since ${cutoff}. See this workflow's header for what recovers it instead."
+              exit 1
+            fi
+
+            gh api --method POST "${versions}/${id}/restore"
+            echo "- restored version \`${id}\`" >> "${GITHUB_STEP_SUMMARY}"
+            tag
+          fi
+
+          echo "- \`${TAG}\` -> \`${DIGEST}\`" >> "${GITHUB_STEP_SUMMARY}"

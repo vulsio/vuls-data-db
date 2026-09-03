@@ -1,0 +1,76 @@
+name: Untag
+
+# Removes a tag from a registry dotgit image. The tag is named by the caller,
+# never discovered here: the run's inputs are the record of who decided to
+# remove it. Its summary records the digest, which is the whole of what tag.yml
+# needs to put the tag back.
+#
+# One tag per run, mirroring tag.yml, so each removal is its own record with
+# its own outcome. A backlog is a loop over dispatches rather than a list in
+# one of them:
+#
+#   for tag in ...; do gh workflow run untag.yml -f tag="${tag}"; done
+
+run-name: "Untag ${{ inputs.repository }}:${{ inputs.tag }} by @${{ github.actor }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        required: true
+        default: "vulsio/vuls-data-db"
+        type: choice
+        options:
+          - vulsio/vuls-data-db
+          - vulsio/vuls-data-db-archive
+          - vulsio/vuls-data-db-backup
+      tag:
+        description: "Tag to remove"
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  untag:
+    name: Untag ${{ inputs.repository }}:${{ inputs.tag }}
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    env:
+      # vuls-data-update's registry code imports encoding/json/v2
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+
+      - name: Untag
+        env:
+          REPOSITORY: ${{ inputs.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          # Read before the untag, so the digest is recorded even if the untag
+          # fails, and so a tag the registry does not have stops the run before
+          # anything changes.
+          digest="$(vuls-data-update dotgit registry ls --repositories "ghcr.io/${REPOSITORY}" --tagged-only --token ${{ secrets.GITHUB_TOKEN }} \
+            | jq -r --arg name "ghcr.io/${REPOSITORY}:${TAG}" 'first(.[] | select(.name == $name) | .digest) // empty')"
+
+          if [[ -z "${digest}" ]]; then
+            echo "::error::ghcr.io/${REPOSITORY}:${TAG} is not a tag in this package. Nothing was untagged."
+            exit 1
+          fi
+
+          echo "- \`${TAG}\` is \`${digest}\`" >> "${GITHUB_STEP_SUMMARY}"
+
+          vuls-data-update dotgit registry untag --token ${{ secrets.GITHUB_TOKEN }} "ghcr.io/${REPOSITORY}:${TAG}"
+
+          echo "- untagged, put it back with the Tag workflow and that digest" >> "${GITHUB_STEP_SUMMARY}"
