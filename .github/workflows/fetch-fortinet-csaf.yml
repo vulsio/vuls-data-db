@@ -83,19 +83,79 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-csaf
 
+      # The advisory list to refresh was the RSS window plus whatever CSAF the
+      # repository already held, which can only ever shrink: an advisory that
+      # drops out of the tree drops out of the seed, and one that gains a CSAF
+      # after leaving the RSS window is never asked for at all. Seed from the
+      # CVRF repository instead, which holds every advisory Fortinet has
+      # published -- 1127 against the 187 CSAF held here, and a sample of the
+      # difference found a CSAF for 13 of 14. The RSS window still goes in, for
+      # advisories newer than the last CVRF fetch, and so does the CSAF already
+      # held, so that holding an advisory is on its own enough to keep asking
+      # for it.
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+        run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
+
+      # A CSAF is named after its advisory's title, and an advisory this
+      # repository holds no CSAF for has no title here to name it with. The CVRF
+      # carries one, so pass it along with the ID rather than let the fetch ask
+      # upstream for a title per advisory -- the host it would ask is the one
+      # already answering /psirt/<ID> with an interstitial. Advisories already
+      # held name themselves out of their own CSAF and need no title passed.
+      #
+      # Titles hold spaces, so the arguments go through an array rather than
+      # word splitting. awk keeps the first line each ID appears on, which is
+      # why the titled ones are listed first.
       - name: Fetch All
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
-        run: vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | tr '\n' ' ')
+        run: |
+          readarray -t args < <(cat \
+            <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat | jq -r '.documenttracking.identification.id + "=" + .document_title') \
+            <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') \
+            <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
+            | awk -F= 'NF && !seen[$1]++' | sort)
+          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s "${args[@]}"
 
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
         run: |
           vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-' | tr '\n' ' ')
 
-      - name: Restore all deleted files
-        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
+      # An advisory whose CSAF answers to no name the fetch can derive is
+      # warned about and skipped, so a convention change upstream is exit 0
+      # with an empty tree -- which the restore below would paper over into a
+      # green run committing nothing while the data quietly went stale. Upstream
+      # never withdraws its whole catalogue in one step, so read a tree with
+      # nothing left on disk as a failed fetch and stop here, before the restore
+      # hides it.
+      - name: Ensure the fetch left the tree populated
         run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf restore $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files --deleted)
+          tracked=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files | wc -l)
+          deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files --deleted | wc -l)
+          if [[ "${tracked}" -gt 0 && "${deleted}" -eq "${tracked}" ]]; then
+            echo "::error::fetch left none of the ${tracked} tracked advisories on disk. refusing to treat this as a successful run"
+            exit 1
+          fi
+
+      # The fetch empties the tree before it writes, so whatever it fails to
+      # write back reads as a deletion -- and the advisory list it fetches is
+      # seeded from the files already on disk, so a dropped file also drops out
+      # of every later seed and never comes back on its own. This ran only on
+      # the RSS side until run 32317321410, which left the fetch-all side free
+      # to commit whatever it happened to lose: one advisory at a time from
+      # 2026-01-22 on, then all 181 at once when the advisory pages started
+      # answering with an interstitial. None of those advisories had actually
+      # been withdrawn: FG-IR-25-260 was dropped by the fetch-all run on
+      # 2026-04-07 and refetched by an RSS run the same day. So restore on both
+      # sides. An advisory upstream really does withdraw is rare enough to
+      # remove by hand.
+      - name: Restore all deleted files
+        run: |
+          deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf ls-files --deleted)
+          if [[ -n "${deleted}" ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf restore -- ${deleted}
+          fi
 
       - name: Set Git remote
         run: |
