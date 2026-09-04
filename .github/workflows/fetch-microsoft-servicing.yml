@@ -118,10 +118,25 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-servicing
 
       - name: Aggregate microsoft-servicing-data-*
+        env:
+          # Filtered by the expression engine and read from the environment,
+          # rather than interpolated into the script: the expression is
+          # substituted before bash parses it, so an apostrophe in a group
+          # comment ended the quoted string and bash ran the rest of the JSON
+          # as commands. The names are also all this step needs, and the only
+          # part of it certain to stay inside MAX_ARG_STRLEN, the 131072 bytes
+          # one environment string is capped at -- msuc's include is already
+          # past that at 161442.
+          NAMES: ${{ toJson(fromJson(needs.list-names.outputs.include).*.name) }}
         run: |
-          include='${{ needs.list-names.outputs.include }}'
-          if [[ -z "$include" ]]; then
-            echo "::error::list-names output is empty"
+          # Read out first, and only from a non-empty array: "[]" is not an
+          # empty string, jq -e exits 0 on empty input, jq length counts a
+          # string or an object too, and an error inside < <(...) does not fail
+          # the step -- so every one of those would leave the loop running zero
+          # times and the step green having aggregated nothing.
+          names="$(jq -er 'if type == "array" and length > 0 then .[] else error("not a non-empty array") end' <<< "${NAMES}" || true)"
+          if [[ -z "${names}" ]]; then
+            echo "::error::no shard names in the list-names output"
             exit 1
           fi
           while read -r name; do
@@ -131,7 +146,7 @@ jobs:
               cp -a "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}/"* "ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing/"
             fi
             rm -rf "ghcr.io/${{ github.repository }}/microsoft-servicing-data-${name}"
-          done < <(echo "$include" | jq -r '.[].name')
+          done <<< "${names}"
 
       - name: Set Git remote
         run: |
