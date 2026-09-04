@@ -150,6 +150,10 @@ jobs:
       - name: Build DB
         run: make -f db-nightly.mk db-build BRANCH=nightly DBPATH=./vuls.db
 
+      - name: Save vuls.db schema_version
+        id: save_schema_version
+        run: echo "schema_version=$(vuls db search metadata --dbpath ./vuls.db | jq .schema_version)" >> "$GITHUB_OUTPUT"
+
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
 
@@ -160,9 +164,21 @@ jobs:
       # step below passes.
       - name: Push vuls.db to GHCR (tagless, digest-only)
         id: push
+        env:
+          SCHEMA_VERSION: ${{ steps.save_schema_version.outputs.schema_version }}
         run: |
           set -euo pipefail
-          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
+          # Annotations identify which pipeline produced an (initially
+          # untagged) candidate digest; they are readable without pulling
+          # the 250MB layer:
+          #   oras manifest fetch ghcr.io/vulsio/vuls-nightly-db@<digest> | jq .annotations
+          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" \
+            --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
+            --annotation "io.vuls.db.branch=nightly" \
+            --annotation "io.vuls.db.schema-version=${SCHEMA_VERSION}" \
+            --annotation "io.vuls.db.build.run-url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}" \
+            ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
           # Collapsed so the diff-guard sections below (and their terminal
           # "Diff guard summary" table) stay within the first screen of the
