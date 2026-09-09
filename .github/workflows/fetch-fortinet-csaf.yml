@@ -100,18 +100,27 @@ jobs:
 
       # A CSAF is named after its advisory's title, so the fetch needs a title
       # per advisory. Left to itself it asks /psirt/cvrf/<ID> for each one, a
-      # request apiece; the CVRF repository carries them already, so pass them
-      # alongside the IDs and let the fetch go straight to the file.
+      # request apiece; the CVRF repository and the RSS feed already carry
+      # them, so pass them alongside the IDs and let the fetch go straight to
+      # the file. The CSAF already held goes in as bare IDs, but dedup takes
+      # the titled line for any ID the first two sources also name -- which is
+      # all 187 of them today, so the endpoint goes unasked. An advisory held
+      # here that had left the CVRF catalogue and the RSS window both would
+      # arrive bare and cost the one request.
       #
       # Titles hold spaces, so the arguments go through an array rather than
       # word splitting. awk keeps the first line each ID appears on, which is
-      # why the titled sources are listed before the bare ones.
+      # why the titled sources are listed before the bare one.
       - name: Fetch All
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
         run: |
+          curl -fsS https://filestore.fortinet.com/fortiguard/rss/ir.xml -o "${RUNNER_TEMP}/ir.xml"
           readarray -t args < <(cat \
             <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat | jq -r '.documenttracking.identification.id + "=" + .document_title') \
-            <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') \
+            <(paste -d= \
+              <(xq -x //item/link < "${RUNNER_TEMP}/ir.xml" | xargs -L 1 basename) \
+              <(xq -x //item/title < "${RUNNER_TEMP}/ir.xml") \
+              | grep '^FG-IR-') \
             <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
             | awk -F= 'NF && !seen[$1]++' | sort)
           vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s "${args[@]}"
@@ -119,7 +128,12 @@ jobs:
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
         run: |
-          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-' | tr '\n' ' ')
+          curl -fsS https://filestore.fortinet.com/fortiguard/rss/ir.xml -o "${RUNNER_TEMP}/ir.xml"
+          readarray -t args < <(paste -d= \
+            <(xq -x //item/link < "${RUNNER_TEMP}/ir.xml" | xargs -L 1 basename) \
+            <(xq -x //item/title < "${RUNNER_TEMP}/ir.xml") \
+            | grep '^FG-IR-' | awk -F= 'NF && !seen[$1]++')
+          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 "${args[@]}"
 
       # An advisory whose CSAF answers to no name the fetch can derive is
       # warned about and skipped, so a convention change upstream is exit 0
