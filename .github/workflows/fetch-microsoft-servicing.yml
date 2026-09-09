@@ -32,6 +32,25 @@ jobs:
     needs: [list-names]
     strategy:
       fail-fast: false
+      # One shard at a time, because support.microsoft.com throttles on a
+      # quota over a window and what clears it is going quiet. The fetcher's
+      # doc measures that: the window is 3 to 5 seconds with nothing asking,
+      # a lone worker's first retry clears it, and a third worker keeps the
+      # quota spent while the other two back off. Its default concurrency of 2
+      # is the largest that holds -- so one shard is two askers, the shape
+      # measured clean, and fifteen shards was thirty.
+      #
+      # Not `--wait`, which the same doc rules out for this host: the quota is
+      # over a window, so a slower crawl reaches it having fetched less. That
+      # is the opposite of fetch-msuc.yml, where the catalog answers a
+      # throttled query with silence instead and #237 did lower the rate.
+      #
+      # Serialising costs this source about two hours where the matrix took
+      # one, and costs Fetch All nothing: msuc's branch is what sets that run's
+      # length, 4h54m of a 4h55m one measured, against this source's 1h08m.
+      # The 6 hour limit is per job, not per run -- and no shard job has come
+      # near it, the longest being 25m.
+      max-parallel: 1
       matrix:
         include: ${{ fromJson(needs.list-names.outputs.include) }}
     env:
