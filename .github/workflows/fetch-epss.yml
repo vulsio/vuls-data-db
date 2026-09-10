@@ -66,6 +66,19 @@ jobs:
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-epss
           fi
 
+      # A run that writes nothing leaves the repository empty, and committing
+      # that is a green run that quietly dropped the data. Stop before the
+      # commit -- and before any restore, which would put the files back and
+      # hide it.
+      - name: Ensure the repository was left populated
+        run: |
+          set -euo pipefail
+
+          if [[ -z $(find ghcr.io/${{ github.repository }}/vuls-data-raw-epss -name .git -prune -o -type f -print -quit) ]]; then
+            echo "::error::no files left on disk in ghcr.io/${{ github.repository }}/vuls-data-raw-epss. refusing to commit an empty repository"
+            exit 1
+          fi
+
       - name: Restore
         run: |
           deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-epss ls-files --deleted | grep -v $(date --utc -d "-1 days" "+%Y-%m-%d").json || [[ $? == 1 ]])

@@ -87,15 +87,28 @@ jobs:
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
         run: vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
 
-      - name: Restore FG-IR-012-00[1-8]|FG-IR-013-001
-        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
-        run: |
-          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf restore 2012/FG-IR-012-001.json 2012/FG-IR-012-002.json 2012/FG-IR-012-003.json 2012/FG-IR-012-004.json 2012/FG-IR-012-005.json 2012/FG-IR-012-006.json 2012/FG-IR-012-007.json 2012/FG-IR-012-008.json 2013/FG-IR-013-001.json
-
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
         run: |
           vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 $(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-' | tr '\n' ' ')
+
+      # A run that writes nothing leaves the repository empty, and committing
+      # that is a green run that quietly dropped the data. Stop before the
+      # commit -- and before any restore, which would put the files back and
+      # hide it.
+      - name: Ensure the repository was left populated
+        run: |
+          set -euo pipefail
+
+          if [[ -z $(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf -name .git -prune -o -type f -print -quit) ]]; then
+            echo "::error::no files left on disk in ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf. refusing to commit an empty repository"
+            exit 1
+          fi
+
+      - name: Restore FG-IR-012-00[1-8]|FG-IR-013-001
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+        run: |
+          git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf restore 2012/FG-IR-012-001.json 2012/FG-IR-012-002.json 2012/FG-IR-012-003.json 2012/FG-IR-012-004.json 2012/FG-IR-012-005.json 2012/FG-IR-012-006.json 2012/FG-IR-012-007.json 2012/FG-IR-012-008.json 2013/FG-IR-013-001.json
 
       - name: Restore all deleted files
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
