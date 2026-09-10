@@ -112,95 +112,93 @@ jobs:
       # here that had left the CVRF catalogue and the RSS window both would
       # arrive bare and cost the one request.
       #
-      # Titles hold spaces, so the arguments go through an array rather than
-      # word splitting. The order the sources are concatenated in is what awk
-      # reads: it keeps the first line each ID appears on, so listing the
-      # titled sources before the bare one is how an ID ends up carrying a
-      # title. The sort afterwards is for legibility and changes nothing about
-      # which line was kept.
-      - name: Fetch All
-        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+      # The order the sources are concatenated in is what awk reads: it keeps
+      # the first line each ID appears on, so listing the titled sources before
+      # the bare one is how an ID ends up carrying a title. The sort afterwards
+      # is for legibility and changes nothing about which line was kept.
+      - name: Assemble the advisory list
+        env:
+          FETCH_ALL: ${{ needs.check.outputs.do_fetch_all }}
         run: |
           set -euo pipefail
 
           curl -fsS https://filestore.fortinet.com/fortiguard/rss/ir.xml -o "${RUNNER_TEMP}/ir.xml"
 
           # The feed's IDs and titles come out of two passes and pair by line
-          # number, so an item missing either one shifts every pair after it
-          # onto the wrong advisory -- which reads downstream as a fetch that
-          # found nothing, not as a feed that broke.
+          # number. xq drops a field it does not find rather than leaving a
+          # blank line, so an item missing one shifts every pair after it onto
+          # the wrong advisory -- which reads downstream as a fetch that found
+          # nothing, not as a feed that broke. Both counts have to match the
+          # number of items, not just each other: one item missing a link and
+          # another missing a title leaves them equal and still misaligned.
+          items=$(grep -o "<item[ >]" "${RUNNER_TEMP}/ir.xml" | wc -l || true)
           xq -x //item/link < "${RUNNER_TEMP}/ir.xml" | xargs -r -L 1 basename > "${RUNNER_TEMP}/ids"
           xq -x //item/title < "${RUNNER_TEMP}/ir.xml" > "${RUNNER_TEMP}/titles"
           ids=$(wc -l < "${RUNNER_TEMP}/ids")
           titles=$(wc -l < "${RUNNER_TEMP}/titles")
-          if [[ "${ids}" -eq 0 ]]; then
+          if [[ "${items}" -eq 0 ]]; then
             echo "::error::the RSS feed named no advisories"
             exit 1
           fi
-          if [[ "${ids}" -ne "${titles}" ]]; then
-            echo "::error::the RSS feed gave ${ids} links and ${titles} titles. pairing them by line would put titles against the wrong advisories"
+          if [[ "${ids}" -ne "${items}" || "${titles}" -ne "${items}" ]]; then
+            echo "::error::the RSS feed has ${items} items but gave ${ids} links and ${titles} titles. pairing them by line would put titles against the wrong advisories"
+            exit 1
+          fi
+          # grep finding nothing is a non-zero exit, which set -e turns into a
+          # step that fails without saying why. Catch it and say why.
+          if ! paste -d= "${RUNNER_TEMP}/ids" "${RUNNER_TEMP}/titles" | grep '^FG-IR-' > "${RUNNER_TEMP}/rss"; then
+            echo "::error::none of the ${ids} entries the RSS feed names look like an advisory ID"
             exit 1
           fi
 
-          # A title carrying a newline would arrive as two arguments, the
-          # second of them read as an advisory ID.
-          readarray -t args < <(cat \
-            <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat | jq -r '.documenttracking.identification.id + "=" + (.document_title | gsub("[\r\n]+"; " "))') \
-            <(paste -d= "${RUNNER_TEMP}/ids" "${RUNNER_TEMP}/titles" | grep '^FG-IR-') \
-            <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
-            | awk -F= 'NF && !seen[$1]++' | sort)
+          if [[ "${FETCH_ALL}" != "true" ]]; then
+            awk -F= 'NF && !seen[$1]++' "${RUNNER_TEMP}/rss" > "${RUNNER_TEMP}/advisories"
+          else
+            # Nothing is smaller than an empty catalogue, so the comparison
+            # below would pass whatever the list turned out to be. Count it
+            # first.
+            cvrf=$(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | wc -l)
+            if [[ "${cvrf}" -eq 0 ]]; then
+              echo "::error::the CVRF repository holds no advisories. the full refresh has nothing to seed from"
+              exit 1
+            fi
 
-          # readarray reports the exit status of nothing inside a process
-          # substitution, so a source that comes up empty narrows the refresh
-          # without failing anything -- and a narrowed refresh commits green,
-          # since the restore puts back whatever went unasked for. Every CVRF
-          # advisory contributes one entry, so the seed cannot be the smaller
-          # of the two. Count the catalogue first: nothing is smaller than an
-          # empty one, so a comparison against it would pass whatever the seed
-          # turned out to be.
-          cvrf=$(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | wc -l)
-          if [[ "${cvrf}" -eq 0 ]]; then
-            echo "::error::the CVRF repository holds no advisories. the full refresh has nothing to seed from"
-            exit 1
+            # A title carrying a newline would arrive as two arguments, the
+            # second of them read as an advisory ID.
+            cat \
+              <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat | jq -r '.documenttracking.identification.id + "=" + (.document_title | gsub("[\r\n]+"; " "))') \
+              "${RUNNER_TEMP}/rss" \
+              <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
+              | awk -F= 'NF && !seen[$1]++' | sort > "${RUNNER_TEMP}/advisories"
+
+            # A process substitution reports its exit status to nobody, so a
+            # source that comes up empty narrows the refresh without failing
+            # anything -- and a narrowed refresh commits green, since the
+            # restore puts back whatever went unasked for. Every CVRF advisory
+            # contributes one entry, so the list cannot be the smaller of the
+            # two.
+            listed=$(wc -l < "${RUNNER_TEMP}/advisories")
+            if [[ "${listed}" -lt "${cvrf}" ]]; then
+              echo "::error::list holds ${listed} advisories against the ${cvrf} in the CVRF repository. one of its sources came up short"
+              exit 1
+            fi
           fi
-          if [[ "${#args[@]}" -lt "${cvrf}" ]]; then
-            echo "::error::seed holds ${#args[@]} advisories against the ${cvrf} in the CVRF repository. one of its sources came up short"
+
+          echo "assembled $(wc -l < "${RUNNER_TEMP}/advisories") advisories"
+
+      # Titles hold spaces, so the arguments go through an array rather than
+      # word splitting.
+      - name: Fetch
+        run: |
+          set -euo pipefail
+
+          readarray -t args < "${RUNNER_TEMP}/advisories"
+          if [[ "${#args[@]}" -eq 0 ]]; then
+            echo "::error::no advisories to fetch"
             exit 1
           fi
 
           vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 1s "${args[@]}"
-
-      - name: Fetch RSS
-        if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
-        run: |
-          set -euo pipefail
-
-          curl -fsS https://filestore.fortinet.com/fortiguard/rss/ir.xml -o "${RUNNER_TEMP}/ir.xml"
-
-          # The feed's IDs and titles come out of two passes and pair by line
-          # number, so an item missing either one shifts every pair after it
-          # onto the wrong advisory -- which reads downstream as a fetch that
-          # found nothing, not as a feed that broke.
-          xq -x //item/link < "${RUNNER_TEMP}/ir.xml" | xargs -r -L 1 basename > "${RUNNER_TEMP}/ids"
-          xq -x //item/title < "${RUNNER_TEMP}/ir.xml" > "${RUNNER_TEMP}/titles"
-          ids=$(wc -l < "${RUNNER_TEMP}/ids")
-          titles=$(wc -l < "${RUNNER_TEMP}/titles")
-          if [[ "${ids}" -eq 0 ]]; then
-            echo "::error::the RSS feed named no advisories"
-            exit 1
-          fi
-          if [[ "${ids}" -ne "${titles}" ]]; then
-            echo "::error::the RSS feed gave ${ids} links and ${titles} titles. pairing them by line would put titles against the wrong advisories"
-            exit 1
-          fi
-
-          readarray -t args < <(paste -d= "${RUNNER_TEMP}/ids" "${RUNNER_TEMP}/titles" | grep '^FG-IR-' | awk -F= 'NF && !seen[$1]++')
-          if [[ "${#args[@]}" -eq 0 ]]; then
-            echo "::error::none of the ${ids} entries the feed named look like an advisory ID"
-            exit 1
-          fi
-
-          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 "${args[@]}"
 
       # An advisory whose CSAF answers to no name the fetch can derive is
       # warned about and skipped, so a convention change upstream is exit 0
