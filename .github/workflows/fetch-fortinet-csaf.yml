@@ -123,7 +123,7 @@ jobs:
               | grep '^FG-IR-') \
             <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
             | awk -F= 'NF && !seen[$1]++' | sort)
-          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 3s "${args[@]}"
+          vuls-data-update fetch fortinet-csaf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf --concurrency 1 --wait 1s "${args[@]}"
 
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
