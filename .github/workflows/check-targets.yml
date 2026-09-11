@@ -1,0 +1,69 @@
+name: Check Targets
+
+run-name: "Check the targets files by @${{ github.actor }}"
+
+# The sharded fetchers read their seed lists from *-targets.json, and those
+# lists are long enough that nothing about them is visible by eye: msuc carries
+# 7291 KBs across 65 shards. Every property this checks has been broken in the
+# file at least once -- a seed listed in two shards, a shard renamed onto
+# another's name, seeds landing out of order and burying a small change in a
+# large diff -- and none of it fails the fetch. It just quietly fetches
+# something other than what the file appears to say.
+#
+# Nothing here is about which seeds are right. That is the fetcher's business:
+# a seed the catalog has expired is reported by msuc and a seed with no
+# servicing article is reported by servicing, and both are pruned from the
+# runs rather than from here.
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/msuc-targets.json"
+      - ".github/workflows/microsoft-servicing-targets.json"
+      - ".github/workflows/check-targets.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check ${{ matrix.file }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+          - msuc-targets.json
+          - microsoft-servicing-targets.json
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Check ${{ matrix.file }}
+        env:
+          FILE: .github/workflows/${{ matrix.file }}
+        run: |
+          set -euo pipefail
+
+          # One expression, reporting the first property that does not hold, so
+          # the failure names what is wrong rather than only that something is.
+          result="$(jq -r '
+            def kbnum: .[2:] | tonumber;
+            if type != "array" or length == 0 then "not a non-empty array"
+            elif (map(.name) | length) != (map(.name) | unique | length) then "duplicate shard name"
+            elif any(.[]; (.name // "") == "" or (.comment // "") == "") then "a shard has no name or comment"
+            elif any(.[]; (.target | type) != "array" or (.target | length) == 0) then "a shard has no seeds"
+            elif ([.[].target[]] | length) != ([.[].target[]] | unique | length) then "a seed appears in more than one shard"
+            elif any(.[]; .target | any(.[]; test("^KB[0-9]+$") | not)) then "a seed is not KB<digits>"
+            elif any(.[]; .target | (map(kbnum) != (map(kbnum) | sort))) then "a shard is not in ascending KB order"
+            else "ok" end
+          ' "${FILE}")"
+
+          if [[ "${result}" != "ok" ]]; then
+            echo "::error file=${FILE}::${result}"
+            exit 1
+          fi
+
+          jq -r '"\(length) shards, \([.[].target[]] | length) seeds"' "${FILE}" >> "${GITHUB_STEP_SUMMARY}"
