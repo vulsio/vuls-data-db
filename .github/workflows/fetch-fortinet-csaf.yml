@@ -154,34 +154,26 @@ jobs:
           if [[ "${FETCH_ALL}" != "true" ]]; then
             awk -F= 'NF && !seen[$1]++' "${RUNNER_TEMP}/rss" > "${RUNNER_TEMP}/advisories"
           else
-            # Nothing is smaller than an empty catalogue, so the comparison
-            # below would pass whatever the list turned out to be. Count it
-            # first.
             cvrf=$(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | wc -l)
             if [[ "${cvrf}" -eq 0 ]]; then
               echo "::error::the CVRF repository holds no advisories. the full refresh has nothing to seed from"
               exit 1
             fi
 
-            # A title carrying a newline would arrive as two arguments, the
-            # second of them read as an advisory ID.
-            cat \
-              <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat | jq -r '.documenttracking.identification.id + "=" + (.document_title | gsub("[\r\n]+"; " "))') \
-              "${RUNNER_TEMP}/rss" \
-              <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||') \
-              | awk -F= 'NF && !seen[$1]++' | sort > "${RUNNER_TEMP}/advisories"
+            # Every record carries a title: CVRF requires one and does not
+            # allow it empty, and the CVRF fetcher refuses a document without
+            # one. Folding newlines keeps one title from arriving as two
+            # arguments.
+            find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" -print0 | xargs -0 cat \
+              | jq -r '.documenttracking.identification.id + "=" + (.document_title | gsub("[\r\n]+"; " "))' \
+              > "${RUNNER_TEMP}/cvrf-seed"
 
-            # A process substitution reports its exit status to nobody, so a
-            # source that comes up empty narrows the refresh without failing
-            # anything -- and a narrowed refresh commits green, since the
-            # restore puts back whatever went unasked for. Every CVRF advisory
-            # contributes one entry, so the list cannot be the smaller of the
-            # two.
-            listed=$(wc -l < "${RUNNER_TEMP}/advisories")
-            if [[ "${listed}" -lt "${cvrf}" ]]; then
-              echo "::error::list holds ${listed} advisories against the ${cvrf} in the CVRF repository. one of its sources came up short"
-              exit 1
-            fi
+            find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-csaf/ -name "*.json" | sed 's|.*/||; s|\.json$||' > "${RUNNER_TEMP}/held"
+
+            # Plain files, so a source that fails fails the step. The titled
+            # sources go first: awk keeps the first line each ID appears on.
+            cat "${RUNNER_TEMP}/cvrf-seed" "${RUNNER_TEMP}/rss" "${RUNNER_TEMP}/held" \
+              | awk -F= 'NF && !seen[$1]++' | sort > "${RUNNER_TEMP}/advisories"
           fi
 
           echo "assembled $(wc -l < "${RUNNER_TEMP}/advisories") advisories"
