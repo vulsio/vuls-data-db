@@ -93,6 +93,19 @@ jobs:
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} remote add origin ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
           fi
 
+      # A run that writes nothing leaves the repository empty, and committing
+      # that is a green run that quietly dropped the data. Stop before the
+      # commit -- and before any restore, which would put the files back and
+      # hide it.
+      - name: Ensure the repository was left populated
+        run: |
+          set -euo pipefail
+
+          if [[ -z $(find ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} -name .git -prune -o -type f -print -quit) ]]; then
+            echo "::error::no files left on disk in ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}. refusing to commit an empty repository"
+            exit 1
+          fi
+
       - name: Commit
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} status --porcelain) ]]; then

@@ -86,6 +86,19 @@ jobs:
       # The index is served by the same host the Fetch step just read the feed
       # from, so this adds no new availability dependency; an unreachable or
       # unparsable index fails the job rather than guessing.
+      # A run that writes nothing leaves the repository empty, and committing
+      # that is a green run that quietly dropped the data. Stop before the
+      # commit -- and before any restore, which would put the files back and
+      # hide it.
+      - name: Ensure the repository was left populated
+        run: |
+          set -euo pipefail
+
+          if [[ -z $(find ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata -name .git -prune -o -type f -print -quit) ]]; then
+            echo "::error::no files left on disk in ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata. refusing to commit an empty repository"
+            exit 1
+          fi
+
       - name: Restore advisories dropped from the upstream feed
         shell: bash
         env:
