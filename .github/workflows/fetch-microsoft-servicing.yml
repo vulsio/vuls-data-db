@@ -45,11 +45,9 @@ jobs:
       # is the opposite of fetch-msuc.yml, where the catalog answers a
       # throttled query with silence instead and #237 did lower the rate.
       #
-      # Serialising costs this source about two hours where the matrix took
-      # one, and costs Fetch All nothing: msuc's branch is what sets that run's
-      # length, 4h54m of a 4h55m one measured, against this source's 1h08m.
-      # The 6 hour limit is per job, not per run -- and no shard job has come
-      # near it, the longest being 25m.
+      # Serialising costs this source wall clock and costs Fetch All nothing:
+      # msuc's branch is what sets that run's length. The 6 hour limit is per
+      # job, not per run, and no shard job has come near it.
       max-parallel: 1
       matrix:
         include: ${{ fromJson(needs.list-names.outputs.include) }}
@@ -82,10 +80,22 @@ jobs:
       - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
+      # One worker, below the fetcher's default of two. Two is the most that
+      # recovers in the doc's measurement, but that was one crawler against a
+      # quota this one no longer has: with two, one worker backs off while the
+      # other keeps the quota spent, the 3 to 5 second window never goes quiet,
+      # and the backing-off worker walks through its eleven attempts and gives
+      # up. With one, a 403 means nothing is asking, which is the condition the
+      # window clears in.
+      #
+      # It is not obviously slower either. Halving the workers halves the rate
+      # a shard could ask at, but the shards were nowhere near it: os-windows-
+      # legacy managed 309 seeds in 68 minutes, 4.5 a minute, where one worker
+      # against a second of latency and a second of wait is 30.
       - name: Fetch
         run: |
           mkdir vuls-data-raw-microsoft-servicing
-          vuls-data-update fetch microsoft-servicing --dir vuls-data-raw-microsoft-servicing ${{ join(matrix.target, ' ') }}
+          vuls-data-update fetch microsoft-servicing --dir vuls-data-raw-microsoft-servicing --concurrency 1 ${{ join(matrix.target, ' ') }}
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-microsoft-servicing.tar.zst vuls-data-raw-microsoft-servicing || [[ $? == 1 ]]
