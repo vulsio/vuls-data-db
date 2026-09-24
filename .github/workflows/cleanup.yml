@@ -59,4 +59,4 @@ jobs:
 
           vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/${{ inputs.package }}" --token ${{ secrets.GITHUB_TOKEN }} \
             | jq -r --argjson grace "${GRACE_SECONDS}" '.[] | select(.name == "" and (.created_at | fromdateiso8601) < (now - $grace)) | .digest' \
-            | xargs -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/${{ inputs.package }}@{}
+            | xargs -r -I {} vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/${{ inputs.package }}@{}
