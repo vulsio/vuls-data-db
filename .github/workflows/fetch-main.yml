@@ -217,6 +217,7 @@ jobs:
           path: .vuls-data-db
           sparse-checkout: .github/workflows/conversion-targets.json
           sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       # The pull above extracts .git only; the worktree stays empty and every
       # other fetcher rewrites all of it. A conversion target's fetch keeps raw/
