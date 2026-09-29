@@ -95,6 +95,24 @@ jobs:
             exit 1
           fi
 
+          # The commit that last touched raw/ can be the one that deleted it,
+          # and then the diff below reports "stale" against a conversion that
+          # no longer exists. Say what happened instead: the fix is restoring
+          # raw/ from history, not converting from scratch.
+          if [[ -z "$(git -C "$REPO" ls-tree -r --name-only HEAD -- raw/)" ]]; then
+            last="$(git -C "$REPO" log -1 --format=%H "${base}^" -- raw/ 2>/dev/null || true)"
+            {
+              echo "### :x: \`${NAME}\`: raw/ was deleted"
+              echo
+              echo "\`raw/\` was emptied at \`${base}\`, so the source extracts to nothing."
+              if [[ -n "$last" ]]; then
+                echo "The last commit that had it is \`${last}\`."
+              fi
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::${NAME}: raw/ was deleted at ${base}${last:+; last present at ${last}}"
+            exit 1
+          fi
+
           # $PATHS is deliberately unquoted: it is a list of pathspecs.
           changed="$(git -C "$REPO" diff --name-only "${base}..HEAD" -- $PATHS)"
           if [[ -z "$changed" ]]; then

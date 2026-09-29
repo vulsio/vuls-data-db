@@ -211,6 +211,21 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
+      # The pull above extracts .git only; the worktree stays empty and every
+      # other fetcher rewrites all of it. openssh-security's fetch keeps raw/
+      # instead -- the model-converted records no fetch can rebuild -- so it has
+      # to be on disk before the fetch, or the commit below records all of raw/
+      # as deleted (as eddae7b did).
+      - name: Restore raw/ for openssh-security
+        if: ${{ inputs.target == 'openssh-security' }}
+        run: |
+          set -euo pipefail
+
+          dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}"
+          if [[ -n $(git -C "${dir}" ls-files -- raw/) ]]; then
+            git -C "${dir}" restore -- raw/
+          fi
+
       - name: install cabextract for microsoft-wsusscn2
         if: ${{ inputs.target == 'microsoft-wsusscn2' }}
         run: sudo apt-get update && sudo apt-get install -y cabextract
