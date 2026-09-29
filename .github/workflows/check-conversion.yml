@@ -22,6 +22,9 @@ run-name: "Check conversion is current by @${{ github.actor }}"
 #            notes, CVE records) is revised upstream on its own schedule and
 #            listing it here would fail this check every time one gained a
 #            reference, teaching everyone to ignore it.
+#
+# The same list tells fetch-main.yml to put raw/ back on disk before fetching,
+# so the fetcher has to keep raw/ (util.WithKeep(".git", "raw")) for it too.
 
 on:
   schedule:
