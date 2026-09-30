@@ -23,8 +23,10 @@ run-name: "Check conversion is current by @${{ github.actor }}"
 #            listing it here would fail this check every time one gained a
 #            reference, teaching everyone to ignore it.
 #
-# The same list tells fetch-main.yml to put raw/ back on disk before fetching,
-# so the fetcher has to keep raw/ (util.WithKeep(".git", "raw")) for it too.
+# The same list tells fetch-main.yml to put raw/ back on disk after fetching,
+# before the commit (and after its empty-fetch guard, which a restored raw/
+# would otherwise satisfy). So the fetcher must leave raw/ alone for it too
+# (util.WithKeep(".git", "raw")).
 
 on:
   schedule:
@@ -101,7 +103,9 @@ jobs:
           # The commit that last touched raw/ can be the one that deleted it,
           # and then the diff below reports "stale" against a conversion that
           # no longer exists. Say what happened instead: the fix is restoring
-          # raw/ from history, not converting from scratch.
+          # raw/ from history, not converting from scratch. What to restore is
+          # the last conversion before the deletion: no commit between the two
+          # touched raw/, so raw/ there is what the deletion removed.
           if [[ -z "$(git -C "$REPO" ls-tree -r --name-only HEAD -- raw/)" ]]; then
             last="$(git -C "$REPO" log -1 --format=%H "${base}^" -- raw/ 2>/dev/null || true)"
             {
@@ -109,10 +113,10 @@ jobs:
               echo
               echo "\`raw/\` was emptied at \`${base}\`, so the source extracts to nothing."
               if [[ -n "$last" ]]; then
-                echo "The last commit that had it is \`${last}\`."
+                echo "It was last converted at \`${last}\`; restore it with \`git checkout ${last} -- raw/\`."
               fi
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error::${NAME}: raw/ was deleted at ${base}${last:+; last present at ${last}}"
+            echo "::error::${NAME}: raw/ was deleted at ${base}${last:+; last converted at ${last}}"
             exit 1
           fi
 
