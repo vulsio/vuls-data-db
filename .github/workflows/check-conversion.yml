@@ -102,21 +102,41 @@ jobs:
 
           # The commit that last touched raw/ can be the one that deleted it,
           # and then the diff below reports "stale" against a conversion that
-          # no longer exists. Say what happened instead: the fix is restoring
-          # raw/ from history, not converting from scratch. What to restore is
-          # the last conversion before the deletion: no commit between the two
-          # touched raw/, so raw/ there is what the deletion removed.
+          # no longer exists. Say what happened instead: raw/ is restored from
+          # the last conversion before the deletion (no commit between the two
+          # touched raw/, so raw/ there is what the deletion removed).
+          #
+          # Restoring alone is not the fix when the inputs moved on after that
+          # conversion. The commit that puts raw/ back becomes the base this
+          # check measures from, so whatever changed before it would never be
+          # reported again. Measure from the restored conversion here, and
+          # name what has to be converted in the same commit.
           if [[ -z "$(git -C "$REPO" ls-tree -r --name-only HEAD -- raw/)" ]]; then
             last="$(git -C "$REPO" log -1 --format=%H "${base}^" -- raw/ 2>/dev/null || true)"
+            since=""
+            if [[ -n "$last" ]]; then
+              since="$(git -C "$REPO" diff --name-only "${last}..HEAD" -- $PATHS)"
+            fi
             {
               echo "### :x: \`${NAME}\`: raw/ was deleted"
               echo
               echo "\`raw/\` was emptied at \`${base}\`, so the source extracts to nothing."
               if [[ -n "$last" ]]; then
                 echo "It was last converted at \`${last}\`; restore it with \`git checkout ${last} -- raw/\`."
+                if [[ -n "$since" ]]; then
+                  echo
+                  echo "That conversion is stale too. Changed since, among what the conversion reads:"
+                  echo
+                  echo '```'
+                  echo "$since"
+                  echo '```'
+                  echo
+                  echo "Convert these in the same commit as the restore: once \`raw/\` is"
+                  echo "committed, this check measures from that commit and will not report them."
+                fi
               fi
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error::${NAME}: raw/ was deleted at ${base}${last:+; last converted at ${last}}"
+            echo "::error::${NAME}: raw/ was deleted at ${base}${last:+; last converted at ${last}}${since:+; convert with the restore, changed since: $(echo ${since} | tr '\n' ' ')}"
             exit 1
           fi
 
