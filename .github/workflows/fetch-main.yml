@@ -239,6 +239,42 @@ jobs:
             exit 1
           fi
 
+      - name: Check out conversion targets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          path: .vuls-data-db
+          sparse-checkout: .github/workflows/conversion-targets.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # The pull extracts .git only; the worktree stays empty and every other
+      # fetcher rewrites all of it. A conversion target's raw/ is not the
+      # fetch's output -- the model-converted records no fetch can rebuild --
+      # so it has to be put back on disk before the commit, or the commit
+      # records all of raw/ as deleted (as vuls-data-raw-openssh-security
+      # eddae7b did). The fetch does not read raw/, and leaves the index alone,
+      # so restoring here rather than before the fetch loses nothing -- and it
+      # has to be below the guard above, which the restored raw/ would
+      # otherwise satisfy for a fetch that wrote nothing.
+      #
+      # conversion-targets.json is the list, rather than a second one here: a
+      # source converted by hand is exactly a source whose raw/ the fetch keeps,
+      # and a target missing from one of two lists is how raw/ gets deleted.
+      - name: Restore raw/ for conversion targets
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          set -euo pipefail
+
+          if ! jq -e --arg t "${TARGET}" 'any(.[]; .name == $t)' .vuls-data-db/.github/workflows/conversion-targets.json > /dev/null; then
+            exit 0
+          fi
+
+          dir="ghcr.io/${{ github.repository }}/vuls-data-raw-${TARGET}"
+          if [[ -n $(git -C "${dir}" ls-files -- raw/) ]]; then
+            git -C "${dir}" restore -- raw/
+          fi
+
       - name: Commit
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} status --porcelain) ]]; then
