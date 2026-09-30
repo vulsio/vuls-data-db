@@ -211,14 +211,6 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
 
-      - name: Check out conversion targets
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
-        with:
-          path: .vuls-data-db
-          sparse-checkout: .github/workflows/conversion-targets.json
-          sparse-checkout-cone-mode: false
-          persist-credentials: false
-
       - name: install cabextract for microsoft-wsusscn2
         if: ${{ inputs.target == 'microsoft-wsusscn2' }}
         run: sudo apt-get update && sudo apt-get install -y cabextract
@@ -246,6 +238,14 @@ jobs:
             echo "::error::no files left on disk in ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}. refusing to commit an empty repository"
             exit 1
           fi
+
+      - name: Check out conversion targets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          path: .vuls-data-db
+          sparse-checkout: .github/workflows/conversion-targets.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       # The pull extracts .git only; the worktree stays empty and every other
       # fetcher rewrites all of it. A conversion target's raw/ is not the
