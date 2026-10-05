@@ -15,8 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.push_archive.outputs.tags }}
-    env:
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Set global git config
         run: |

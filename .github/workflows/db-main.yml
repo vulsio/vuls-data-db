@@ -67,7 +67,6 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     env:
-      GOEXPERIMENT: jsonv2
       # Persistent diff-guard threshold config — the single source of
       # truth, applied to BOTH scheduled and manually-dispatched runs.
       # workflow_dispatch input defaults are NOT visible to `schedule`
@@ -135,7 +134,7 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
         with:
-          go-version: "1.26.x"
+          go-version: "stable"
           cache: false
 
       - name: Install Dependencies

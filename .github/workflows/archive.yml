@@ -253,8 +253,6 @@ jobs:
     if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
     outputs:
       tag: ${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
-    env:
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5

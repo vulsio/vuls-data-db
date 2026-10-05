@@ -40,8 +40,6 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     needs: check
-    env:
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
