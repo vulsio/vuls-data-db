@@ -274,16 +274,18 @@ runs:
       shell: bash
       env:
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
-        VULS0_OLD_GO_TOOLCHAIN: ${{ inputs.vuls0_old_go_toolchain }}
+        # The pinned commit does not build with the job's Go (see the
+        # `vuls0_old_go_toolchain` input), so this step builds it with its own
+        # toolchain. The step-level env takes precedence over the
+        # GOTOOLCHAIN=local that actions/setup-go exports via GITHUB_ENV.
+        GOTOOLCHAIN: ${{ inputs.vuls0_old_go_toolchain }}
+        # Makes encoding/json/v2 available to that Go 1.26 toolchain (a no-op
+        # on Go 1.27+, where it is on by default); drop it together with the
+        # toolchain override.
+        GOEXPERIMENT: jsonv2
       run: |
         mkdir -p /tmp/vuls0-old-bin
-        # The pinned commit does not build with the job's Go (see the
-        # `vuls0_old_go_toolchain` input), so build it with its own toolchain.
-        # Set inline: actions/setup-go exports GOTOOLCHAIN=local via GITHUB_ENV.
-        # GOEXPERIMENT=jsonv2 is what makes encoding/json/v2 available to that
-        # Go 1.26 toolchain (a no-op on Go 1.27+, where it is on by default);
-        # drop it together with the toolchain override.
-        GOEXPERIMENT=jsonv2 GOTOOLCHAIN="${VULS0_OLD_GO_TOOLCHAIN}" GOBIN=/tmp/vuls0-old-bin go install "github.com/future-architect/vuls/cmd/vuls@${VULS0_OLD_REF}"
+        GOBIN=/tmp/vuls0-old-bin go install "github.com/future-architect/vuls/cmd/vuls@${VULS0_OLD_REF}"
         mv /tmp/vuls0-old-bin/vuls /tmp/vuls0-old-bin/vuls0-old
         echo "VULS0_OLD=/tmp/vuls0-old-bin/vuls0-old" >> "$GITHUB_ENV"
 
