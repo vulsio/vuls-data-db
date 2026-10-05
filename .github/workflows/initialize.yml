@@ -48,7 +48,6 @@ jobs:
       IMAGE_REF: ghcr.io/${{ github.repository }}:vuls-data-${{ inputs.kind }}-${{ inputs.target }}
       LOCAL_DIR: ghcr.io/${{ github.repository }}/vuls-data-${{ inputs.kind }}-${{ inputs.target }}
       TARBALL: vuls-data-${{ inputs.kind }}-${{ inputs.target }}.tar.zst
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Validate target name
         run: |
