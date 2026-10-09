@@ -153,7 +153,7 @@ Output the verdict as one of:
   - Detection: `DETECTION_RATE_THRESHOLD_OVERRIDES` in the workflow's `env:` block (entries like `ubuntu_2604=added:50`).
   - DB: `DB_RATE_THRESHOLD_OVERRIDES` (entries like `ubuntu:26.04=added:80`).
 
-The guard judges each target on separate axes — `added`, `changed` (db only) and `removed` — and the report's Summary row bolds the cell that tripped while the `## Details` headline names it (e.g. `cpe / cisco-json (detection removed 12.3% > 10.0%)`). Read the axis before classifying: an `added` trip is usually backfill and a candidate for an override; a `removed` or `changed` trip means detections disappeared or moved, so even an upstream-driven verdict should say *why* the loss is legitimate (upstream withdrawal, supersedence cycle, re-shard) before recommending an override on that axis.
+The guard judges each target on separate axes — `added`, `changed` (db only) and `removed` — and the report's Summary row bolds the cell that tripped while the `## Details` headline names it: a db row reads `cpe / cisco-json (detection removed 12.3% > 10.0%)`, where `detection` / `kb` is the db sub-bucket that tripped and 10% is the db removed default; a detection row reads `ubuntu_2204 / ubuntu-oval (removed 12.3% > 5.0%)` against the detection removed default of 5%. Read the axis before classifying: an `added` trip is usually backfill and a candidate for an override; a `removed` or `changed` trip means detections disappeared or moved, so even an upstream-driven verdict should say *why* the loss is legitimate (upstream withdrawal, supersedence cycle, re-shard) before recommending an override on that axis.
 
 Always cite at least one concrete CVE file diff (raw or extracted) as evidence — never just summarize "looks upstream".
 
