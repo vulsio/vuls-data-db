@@ -5,12 +5,13 @@ description: |
   and a pinned older commit) and `vuls diff db`, emitting step summaries and
   failing the job if any check exceeds its configured thresholds.
 
-  Thresholds are per change axis: both diffs judge the added, changed
-  (`diff db` only — `diff detection` compares CVE ID sets and has no
-  content to call changed) and removed units of every (target, data
-  source) pair against their own threshold, so routine additions can be
-  tolerated while removals stay tightly bounded. Overrides name the axis
-  they relax (`<key>=<axis>:<rate>`).
+  Thresholds are per change axis, each judged against its own threshold
+  for every (target, data source) pair: `vuls diff db` judges the added,
+  changed and removed units; `vuls diff detection` judges only added and
+  removed (it compares CVE ID sets, so there is no content to call
+  changed). Routine additions can thus be tolerated while removals stay
+  tightly bounded. Overrides name the axis they relax
+  (`<key>=<axis>:<rate>`).
 
   All guard steps are kept inside this composite action so the caller only
   needs a single `uses:` step to run the whole gate.

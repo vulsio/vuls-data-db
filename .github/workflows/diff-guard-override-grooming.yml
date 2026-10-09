@@ -1,8 +1,9 @@
 name: diff-guard override grooming reminder
 
 # Files a re-triage reminder issue for the diff-guard threshold
-# overrides (the DB_/DETECTION_RATE_THRESHOLD_OVERRIDES env
-# lists in db-main.yml / db-nightly.yml) on a ~2-month cadence.
+# overrides (the DB_RATE_THRESHOLD_OVERRIDES and
+# DETECTION_RATE_THRESHOLD_OVERRIDES env lists in db-main.yml /
+# db-nightly.yml) on a ~2-month cadence.
 #
 # Prerequisite: the `diff-guard-grooming` label must already exist in
 # the repo — it is created once, out of band, not by this workflow.
