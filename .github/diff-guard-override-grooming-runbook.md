@@ -24,7 +24,16 @@ The guard judges every target on separate change axes — **added**, **changed**
 content to call changed) and **removed** — each against its own threshold.
 Additions are the routine pattern of vulnerability data and get a generous
 default; removals and changes stay tight. Each workflow's `build` job carries
-the defaults and two override lists in its `env:` block:
+the defaults and two override lists in its `env:` block. **Transition note:**
+`db-main.yml` installs `vuls@main`, which does not have the per-axis flags
+yet, so it still runs the single combined-rate guard — defaults
+`DB_CHANGE_RATE_THRESHOLD` (10) / `DETECTION_CHANGE_RATE_THRESHOLD` (5) and
+override lists `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` /
+`DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` with `<key>=<rate>` entries,
+judged on the combined `added + removed (+ 2 × changed)` rate. Groom those
+lists as one rate per target against the single default. The per-axis
+layout below is what `db-nightly.yml` runs; `db-main.yml` moves to it once
+vuls2 `main` carries the flags.
 
 - `vuls diff db` — defaults in `DB_RATE_THRESHOLDS` (`added:30`,
   `changed:10`, `removed:10`); overrides in `DB_RATE_THRESHOLD_OVERRIDES`.
@@ -206,7 +215,9 @@ include/exclude rationale.
 Edit the `env:` blocks in **both** `.github/workflows/db-main.yml` and
 `.github/workflows/db-nightly.yml`:
 
-- `DB_RATE_THRESHOLD_OVERRIDES` / `DETECTION_RATE_THRESHOLD_OVERRIDES`.
+- `DB_RATE_THRESHOLD_OVERRIDES` / `DETECTION_RATE_THRESHOLD_OVERRIDES`
+  (`db-main.yml` during the transition: `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` /
+  `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` with `<key>=<rate>` entries).
 - One `<key>=<axis>:<rate>` per line. **No `#` comments inside the lists** —
   vuls2's override parser rejects them. Per-entry rationale goes in the PR
   description, not the YAML.
