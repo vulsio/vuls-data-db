@@ -70,6 +70,7 @@ jobs:
           - suse-oval
           - ubuntu-cve-tracker
           - vulncheck-kev
+          - vulncheck-nist-nvd2
     uses: ./.github/workflows/truncate.yml
     permissions:
       contents: read
