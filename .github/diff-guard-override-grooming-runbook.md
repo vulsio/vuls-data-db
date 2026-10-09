@@ -147,8 +147,8 @@ a FAIL row names the tripped (bucket, axis) with rate and threshold.
 `added + removed + 2 × changed` per bucket. For detection the per-axis rates
 can be recomputed exactly from the `Added` / `Removed` / `Baseline` columns;
 for db only upper bounds are available — `removed ≤ (Baseline − Matched
-Criterions) / Baseline`, `added ≤ (Target − Matched) / Baseline` from the
-`## Detection` table. Reports predating the per-source split additionally lack
+Criterions) / Baseline × 100`, `added ≤ (Target − Matched) / Baseline × 100`
+from the `## Detection` table, in percent like the report's rate cells. Reports predating the per-source split additionally lack
 the `Source` column and carry one row per ecosystem/file — map columns from
 the header row and treat those rows as the ecosystem-/file-wide aggregate.)
 
