@@ -19,17 +19,38 @@ Two workflows run the diff guard, each on a 6-hour cron:
   `BRANCH=nightly`, installs `vuls@nightly`, baseline is the previous
   `:nightly` image.
 
-Each workflow's `build` job carries two override lists in its `env:` block:
+The guard judges every target on separate change axes — **added**, **changed**
+(`vuls diff db` only; `vuls diff detection` compares CVE ID sets and has no
+content to call changed) and **removed** — each against its own threshold.
+Additions are the routine pattern of vulnerability data and get a generous
+default; removals and changes stay tight. Each workflow's `build` job carries
+the defaults and two override lists in its `env:` block. **Transition note:**
+`db-main.yml` installs `vuls@main`, which does not have the per-axis flags
+yet, so it still runs the single combined-rate guard — defaults
+`DB_CHANGE_RATE_THRESHOLD` (10) / `DETECTION_CHANGE_RATE_THRESHOLD` (5) and
+override lists `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` /
+`DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` with `<key>=<rate>` entries,
+judged on the combined `added + removed (+ 2 × changed)` rate. Groom those
+lists as one rate per target against the single default. The per-axis
+layout below is what `db-nightly.yml` runs; `db-main.yml` moves to it once
+vuls2 `main` carries the flags.
 
-- `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` — for `vuls diff db` (default threshold
-  `DB_CHANGE_RATE_THRESHOLD`, 10%). Keys are `<ecosystem>` (all data sources
-  in that ecosystem) or `<ecosystem>/<source>` (a single source, e.g.
-  `cpe/cisco-json` — wins over the ecosystem key).
-- `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` — for `vuls diff detection`
-  (default `DETECTION_CHANGE_RATE_THRESHOLD`, 5%). Keys are
-  `<scan-result-file>` (all data sources detected in that file) or
-  `<scan-result-file>/<source>` (a single source, e.g.
-  `cpe_jvn/jvn-feed-rss` — wins over the file key).
+- `vuls diff db` — defaults in `DB_RATE_THRESHOLDS` (`added:30`,
+  `changed:10`, `removed:10`); overrides in `DB_RATE_THRESHOLD_OVERRIDES`.
+  Keys are `<ecosystem>` (all data sources in that ecosystem) or
+  `<ecosystem>/<source>` (a single source, e.g. `cpe/cisco-json` — wins over
+  the ecosystem key).
+- `vuls diff detection` — defaults in `DETECTION_RATE_THRESHOLDS`
+  (`added:30`, `removed:5`); overrides in
+  `DETECTION_RATE_THRESHOLD_OVERRIDES`. Keys are `<scan-result-file>` (all
+  data sources detected in that file) or `<scan-result-file>/<source>` (a
+  single source, e.g. `cpe_jvn/jvn-feed-rss` — wins over the file key).
+
+A default entry is `<axis>:<rate>`; an override entry is the same with a
+target key in front, `<key>=<axis>:<rate>` (e.g. `ubuntu_2604=added:50`,
+`cpe/cisco-json=removed:25`), and relaxes **only the axis it names**; the same
+key may appear on several lines, one per axis. Precedence is resolved per
+axis: `<key>/<source>` beats `<key>` beats the axis default.
 
 The guard judges pass/fail per (ecosystem, source) / (file, source) — "target"
 below means that pair, and the report prints one row per pair. Both key
@@ -37,7 +58,9 @@ vocabularies use the vuls2 source IDs (e.g. `cisco-json`, `jvn-feed-rss`).
 
 Goal: re-derive both lists from the last ~2 months of data so they neither go
 stale (overrides for targets that have calmed down) nor miss newly-recurring
-churn. The whole list is re-derived, not just appended to.
+churn. The whole list is re-derived, not just appended to. Each (target, axis)
+is judged on its own distribution: a target may keep an `added` override and
+lose its `removed` one.
 
 ## Step 1 — Collect the run list
 
@@ -121,25 +144,42 @@ the report-table rows instead.
 The `Run diff guard` step prints a markdown report per diff. Column layouts vary
 slightly by `vuls` version, so read the header row to map columns. Typical:
 
-- **`vuls diff detection`** — `| Name | Source | Baseline | Target | Added | Removed | Change Rate | [Threshold] | Result |`
-- **`vuls diff db`** — `| Ecosystem | Source | Detection Change Rate | KB Change Rate | [Threshold] | Result |`
+- **`vuls diff detection`** — `| Name | Source | Baseline | Target | Added | Removed | Rate (added / removed) | Threshold (added / removed) | Result |`
+- **`vuls diff db`** — `| Ecosystem | Source | Detection (added / changed / removed) | KB (added / changed / removed) | Threshold (added / changed / removed) | Result |`
 
-(Reports from vuls2 builds predating the per-source split lack the `Source`
-column and carry one row per ecosystem/file — map columns from the header row
-and treat those rows as the ecosystem-/file-wide aggregate.)
+Rate cells hold one value per axis in the order the header gives; a value
+above its threshold is wrapped in `**bold**`, and the `## Details` headline of
+a FAIL row names the tripped (bucket, axis) with rate and threshold.
 
-For each sampled run, record per target: name, change rate(s), and Result
-(PASS / FAIL). The report lists *every* target, so one sampled run yields the
-full picture for that run.
+(Reports from vuls2 builds predating the axis split carry a single combined
+`Change Rate` column — `added + removed` for detection, and for db
+`added + removed + 2 × changed` per bucket. For detection the per-axis rates
+can be recomputed exactly from the `Added` / `Removed` / `Baseline` columns;
+for db the `## KB` table carries `Added` / `Removed` / `Changed` counts, so
+its per-axis rates are exact over `Baseline KB Keys`, while the `## Detection`
+table only gives upper bounds from its criterion counts — `removed ≤ (Baseline
+− Matched Criterions) / Baseline × 100`, `added ≤ (Target − Matched) /
+Baseline × 100`, `changed ≤ min(Baseline − Matched, Target − Matched) /
+Baseline × 100` — all in percent like the report's rate cells. A zero
+baseline follows the report's own convention: the rate is 100% when the axis
+count is non-zero and 0% otherwise. Reports predating the per-source split
+additionally lack the `Source` column and carry one row per ecosystem/file —
+map columns from the header row and treat those rows as the
+ecosystem-/file-wide aggregate.)
+
+For each sampled run, record per target: name, the rate of every axis, and
+Result (PASS / FAIL). The report lists *every* target, so one sampled run
+yields the full picture for that run.
 
 ## Step 4 — Per-entry decision: drop / narrow / keep
 
-For **each entry currently in the override lists**, build the target's
-change-rate distribution over the window from the sampled runs, then:
+For **each entry currently in the override lists** — one entry is one
+(target, axis) — build that axis' rate distribution for the target over the
+window from the sampled runs, then:
 
 | observed over the window | action |
 |---|---|
-| max rate ≤ the **default** threshold (db 10% / detection 5%) | **drop** the override |
+| max rate on that axis ≤ the axis' **default** threshold (added 30% / db changed 10% / db removed 10% / detection removed 5%) | **drop** the override |
 | max rate ≤ a value lower than the current override | **narrow** to `(observed peak) + headroom` |
 | still needs the current value | **keep** |
 
@@ -155,9 +195,12 @@ change-rate distribution over the window from the sampled runs, then:
 
 ## Step 5 — Additive pass: new overrides
 
-From the FAIL events, find targets *not* currently overridden that tripped the
-guard. Add an override only for **recurring upstream-driven churn that is not a
-regression**:
+From the FAIL events, find (target, axis) pairs *not* currently overridden
+that tripped the guard. Add an override only for **recurring upstream-driven
+churn that is not a regression**, and only on the axis that tripped — a
+`removed` override says "this source routinely loses this share of its
+detections", which deserves a sentence of evidence in the PR (e.g. a monthly
+supersedence cycle), not just a FAIL count:
 
 - ✅ new distro generations, recent releases, rolling releases, periodic
   vendor-data cycles — recurring across **multiple distinct events**;
@@ -172,14 +215,18 @@ include/exclude rationale.
 Edit the `env:` blocks in **both** `.github/workflows/db-main.yml` and
 `.github/workflows/db-nightly.yml`:
 
-- `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` / `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES`.
-- One `<key>=<rate>` per line. **No `#` comments inside the lists** — vuls2's
-  override parser rejects them. Per-entry rationale goes in the PR description,
-  not the YAML.
-- Prefer the **narrowest key that covers the churn**: if only one source in an
-  ecosystem (or in a file) is churning, use the slash-qualified key
-  (`cpe/jvn-feed-rss=…`, `cpe_jvn/jvn-feed-rss=…`) instead of loosening the
-  whole ecosystem/file — a wide key re-masks the other sources sharing it.
+- `DB_RATE_THRESHOLD_OVERRIDES` / `DETECTION_RATE_THRESHOLD_OVERRIDES`
+  (`db-main.yml` during the transition: `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` /
+  `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` with `<key>=<rate>` entries).
+- One `<key>=<axis>:<rate>` per line. **No `#` comments inside the lists** —
+  vuls2's override parser rejects them. Per-entry rationale goes in the PR
+  description, not the YAML.
+- Prefer the **narrowest key and axis that cover the churn**: if only one
+  source in an ecosystem (or in a file) is churning, use the slash-qualified
+  key (`cpe/jvn-feed-rss=added:…`, `cpe_jvn/jvn-feed-rss=added:…`) instead of
+  loosening the whole ecosystem/file — a wide key re-masks the other sources
+  sharing it — and name only the axis that tripped, so the other axes keep
+  their default.
 - The two pipelines have independent data (different data branch, different
   `vuls` version, baseline-age effects), so their lists legitimately differ —
   but where the **same** target is overridden in both, keep the **value

@@ -149,9 +149,12 @@ Output the verdict as one of:
 - **orchestration-driven** — raw moved because vuls-data-db changed what gets fetched (step 4e: seed/target registration, fetch workflow scope). Cite the vuls-data-db PR(s) and the seed↔added-ID overlap count. Usually an intentional one-time expansion: promote after inspection rather than adjusting thresholds.
 - **extractor-driven** — raw unchanged but extracted moved. Show a same-file diff between `<baseline_ext>` and `<target_ext>` and link to the offending commit in `pkg/extract/<source>/`.
 - **vuls2-builder-driven** — anchors unchanged but `created_by` differs. Link to the vuls2 commit in the date range.
-- **threshold-only** — small baseline (e.g. `ubuntu_2604` with baseline ~200 detections) tripping the global threshold on routine noise. Recommend a per-file or per-ecosystem override:
-  - Detection: `detection_change_rate_threshold_overrides` in the workflow's `with:` block (entries like `ubuntu_2604=20`).
-  - DB: `db_change_rate_threshold_overrides` (entries like `ubuntu:26.04=15`).
+- **threshold-only** — small baseline (e.g. `ubuntu_2604` with baseline ~200 detections) tripping the global threshold on routine noise. Recommend a per-file or per-ecosystem override on the axis that tripped:
+  - Detection: `DETECTION_RATE_THRESHOLD_OVERRIDES` in the workflow's `env:` block (entries like `ubuntu_2604=added:50`).
+  - DB: `DB_RATE_THRESHOLD_OVERRIDES` (entries like `ubuntu:26.04=added:80`).
+  - `db-main.yml` still runs the single combined-rate guard until vuls2 `main` carries the per-axis flags: its lists are `DETECTION_CHANGE_RATE_THRESHOLD_OVERRIDES` / `DB_CHANGE_RATE_THRESHOLD_OVERRIDES` with `<key>=<rate>` entries and its reports have one `Change Rate` column, so recommend the override in that form for a db-main run.
+
+The guard judges each target on separate axes — `added`, `changed` (db only) and `removed` — and the report's Summary row bolds the cell that tripped while the `## Details` headline names it: a db row reads `cpe / cisco-json (detection removed 12.3% > 10.0%)`, where `detection` / `kb` is the db sub-bucket that tripped and 10% is the db removed default; a detection row reads `ubuntu_2204 / ubuntu-oval (removed 12.3% > 5.0%)` against the detection removed default of 5%. Read the axis before classifying: an `added` trip is usually backfill and a candidate for an override; a `removed` or `changed` trip means detections disappeared or moved, so even an upstream-driven verdict should say *why* the loss is legitimate (upstream withdrawal, supersedence cycle, re-shard) before recommending an override on that axis.
 
 Always cite at least one concrete CVE file diff (raw or extracted) as evidence — never just summarize "looks upstream".
 
@@ -162,5 +165,5 @@ Always cite at least one concrete CVE file diff (raw or extracted) as evidence �
 - **NEVER run `gh workflow run` against this repo (vulsio/vuls-data-db) — under any circumstances.** This includes `promote-digest.yml`. `workflow_dispatch` here moves production tags (`:0` / `:latest` / `:nightly`) and cannot be undone. If triage concludes a candidate should be promoted, **present the exact command and stop** — a human runs it. This holds even if the user says "go ahead": your role ends at showing the command. Read-only `gh` (`gh run view` / `gh run list` / `gh api ...`) is fine.
 - **Don't** diff `HEAD vs HEAD~1` of the dotgit and call it the answer. The two anchors may span multiple commits, and you'll miss the earlier ones.
 - **Don't** treat `:0` / `:latest` / `:nightly` at *now* as the baseline. The baseline is what those tags pointed to **when the failed run executed**. Use the promote-digest history.
-- **Don't** assume `KB Change Rate = 0%` means "nothing changed". The metric measures one specific aspect of the bolt buckets and can show 0% even when many CVE entries had their `Vulnerable` flag flipped. Cross-check with raw status histograms (`grep -E '"status":' | sort | uniq -c`).
+- **Don't** assume all-zero KB rates (`0.0% / 0.0% / 0.0%`) mean "nothing changed". The metric measures one specific aspect of the bolt buckets and can show 0% even when many CVE entries had their `Vulnerable` flag flipped. Cross-check with raw status histograms (`grep -E '"status":' | sort | uniq -c`).
 - **Don't** auto-commit conclusions to memory. Each diff-guard failure has its own root cause; the procedure here is what should be remembered, not the verdict.
