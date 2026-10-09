@@ -5,28 +5,15 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
-      db_added_rate_threshold:
+      db_rate_thresholds:
         description: |
-          `vuls diff db` default added rate (%) threshold per
-          (ecosystem, data source); diff fails if exceeded. Leave empty
-          to use the build job's DB_ADDED_RATE_THRESHOLD env; a value
-          here replaces it for this dispatch only.
-        required: false
-        type: string
-        default: ""
-      db_changed_rate_threshold:
-        description: |
-          `vuls diff db` default changed rate (%) threshold per
-          (ecosystem, data source). Leave empty to use the build job's
-          DB_CHANGED_RATE_THRESHOLD env.
-        required: false
-        type: string
-        default: ""
-      db_removed_rate_threshold:
-        description: |
-          `vuls diff db` default removed rate (%) threshold per
-          (ecosystem, data source). Leave empty to use the build job's
-          DB_REMOVED_RATE_THRESHOLD env.
+          `vuls diff db` default thresholds (%) per (ecosystem, data
+          source), as multi-line entries of "<axis>:<rate>" where axis
+          is added, changed or removed; an axis not named keeps the
+          vuls2 built-in default. Leave empty to use the build job's
+          DB_RATE_THRESHOLDS env; a non-empty value here replaces it
+          for this dispatch only (a whitespace-only value replaces it
+          with nothing, i.e. the vuls2 built-in defaults).
         required: false
         type: string
         default: ""
@@ -48,20 +35,16 @@ on:
         required: false
         type: string
         default: ""
-      detection_added_rate_threshold:
+      detection_rate_thresholds:
         description: |
-          `vuls diff detection` default added rate (%) threshold per
-          (scan result, data source); diff fails if exceeded. Leave
-          empty to use the build job's DETECTION_ADDED_RATE_THRESHOLD
-          env; a value here replaces it for this dispatch only.
-        required: false
-        type: string
-        default: ""
-      detection_removed_rate_threshold:
-        description: |
-          `vuls diff detection` default removed rate (%) threshold per
-          (scan result, data source). Leave empty to use the build
-          job's DETECTION_REMOVED_RATE_THRESHOLD env.
+          `vuls diff detection` default thresholds (%) per (scan
+          result, data source), as multi-line entries of
+          "<axis>:<rate>" where axis is added or removed (the detection
+          diff has no changed axis); an axis not named keeps the vuls2
+          built-in default. Leave empty to use the build job's
+          DETECTION_RATE_THRESHOLDS env; a non-empty value here
+          replaces it for this dispatch only (a whitespace-only value
+          replaces it with nothing, i.e. the vuls2 built-in defaults).
         required: false
         type: string
         default: ""
@@ -102,19 +85,21 @@ jobs:
       # events, so the `Run diff guard` step falls back to these env
       # values whenever no dispatch input is supplied; a dispatch input,
       # when supplied, replaces the corresponding value for that run.
-      # Default per-target change-rate thresholds (%), one per axis. The
-      # guard judges the added / changed / removed units of every target
-      # separately: additions are the routine pattern of vulnerability
-      # data and get a generous default; changes and removals stay at
-      # the values the single-threshold guard ran with. These equal the
-      # vuls2 built-in defaults and are restated here so the whole
-      # policy reads in one place. `vuls diff detection` compares CVE ID
-      # sets and has no changed axis.
-      DB_ADDED_RATE_THRESHOLD: "30"
-      DB_CHANGED_RATE_THRESHOLD: "10"
-      DB_REMOVED_RATE_THRESHOLD: "10"
-      DETECTION_ADDED_RATE_THRESHOLD: "30"
-      DETECTION_REMOVED_RATE_THRESHOLD: "5"
+      # Default per-target change-rate thresholds (%), one "<axis>:<rate>"
+      # per line. The guard judges the added / changed / removed units of
+      # every target separately: additions are the routine pattern of
+      # vulnerability data and get a generous default; changes and
+      # removals stay at the values the single-threshold guard ran with.
+      # These equal the vuls2 built-in defaults and are restated here so
+      # the whole policy reads in one place. `vuls diff detection`
+      # compares CVE ID sets and has no changed axis.
+      DB_RATE_THRESHOLDS: |
+        added:30
+        changed:10
+        removed:10
+      DETECTION_RATE_THRESHOLDS: |
+        added:30
+        removed:5
       # Per-target threshold overrides (DB and detection lists alike),
       # one "<key>=<axis>:<rate>" per line; an entry relaxes only the
       # axis it names, so prefer the narrowest key AND axis that cover
@@ -222,12 +207,9 @@ jobs:
         with:
           target_db: ./vuls.db
           baseline_repository: ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_schema_version.outputs.schema_version }}
-          db_added_rate_threshold: ${{ github.event.inputs.db_added_rate_threshold || env.DB_ADDED_RATE_THRESHOLD }}
-          db_changed_rate_threshold: ${{ github.event.inputs.db_changed_rate_threshold || env.DB_CHANGED_RATE_THRESHOLD }}
-          db_removed_rate_threshold: ${{ github.event.inputs.db_removed_rate_threshold || env.DB_REMOVED_RATE_THRESHOLD }}
+          db_rate_thresholds: ${{ github.event.inputs.db_rate_thresholds || env.DB_RATE_THRESHOLDS }}
           db_rate_threshold_overrides: ${{ github.event.inputs.db_rate_threshold_overrides || env.DB_RATE_THRESHOLD_OVERRIDES }}
-          detection_added_rate_threshold: ${{ github.event.inputs.detection_added_rate_threshold || env.DETECTION_ADDED_RATE_THRESHOLD }}
-          detection_removed_rate_threshold: ${{ github.event.inputs.detection_removed_rate_threshold || env.DETECTION_REMOVED_RATE_THRESHOLD }}
+          detection_rate_thresholds: ${{ github.event.inputs.detection_rate_thresholds || env.DETECTION_RATE_THRESHOLDS }}
           detection_rate_threshold_overrides: ${{ github.event.inputs.detection_rate_threshold_overrides || env.DETECTION_RATE_THRESHOLD_OVERRIDES }}
 
       # Guard passed: attach :latest and :<schema_version> to the verified digest.

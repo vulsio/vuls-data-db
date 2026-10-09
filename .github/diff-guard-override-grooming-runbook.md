@@ -26,19 +26,20 @@ Additions are the routine pattern of vulnerability data and get a generous
 default; removals and changes stay tight. Each workflow's `build` job carries
 the defaults and two override lists in its `env:` block:
 
-- `vuls diff db` — defaults `DB_ADDED_RATE_THRESHOLD` (30%),
-  `DB_CHANGED_RATE_THRESHOLD` (10%), `DB_REMOVED_RATE_THRESHOLD` (10%);
-  overrides in `DB_RATE_THRESHOLD_OVERRIDES`. Keys are `<ecosystem>` (all data
-  sources in that ecosystem) or `<ecosystem>/<source>` (a single source, e.g.
-  `cpe/cisco-json` — wins over the ecosystem key).
-- `vuls diff detection` — defaults `DETECTION_ADDED_RATE_THRESHOLD` (30%),
-  `DETECTION_REMOVED_RATE_THRESHOLD` (5%); overrides in
+- `vuls diff db` — defaults in `DB_RATE_THRESHOLDS` (`added:30`,
+  `changed:10`, `removed:10`); overrides in `DB_RATE_THRESHOLD_OVERRIDES`.
+  Keys are `<ecosystem>` (all data sources in that ecosystem) or
+  `<ecosystem>/<source>` (a single source, e.g. `cpe/cisco-json` — wins over
+  the ecosystem key).
+- `vuls diff detection` — defaults in `DETECTION_RATE_THRESHOLDS`
+  (`added:30`, `removed:5`); overrides in
   `DETECTION_RATE_THRESHOLD_OVERRIDES`. Keys are `<scan-result-file>` (all
   data sources detected in that file) or `<scan-result-file>/<source>` (a
   single source, e.g. `cpe_jvn/jvn-feed-rss` — wins over the file key).
 
-An override entry is `<key>=<axis>:<rate>` (e.g. `ubuntu_2604=added:50`,
-`cpe/cisco-json=removed:25`) and relaxes **only the axis it names**; the same
+A default entry is `<axis>:<rate>`; an override entry is the same with a
+target key in front, `<key>=<axis>:<rate>` (e.g. `ubuntu_2604=added:50`,
+`cpe/cisco-json=removed:25`), and relaxes **only the axis it names**; the same
 key may appear on several lines, one per axis. Precedence is resolved per
 axis: `<key>/<source>` beats `<key>` beats the axis default.
 
