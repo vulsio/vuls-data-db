@@ -146,11 +146,17 @@ a FAIL row names the tripped (bucket, axis) with rate and threshold.
 `Change Rate` column — `added + removed` for detection, and for db
 `added + removed + 2 × changed` per bucket. For detection the per-axis rates
 can be recomputed exactly from the `Added` / `Removed` / `Baseline` columns;
-for db only upper bounds are available — `removed ≤ (Baseline − Matched
-Criterions) / Baseline × 100`, `added ≤ (Target − Matched) / Baseline × 100`
-from the `## Detection` table, in percent like the report's rate cells. Reports predating the per-source split additionally lack
-the `Source` column and carry one row per ecosystem/file — map columns from
-the header row and treat those rows as the ecosystem-/file-wide aggregate.)
+for db the `## KB` table carries `Added` / `Removed` / `Changed` counts, so
+its per-axis rates are exact over `Baseline KB Keys`, while the `## Detection`
+table only gives upper bounds from its criterion counts — `removed ≤ (Baseline
+− Matched Criterions) / Baseline × 100`, `added ≤ (Target − Matched) /
+Baseline × 100`, `changed ≤ min(Baseline − Matched, Target − Matched) /
+Baseline × 100` — all in percent like the report's rate cells. A zero
+baseline follows the report's own convention: the rate is 100% when the axis
+count is non-zero and 0% otherwise. Reports predating the per-source split
+additionally lack the `Source` column and carry one row per ecosystem/file —
+map columns from the header row and treat those rows as the
+ecosystem-/file-wide aggregate.)
 
 For each sampled run, record per target: name, the rate of every axis, and
 Result (PASS / FAIL). The report lists *every* target, so one sampled run
