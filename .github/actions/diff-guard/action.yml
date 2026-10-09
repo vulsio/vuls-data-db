@@ -13,21 +13,6 @@ description: |
   tightly bounded. Defaults are given per axis (`<axis>:<rate>`) and
   overrides name the axis they relax (`<key>=<axis>:<rate>`).
 
-  Two input families select which vuls2 flag family is passed. The
-  per-axis inputs (`db_rate_thresholds`, `db_rate_threshold_overrides`,
-  `detection_rate_thresholds`, `detection_rate_threshold_overrides`)
-  drive `--rate-threshold` / `--rate-threshold-override`. The legacy
-  inputs (`db_change_rate_threshold`, `db_change_rate_threshold_overrides`,
-  `detection_change_rate_threshold`,
-  `detection_change_rate_threshold_overrides`) drive the single
-  combined-rate `--change-rate-threshold` /
-  `--change-rate-threshold-override`, which every vuls2 accepts. The
-  legacy family exists for callers whose vuls2 predates the axis split
-  (db-main.yml installs vuls@main) and is removed once every caller runs
-  a vuls2 with the per-axis flags. Giving inputs from both families is an
-  error; giving none means the per-axis family with vuls2's built-in
-  defaults.
-
   All guard steps are kept inside this composite action so the caller only
   needs a single `uses:` step to run the whole gate.
 
@@ -142,40 +127,6 @@ inputs:
       file name without ".json". Blank/whitespace-only lines are dropped.
     required: false
     default: ""
-  db_change_rate_threshold:
-    description: |
-      Legacy family: `vuls diff db` single combined change rate (%)
-      threshold per (ecosystem, data source), passed as
-      `--change-rate-threshold`. Only for callers whose vuls2 predates the
-      per-axis flags; cannot be combined with the per-axis inputs.
-    required: false
-    default: ""
-  db_change_rate_threshold_overrides:
-    description: |
-      Legacy family: overrides of db_change_rate_threshold. One entry per
-      line, "<ecosystem>=<rate>" (every data source in that ecosystem) or
-      "<ecosystem>/<source>=<rate>" (single source, wins over the ecosystem
-      key). Blank/whitespace-only lines are dropped. Requires
-      db_change_rate_threshold.
-    required: false
-    default: ""
-  detection_change_rate_threshold:
-    description: |
-      Legacy family: `vuls diff detection` single combined change rate (%)
-      threshold per (scan result, data source), passed as
-      `--change-rate-threshold`. Only for callers whose vuls2 predates the
-      per-axis flags; cannot be combined with the per-axis inputs.
-    required: false
-    default: ""
-  detection_change_rate_threshold_overrides:
-    description: |
-      Legacy family: overrides of detection_change_rate_threshold. One
-      entry per line, "<file-basename>=<rate>" (every data source detected
-      in that file) or "<file-basename>/<source>=<rate>" (single source,
-      wins over the file key). Blank/whitespace-only lines are dropped.
-      Requires detection_change_rate_threshold.
-    required: false
-    default: ""
   integration_ref:
     description: vulsio/integration commit SHA to pin scan-result fixtures to.
     required: false
@@ -263,17 +214,15 @@ runs:
           echo "</details>"
         } >> "$GITHUB_STEP_SUMMARY"
 
-    # Centralizes the threshold / override input handling for all three
-    # diff steps below: picks the flag family from which inputs were
-    # given and turns the multi-line lists into CSV. Rule for the lists:
-    # `awk 'NF'` drops blank/whitespace-only lines (NF is 0 for them);
-    # `paste -sd, -` joins survivors with ",". Whitespace around each
-    # entry is intentionally NOT trimmed here — vuls2 trims around the
-    # separators itself. An empty result is forwarded as-is: vuls2's
-    # StringSlice flag parses "" into an empty list, i.e. built-in
-    # defaults / no overrides. Per-axis entries carry their axis
-    # ("<axis>:<rate>" / "<key>=<axis>:<rate>"); the axis is validated by
-    # vuls2, not here.
+    # Centralizes the multi-line threshold / override input parsing for
+    # all three diff steps below. Rule: `awk 'NF'` drops
+    # blank/whitespace-only lines (NF is 0 for them); `paste -sd, -`
+    # joins survivors with ",". Whitespace around each entry is
+    # intentionally NOT trimmed here — vuls2 trims around the separators
+    # itself. An empty result is forwarded as-is: vuls2's StringSlice flag
+    # parses "" into an empty list, i.e. built-in defaults / no
+    # overrides. Entries carry their axis ("<axis>:<rate>" /
+    # "<key>=<axis>:<rate>"); the axis is validated by vuls2, not here.
     - name: Parse thresholds and overrides
       id: parse_thresholds
       shell: bash
@@ -282,10 +231,6 @@ runs:
         DETECTION_OVERRIDES: ${{ inputs.detection_rate_threshold_overrides }}
         DB_THRESHOLDS: ${{ inputs.db_rate_thresholds }}
         DB_OVERRIDES: ${{ inputs.db_rate_threshold_overrides }}
-        LEGACY_DETECTION_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
-        LEGACY_DETECTION_OVERRIDES: ${{ inputs.detection_change_rate_threshold_overrides }}
-        LEGACY_DB_THRESHOLD: ${{ inputs.db_change_rate_threshold }}
-        LEGACY_DB_OVERRIDES: ${{ inputs.db_change_rate_threshold_overrides }}
       run: |
         # GitHub's `shell: bash` already runs with `-eo pipefail`; set it
         # explicitly so the fail-fast contract is visible at the call site
@@ -293,41 +238,13 @@ runs:
         # the step aborts instead of silently emitting empty lists.
         set -euo pipefail
         to_csv() { printf '%s' "$1" | awk 'NF' | paste -sd, -; }
-        # An input counts as given when it has any non-blank content.
-        given() { [ -n "$(printf '%s' "$1" | awk 'NF')" ]; }
-
-        family=axes
-        if given "$LEGACY_DETECTION_THRESHOLD" || given "$LEGACY_DETECTION_OVERRIDES" \
-           || given "$LEGACY_DB_THRESHOLD" || given "$LEGACY_DB_OVERRIDES"; then
-          family=legacy
-        fi
-        if [ "$family" = legacy ] && { given "$DETECTION_THRESHOLDS" || given "$DETECTION_OVERRIDES" \
-           || given "$DB_THRESHOLDS" || given "$DB_OVERRIDES"; }; then
-          echo "::error::diff-guard: both the per-axis inputs (*_rate_thresholds / *_rate_threshold_overrides) and the legacy inputs (*_change_rate_threshold / *_change_rate_threshold_overrides) were given; use one family" >&2
-          exit 1
-        fi
-        # --change-rate-threshold is a number, not a list: an override
-        # list without the scalar would reach vuls2 as an empty number.
-        if [ "$family" = legacy ] && { ! given "$LEGACY_DETECTION_THRESHOLD" || ! given "$LEGACY_DB_THRESHOLD"; }; then
-          echo "::error::diff-guard: the legacy inputs need both detection_change_rate_threshold and db_change_rate_threshold" >&2
-          exit 1
-        fi
-
         # printf, not echo: a value beginning with `-` (e.g. `-n`) or
         # containing backslashes is written verbatim, avoiding echo's
         # implementation-defined option/escape handling.
-        printf '%s\n' "family=${family}" >> "$GITHUB_OUTPUT"
-        if [ "$family" = legacy ]; then
-          printf '%s\n' "detection_legacy_threshold=$(printf '%s' "$LEGACY_DETECTION_THRESHOLD" | awk 'NF' | head -1 | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "db_legacy_threshold=$(printf '%s' "$LEGACY_DB_THRESHOLD" | awk 'NF' | head -1 | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "detection_overrides_csv=$(to_csv "$LEGACY_DETECTION_OVERRIDES")" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "db_overrides_csv=$(to_csv "$LEGACY_DB_OVERRIDES")" >> "$GITHUB_OUTPUT"
-        else
-          printf '%s\n' "detection_thresholds_csv=$(to_csv "$DETECTION_THRESHOLDS")" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "detection_overrides_csv=$(to_csv "$DETECTION_OVERRIDES")" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "db_thresholds_csv=$(to_csv "$DB_THRESHOLDS")" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "db_overrides_csv=$(to_csv "$DB_OVERRIDES")" >> "$GITHUB_OUTPUT"
-        fi
+        printf '%s\n' "detection_thresholds_csv=$(to_csv "$DETECTION_THRESHOLDS")" >> "$GITHUB_OUTPUT"
+        printf '%s\n' "detection_overrides_csv=$(to_csv "$DETECTION_OVERRIDES")" >> "$GITHUB_OUTPUT"
+        printf '%s\n' "db_thresholds_csv=$(to_csv "$DB_THRESHOLDS")" >> "$GITHUB_OUTPUT"
+        printf '%s\n' "db_overrides_csv=$(to_csv "$DB_OVERRIDES")" >> "$GITHUB_OUTPUT"
 
     - name: Diff detection between baseline and target DBs
       id: diff_detection_master
@@ -338,8 +255,6 @@ runs:
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
-        FAMILY: ${{ steps.parse_thresholds.outputs.family }}
-        LEGACY_THRESHOLD: ${{ steps.parse_thresholds.outputs.detection_legacy_threshold }}
         THRESHOLDS_CSV: ${{ steps.parse_thresholds.outputs.detection_thresholds_csv }}
         OVERRIDES_CSV: ${{ steps.parse_thresholds.outputs.detection_overrides_csv }}
       run: |
@@ -349,21 +264,17 @@ runs:
         set +e
         set -o pipefail
 
-        # The list values are passed verbatim: vuls2's StringSlice flag
-        # parses an empty value into an empty list, so the
-        # built-in-defaults / no-overrides paths need no special-casing
-        # here.
-        # Flag family chosen by the `Parse thresholds and overrides` step
-        # from which inputs the caller gave (see the action description).
-        case "$FAMILY" in
-          legacy) set -- --change-rate-threshold "$LEGACY_THRESHOLD" --change-rate-threshold-override "$OVERRIDES_CSV" ;;
-          *)      set -- --rate-threshold "$THRESHOLDS_CSV" --rate-threshold-override "$OVERRIDES_CSV" ;;
-        esac
+        # `$THRESHOLDS_CSV` / `$OVERRIDES_CSV` come from the `Parse
+        # thresholds and overrides` step. Passed verbatim: vuls2's
+        # StringSlice flag parses an empty value into an empty list, so
+        # the built-in-defaults / no-overrides paths need no
+        # special-casing here.
         vuls diff detection \
           ./scan-results \
           ./baseline.db "$VULS0" \
           "$TARGET_DB" "$VULS0" \
-          "$@" \
+          --rate-threshold "$THRESHOLDS_CSV" \
+          --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-detection-report.md
         rc=$?
 
@@ -435,8 +346,6 @@ runs:
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
-        FAMILY: ${{ steps.parse_thresholds.outputs.family }}
-        LEGACY_THRESHOLD: ${{ steps.parse_thresholds.outputs.detection_legacy_threshold }}
         THRESHOLDS_CSV: ${{ steps.parse_thresholds.outputs.detection_thresholds_csv }}
         OVERRIDES_CSV: ${{ steps.parse_thresholds.outputs.detection_overrides_csv }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
@@ -445,18 +354,15 @@ runs:
         set +e
         set -o pipefail
 
-        # See diff_detection_master for the verbatim-pass rationale.
-        # Flag family chosen by the `Parse thresholds and overrides` step
-        # from which inputs the caller gave (see the action description).
-        case "$FAMILY" in
-          legacy) set -- --change-rate-threshold "$LEGACY_THRESHOLD" --change-rate-threshold-override "$OVERRIDES_CSV" ;;
-          *)      set -- --rate-threshold "$THRESHOLDS_CSV" --rate-threshold-override "$OVERRIDES_CSV" ;;
-        esac
+        # `$THRESHOLDS_CSV` / `$OVERRIDES_CSV` come from the `Parse
+        # thresholds and overrides` step. See diff_detection_master for
+        # the verbatim-pass rationale.
         vuls diff detection \
           ./scan-results-old \
           ./baseline.db "$VULS0_OLD" \
           "$TARGET_DB" "$VULS0_OLD" \
-          "$@" \
+          --rate-threshold "$THRESHOLDS_CSV" \
+          --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-detection-old-report.md
         rc=$?
 
@@ -474,8 +380,6 @@ runs:
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
-        FAMILY: ${{ steps.parse_thresholds.outputs.family }}
-        LEGACY_THRESHOLD: ${{ steps.parse_thresholds.outputs.db_legacy_threshold }}
         THRESHOLDS_CSV: ${{ steps.parse_thresholds.outputs.db_thresholds_csv }}
         OVERRIDES_CSV: ${{ steps.parse_thresholds.outputs.db_overrides_csv }}
       run: |
@@ -483,15 +387,12 @@ runs:
         set +e
         set -o pipefail
 
-        # See diff_detection_master for the verbatim-pass rationale.
-        # Flag family chosen by the `Parse thresholds and overrides` step
-        # from which inputs the caller gave (see the action description).
-        case "$FAMILY" in
-          legacy) set -- --change-rate-threshold "$LEGACY_THRESHOLD" --change-rate-threshold-override "$OVERRIDES_CSV" ;;
-          *)      set -- --rate-threshold "$THRESHOLDS_CSV" --rate-threshold-override "$OVERRIDES_CSV" ;;
-        esac
+        # `$THRESHOLDS_CSV` / `$OVERRIDES_CSV` come from the `Parse
+        # thresholds and overrides` step. See diff_detection_master for
+        # the verbatim-pass rationale.
         vuls diff db ./baseline.db "$TARGET_DB" \
-          "$@" \
+          --rate-threshold "$THRESHOLDS_CSV" \
+          --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-report.md
         rc=$?
 
