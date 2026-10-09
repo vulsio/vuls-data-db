@@ -105,10 +105,11 @@ jobs:
       # Default per-target change-rate thresholds (%), one per axis. The
       # guard judges the added / changed / removed units of every target
       # separately: additions are the routine pattern of vulnerability
-      # data and get the generous vuls2 built-in default (30, restated
-      # here so the whole policy reads in one place); changes and
-      # removals stay tight. `vuls diff detection` compares CVE ID sets
-      # and has no changed axis.
+      # data and get a generous default; changes and removals stay at
+      # the values the single-threshold guard ran with. These equal the
+      # vuls2 built-in defaults and are restated here so the whole
+      # policy reads in one place. `vuls diff detection` compares CVE ID
+      # sets and has no changed axis.
       DB_ADDED_RATE_THRESHOLD: "30"
       DB_CHANGED_RATE_THRESHOLD: "10"
       DB_REMOVED_RATE_THRESHOLD: "10"
