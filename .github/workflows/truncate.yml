@@ -35,6 +35,10 @@ on:
           - vuls-data-extracted-enisa-euvd-list
           - vuls-data-extracted-enisa-kev
           - vuls-data-extracted-epss
+          - vuls-data-extracted-exploit-exploitdb
+          - vuls-data-extracted-exploit-github
+          - vuls-data-extracted-exploit-inthewild
+          - vuls-data-extracted-exploit-trickest
           - vuls-data-extracted-fedora-api
           - vuls-data-extracted-fortinet-csaf
           - vuls-data-extracted-fortinet-cvrf
@@ -51,6 +55,7 @@ on:
           - vuls-data-extracted-mitre-cve-v5
           - vuls-data-extracted-mitre-cwe
           - vuls-data-extracted-msf
+          - vuls-data-extracted-nuclei-repository
           - vuls-data-extracted-nvd-api-cve
           - vuls-data-extracted-nvd-feed-cve-v2
           - vuls-data-extracted-oracle-linux
