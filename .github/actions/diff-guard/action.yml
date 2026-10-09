@@ -3,7 +3,14 @@ description: |
   Compare a freshly built vuls.db against a baseline pulled from a container
   registry. Runs `vuls diff detection` (against two vuls0 binaries: master HEAD
   and a pinned older commit) and `vuls diff db`, emitting step summaries and
-  failing the job if any check exceeds its configured threshold.
+  failing the job if any check exceeds its configured thresholds.
+
+  Thresholds are per change axis: both diffs judge the added, changed
+  (`diff db` only — `diff detection` compares CVE ID sets and has no
+  content to call changed) and removed units of every (target, data
+  source) pair against their own threshold, so routine additions can be
+  tolerated while removals stay tightly bounded. Overrides name the axis
+  they relax (`<key>=<axis>:<rate>`).
 
   All guard steps are kept inside this composite action so the caller only
   needs a single `uses:` step to run the whole gate.
@@ -76,29 +83,43 @@ inputs:
   baseline_repository:
     description: OCI reference (repo:tag) to fetch the baseline vuls.db from.
     required: true
-  db_change_rate_threshold:
-    description: "`vuls diff db` default change rate (%) threshold per (ecosystem, data source)."
+  db_added_rate_threshold:
+    description: "`vuls diff db` default added rate (%) threshold per (ecosystem, data source)."
     required: true
-  db_change_rate_threshold_overrides:
+  db_changed_rate_threshold:
+    description: "`vuls diff db` default changed rate (%) threshold per (ecosystem, data source)."
+    required: true
+  db_removed_rate_threshold:
+    description: "`vuls diff db` default removed rate (%) threshold per (ecosystem, data source)."
+    required: true
+  db_rate_threshold_overrides:
     description: |
-      Overrides of the `vuls diff db` change rate threshold. One entry per
-      line, either "<ecosystem>=<rate>" (e.g. "ubuntu:26.04=25", applies to
-      every data source in that ecosystem) or "<ecosystem>/<source>=<rate>"
-      (e.g. "cpe/cisco-json=30", single source, wins over the ecosystem key).
+      Overrides of the `vuls diff db` per-axis thresholds. One entry per
+      line, "<key>=<axis>:<rate>" where key is "<ecosystem>" (e.g.
+      "ubuntu:26.04", applies to every data source in that ecosystem) or
+      "<ecosystem>/<source>" (e.g. "cpe/cisco-json", single source, wins
+      over the ecosystem key) and axis is added, changed or removed. An
+      entry relaxes only the axis it names (e.g. "ubuntu:26.04=added:80").
       Blank/whitespace-only lines are dropped. Empty value means "no
-      overrides" — every (ecosystem, source) uses db_change_rate_threshold.
+      overrides" — every (ecosystem, source) uses the db_*_rate_threshold
+      defaults.
     required: false
     default: ""
-  detection_change_rate_threshold:
-    description: "`vuls diff detection` default change rate (%) threshold per (scan result, data source)."
+  detection_added_rate_threshold:
+    description: "`vuls diff detection` default added rate (%) threshold per (scan result, data source)."
     required: true
-  detection_change_rate_threshold_overrides:
+  detection_removed_rate_threshold:
+    description: "`vuls diff detection` default removed rate (%) threshold per (scan result, data source)."
+    required: true
+  detection_rate_threshold_overrides:
     description: |
-      Overrides of the `vuls diff detection` change rate threshold. One entry
-      per line, either "<file-basename>=<rate>" (e.g. "debian_13=8", applies
-      to every data source detected in that file) or
-      "<file-basename>/<source>=<rate>" (e.g. "cpe_jvn/jvn-feed-rss=25",
-      single source, wins over the file key). The basename is the scan-result
+      Overrides of the `vuls diff detection` per-axis thresholds. One entry
+      per line, "<key>=<axis>:<rate>" where key is "<file-basename>" (e.g.
+      "debian_13", applies to every data source detected in that file) or
+      "<file-basename>/<source>" (e.g. "cpe_jvn/jvn-feed-rss", single
+      source, wins over the file key) and axis is added or removed (the
+      detection diff has no changed axis). An entry relaxes only the axis
+      it names (e.g. "debian_13=added:50"). The basename is the scan-result
       file name without ".json". Blank/whitespace-only lines are dropped.
     required: false
     default: ""
@@ -195,13 +216,15 @@ runs:
     # Whitespace around each entry is intentionally NOT trimmed here —
     # vuls2 trims around the "=" itself in override.Parse. An empty result
     # is forwarded as-is: vuls2's StringSlice flag parses "" into an empty
-    # override list, i.e. the no-overrides default.
+    # override list, i.e. the no-overrides default. Entries carry their
+    # axis ("<key>=<axis>:<rate>"); the axis is validated by vuls2, not
+    # here.
     - name: Parse threshold overrides
       id: parse_overrides
       shell: bash
       env:
-        DETECTION_OVERRIDES: ${{ inputs.detection_change_rate_threshold_overrides }}
-        DB_OVERRIDES: ${{ inputs.db_change_rate_threshold_overrides }}
+        DETECTION_OVERRIDES: ${{ inputs.detection_rate_threshold_overrides }}
+        DB_OVERRIDES: ${{ inputs.db_rate_threshold_overrides }}
       run: |
         # GitHub's `shell: bash` already runs with `-eo pipefail`; set it
         # explicitly so the fail-fast contract is visible at the call site
@@ -225,7 +248,8 @@ runs:
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
-        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
+        DETECTION_ADDED_RATE_THRESHOLD: ${{ inputs.detection_added_rate_threshold }}
+        DETECTION_REMOVED_RATE_THRESHOLD: ${{ inputs.detection_removed_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.detection_csv }}
       run: |
         # No `set -e` after `rc=$?` — the rest of the step must reach
@@ -242,8 +266,9 @@ runs:
           ./scan-results \
           ./baseline.db "$VULS0" \
           "$TARGET_DB" "$VULS0" \
-          --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
-          --change-rate-threshold-override "$OVERRIDES_CSV" \
+          --added-rate-threshold "$DETECTION_ADDED_RATE_THRESHOLD" \
+          --removed-rate-threshold "$DETECTION_REMOVED_RATE_THRESHOLD" \
+          --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-detection-report.md
         rc=$?
 
@@ -315,7 +340,8 @@ runs:
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
-        DETECTION_CHANGE_RATE_THRESHOLD: ${{ inputs.detection_change_rate_threshold }}
+        DETECTION_ADDED_RATE_THRESHOLD: ${{ inputs.detection_added_rate_threshold }}
+        DETECTION_REMOVED_RATE_THRESHOLD: ${{ inputs.detection_removed_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.detection_csv }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
@@ -329,8 +355,9 @@ runs:
           ./scan-results-old \
           ./baseline.db "$VULS0_OLD" \
           "$TARGET_DB" "$VULS0_OLD" \
-          --change-rate-threshold "$DETECTION_CHANGE_RATE_THRESHOLD" \
-          --change-rate-threshold-override "$OVERRIDES_CSV" \
+          --added-rate-threshold "$DETECTION_ADDED_RATE_THRESHOLD" \
+          --removed-rate-threshold "$DETECTION_REMOVED_RATE_THRESHOLD" \
+          --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-detection-old-report.md
         rc=$?
 
@@ -348,7 +375,9 @@ runs:
       shell: bash
       env:
         TARGET_DB: ${{ inputs.target_db }}
-        DB_CHANGE_RATE_THRESHOLD: ${{ inputs.db_change_rate_threshold }}
+        DB_ADDED_RATE_THRESHOLD: ${{ inputs.db_added_rate_threshold }}
+        DB_CHANGED_RATE_THRESHOLD: ${{ inputs.db_changed_rate_threshold }}
+        DB_REMOVED_RATE_THRESHOLD: ${{ inputs.db_removed_rate_threshold }}
         OVERRIDES_CSV: ${{ steps.parse_overrides.outputs.db_csv }}
       run: |
         # Stay in `set +e` for the entire step. See note above.
@@ -358,8 +387,10 @@ runs:
         # `$OVERRIDES_CSV` comes from the `Parse threshold overrides`
         # step. See diff_detection_master for the verbatim-pass rationale.
         vuls diff db ./baseline.db "$TARGET_DB" \
-          --change-rate-threshold "$DB_CHANGE_RATE_THRESHOLD" \
-          --change-rate-threshold-override "$OVERRIDES_CSV" \
+          --added-rate-threshold "$DB_ADDED_RATE_THRESHOLD" \
+          --changed-rate-threshold "$DB_CHANGED_RATE_THRESHOLD" \
+          --removed-rate-threshold "$DB_REMOVED_RATE_THRESHOLD" \
+          --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-report.md
         rc=$?
 
