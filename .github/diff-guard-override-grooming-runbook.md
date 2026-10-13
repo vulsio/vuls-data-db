@@ -135,14 +135,32 @@ the report-table rows instead.
 The `Run diff guard` step prints a markdown report per diff. Column layouts vary
 slightly by `vuls` version, so read the header row to map columns. Typical:
 
-- **`vuls diff detection`** — `| Name | Source | Baseline | Target | Added | Removed | Rate (added / removed) | Threshold (added / removed) | Result |`
+- **`vuls diff detection`** — `| Name | Source | Baseline | Target | Added | Removed | Moved | Rate (added / removed) | Threshold (added / removed) | Result |`
 - **`vuls diff db`** — `| Ecosystem | Source | Detection (added / changed / removed) | KB (added / changed / removed) | Threshold (added / changed / removed) | Result |`
 
 Rate cells hold one value per axis in the order the header gives; a value
 above its threshold is wrapped in `**bold**`, and the `## Details` headline of
 a FAIL row names the tripped (bucket, axis) with rate and threshold.
 
-(Reports from vuls2 builds predating the axis split carry a single combined
+In the detection report, `Removed` counts only the IDs the source lost that
+no other source of the same file reports in the target; the ones another
+source still reports are counted under `Moved` instead (and listed with
+their destinations under `#### Moved IDs` in the Details of a FAIL row).
+`Moved` is not judged by any axis. vuls0 attributes a CPE match to a verified
+source (NVD, Fortinet, Cisco, PaloAlto) over VulnCheck / JVN once the verified
+source defines the same product, so a `vulncheck-nist-nvd2` / `jvn-feed-rss`
+row with a large `Moved` and a small `Removed` is that re-attribution, not a
+loss, and is not grounds for a `removed` override on that row.
+
+(Reports from vuls2 builds predating the moved split have no `Moved` column
+and their `Removed` is the whole lost set, `removed + moved` in today's
+terms. To read such a row under today's definition, take its `#### Removed
+IDs` list from the Details and drop every ID that another source of the same
+file reports in the target; the receiving source's `#### Added IDs` list is
+only printed when that row also failed, so the split is often not
+recoverable from the log alone, and a historical `removed` trip on a
+VulnCheck / JVN row of a cpe fixture should be read as "lost or moved".
+Reports from vuls2 builds predating the axis split carry a single combined
 `Change Rate` column — `added + removed` for detection, and for db
 `added + removed + 2 × changed` per bucket. For detection the per-axis rates
 can be recomputed exactly from the `Added` / `Removed` / `Baseline` columns;
