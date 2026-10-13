@@ -155,7 +155,7 @@ never grounds for a `removed` override. Whatever the row counts under
 large `Moved` is next to it: record those IDs and judge the override on them
 alone.
 
-(Reports from vuls2 builds predating the moved split have no `Moved` column
+Reports from vuls2 builds predating the moved split have no `Moved` column
 and their `Removed` is the whole lost set, `removed + moved` in today's
 terms. To read such a row under today's definition, take its `#### Removed
 IDs` list from the Details and drop every ID that another source of the same
@@ -163,6 +163,7 @@ file reports in the target; the receiving source's `#### Added IDs` list is
 only printed when that row also failed, so the split is often not
 recoverable from the log alone, and a historical `removed` trip on a
 VulnCheck / JVN row of a cpe fixture should be read as "lost or moved".
+
 Reports from vuls2 builds predating the axis split carry a single combined
 `Change Rate` column — `added + removed` for detection, and for db
 `added + removed + 2 × changed` per bucket. For detection the per-axis rates
@@ -177,7 +178,7 @@ baseline follows the report's own convention: the rate is 100% when the axis
 count is non-zero and 0% otherwise. Reports predating the per-source split
 additionally lack the `Source` column and carry one row per ecosystem/file —
 map columns from the header row and treat those rows as the
-ecosystem-/file-wide aggregate.)
+ecosystem-/file-wide aggregate.
 
 For each sampled run, record per target: name, the rate of every axis, and
 Result (PASS / FAIL). The report lists *every* target, so one sampled run
