@@ -148,9 +148,12 @@ source still reports are counted under `Moved` instead (and listed with
 their destinations under `#### Moved IDs` in the Details of a FAIL row).
 `Moved` is not judged by any axis. vuls0 attributes a CPE match to a verified
 source (NVD, Fortinet, Cisco, PaloAlto) over VulnCheck / JVN once the verified
-source defines the same product, so a `vulncheck-nist-nvd2` / `jvn-feed-rss`
-row with a large `Moved` and a small `Removed` is that re-attribution, not a
-loss, and is not grounds for a `removed` override on that row.
+source defines the same product, so the `Moved` part of a
+`vulncheck-nist-nvd2` / `jvn-feed-rss` row is usually that re-attribution and
+never grounds for a `removed` override. Whatever the row counts under
+`Removed` is still a real file-level loss under the new definition, however
+large `Moved` is next to it: record those IDs and judge the override on them
+alone.
 
 (Reports from vuls2 builds predating the moved split have no `Moved` column
 and their `Removed` is the whole lost set, `removed + moved` in today's
