@@ -11,9 +11,11 @@ on:
           source), as multi-line entries of "<axis>:<rate>" where axis
           is added, changed or removed; an axis not named keeps the
           vuls2 built-in default. Leave empty to use the build job's
-          DB_RATE_THRESHOLDS env; a non-empty value here replaces it
-          for this dispatch only (a whitespace-only value replaces it
-          with nothing, i.e. the vuls2 built-in defaults).
+          DB_RATE_THRESHOLDS env; a non-empty value here replaces the
+          whole env list for this dispatch, so an axis it does not name
+          falls back to the vuls2 built-in default, not to the env value
+          (a whitespace-only value replaces the list with nothing, i.e.
+          the vuls2 built-in defaults on every axis).
         required: false
         type: string
         default: ""
@@ -43,8 +45,10 @@ on:
           diff has no changed axis); an axis not named keeps the vuls2
           built-in default. Leave empty to use the build job's
           DETECTION_RATE_THRESHOLDS env; a non-empty value here
-          replaces it for this dispatch only (a whitespace-only value
-          replaces it with nothing, i.e. the vuls2 built-in defaults).
+          replaces the whole env list for this dispatch, so an axis it
+          does not name falls back to the vuls2 built-in default, not to
+          the env value (a whitespace-only value replaces the list with
+          nothing, i.e. the vuls2 built-in defaults on every axis).
         required: false
         type: string
         default: ""
