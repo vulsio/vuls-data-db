@@ -77,6 +77,31 @@ description: |
     rendered as `MISSING` in the summary table, surfaced as `?` in the
     diagnostic line, and counted as failure (exit rc=1).
 
+  Memory budget:
+    `vuls diff detection` fans out up to NumCPU concurrent vuls0
+    processes (4 on the standard ubuntu-latest runners this repo builds
+    on, 16 GiB RAM, swap removed by the build-space step), each
+    detecting one scan-result file against a ~13 GiB DB. Tasks are
+    appended as (baseline, target) pairs per file and started in slice
+    order, so the four in-flight tasks are almost always two files x
+    two roles; file order is randomized (Go map iteration). Profiling
+    against a 2026-09-30 nightly DB with vuls0 master showed the
+    heaviest files peak at 4.7 GiB (debian_9), 4.0 (oracle_9),
+    3.5 (debian_10) and 3.1-3.2 GiB (ubuntu_1804/2004) of anonymous
+    memory per process, so an unlucky pairing sums to 14-17 GiB anon —
+    past the runner — which evicts the bolt mmap pages, thrashes on
+    major faults, and gets the job cancelled server-side (SIGTERM
+    mid-detection, "cancelled", no cancelling actor; 23 such runs since
+    2026-07-19, every one inside the master detection step).
+    GOMEMLIMIT=2GiB on the detection steps is a soft target for the Go
+    heap, not a hard cap on process memory: live heap of the heaviest
+    files is ~2.5-2.8 GiB, so they settle around 2.8-3.0 GiB anon
+    (worst pairing ~11.6 GiB, inside budget) at the cost of +6-13% wall
+    time on those few files and no change on the rest. bolt's mmap is
+    file-backed and outside the Go runtime's accounting, so it is
+    unaffected by the limit; the point is to leave room for it.
+    `vuls diff db` is a single process and is left unlimited.
+
 inputs:
   target_db:
     description: Path to the freshly built vuls.db to validate.
@@ -257,6 +282,12 @@ runs:
         TARGET_DB: ${{ inputs.target_db }}
         THRESHOLDS_CSV: ${{ steps.parse_thresholds.outputs.detection_thresholds_csv }}
         OVERRIDES_CSV: ${{ steps.parse_thresholds.outputs.detection_overrides_csv }}
+        # Soft-limits each vuls0 worker's Go heap so an unlucky pairing
+        # of the heaviest scan-result files stays inside the 16 GiB
+        # runner. Inherited by the vuls0 child processes via the
+        # environment. See the `Memory budget` section in the action
+        # description.
+        GOMEMLIMIT: 2GiB
       run: |
         # No `set -e` after `rc=$?` — the rest of the step must reach
         # the final `echo "rc=..." >> $GITHUB_OUTPUT` so the aggregator
@@ -349,6 +380,8 @@ runs:
         THRESHOLDS_CSV: ${{ steps.parse_thresholds.outputs.detection_thresholds_csv }}
         OVERRIDES_CSV: ${{ steps.parse_thresholds.outputs.detection_overrides_csv }}
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
+        # See the `Memory budget` section in the action description.
+        GOMEMLIMIT: 2GiB
       run: |
         # Stay in `set +e` for the entire step. See note above.
         set +e
