@@ -106,8 +106,8 @@ jobs:
             echo "::error::restore snapshot ${RESTORE_SNAPSHOT} is not present in ${dir} (truncated out of history?); re-point RESTORE_SNAPSHOT at a commit that still carries ${RESTORE_PATH}/"
             exit 1
           fi
-          if ! git -C "${dir}" cat-file -e "${RESTORE_SNAPSHOT}:${RESTORE_PATH}" 2> /dev/null; then
-            echo "::error::restore snapshot ${RESTORE_SNAPSHOT} does not carry ${RESTORE_PATH}/; fix RESTORE_SNAPSHOT"
+          if [[ "$(git -C "${dir}" cat-file -t "${RESTORE_SNAPSHOT}:${RESTORE_PATH}" 2> /dev/null || true)" != "tree" ]]; then
+            echo "::error::restore snapshot ${RESTORE_SNAPSHOT} does not carry ${RESTORE_PATH}/ as a directory; fix RESTORE_SNAPSHOT"
             exit 1
           fi
           if [[ -e "${dir}/${RESTORE_PATH}" ]]; then
