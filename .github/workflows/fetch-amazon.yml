@@ -39,13 +39,13 @@ jobs:
           git config --global user.name "GitHub Action"
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: MaineK00n/vuls-data-update
           ref: main
 
       - name: Set up Go 1.x
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: "go.mod"
 
@@ -110,7 +110,9 @@ jobs:
             echo "::error::restore snapshot ${RESTORE_SNAPSHOT} does not carry ${RESTORE_PATH}/ as a directory; fix RESTORE_SNAPSHOT"
             exit 1
           fi
-          if [[ -e "${dir}/${RESTORE_PATH}" ]]; then
+          # Only a populated directory counts as the fetcher writing the tree
+          # again; anything else (nothing, an empty directory) gets restored.
+          if [[ -d "${dir}/${RESTORE_PATH}" && -n $(find "${dir}/${RESTORE_PATH}" -type f -print -quit) ]]; then
             echo "::warning::the fetch wrote ${RESTORE_PATH}/ again; upstream is back, drop this step"
             exit 0
           fi
