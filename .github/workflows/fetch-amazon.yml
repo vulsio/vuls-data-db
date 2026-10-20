@@ -82,16 +82,18 @@ jobs:
       # Amazon Linux 2022 was the tech preview that became Amazon Linux 2023.
       # Since 2026-10-15 cdn.amazonlinux.com/al2022 answers 403 (the mirror.list
       # still resolves, but the GUID directory behind it is gone), and the
-      # fetcher no longer fetches it (MaineK00n/vuls-data-update#991). The fetch
-      # clears its output directory first, so without this step the commit would
-      # record the 277 ALAS2022 advisories under 2022/ as deleted -- and upstream
-      # no longer serves them, so this repository is their last copy.
+      # fetcher no longer fetches it (MaineK00n/vuls-data-update#991). It keeps
+      # a 2022/ already on disk, but the dotgit pull leaves the worktree empty,
+      # so without this step the commit would record the 277 ALAS2022
+      # advisories under 2022/ as deleted -- and upstream no longer serves
+      # them, so this repository is their last copy.
       #
       # Restore 2022/ from a pinned commit rather than from the index: the index
       # only carries the tree until the first commit without it, after which a
-      # restore from it is a silent no-op. If truncate.yml ever drops the
-      # snapshot from this tag's history the step hard-fails -- re-point it at a
-      # commit that still carries 2022/ rather than restoring nothing.
+      # restore from it is a silent no-op. If a restore is needed and the
+      # snapshot is gone from this tag's history, the step hard-fails --
+      # re-point it at a commit that still carries 2022/ rather than restoring
+      # nothing.
       - name: Restore the retired Amazon Linux 2022 tree
         env:
           # vuls-data-raw-amazon "update" of 2026-10-14T16:05:37Z, the last
@@ -102,6 +104,15 @@ jobs:
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-amazon"
 
+          # The dotgit pull leaves the worktree empty and the fetcher no longer
+          # writes 2022/ (it only keeps one already on disk), so a populated
+          # 2022/ here was on disk before the fetch. Nothing to restore, and no
+          # reason to require the snapshot.
+          if [[ -d "${dir}/${RESTORE_PATH}" && -n $(find "${dir}/${RESTORE_PATH}" -type f -print -quit) ]]; then
+            echo "::warning::${RESTORE_PATH}/ was already on disk before the fetch; nothing to restore"
+            exit 0
+          fi
+
           if ! git -C "${dir}" rev-parse --verify -q "${RESTORE_SNAPSHOT}^{commit}" > /dev/null; then
             echo "::error::restore snapshot ${RESTORE_SNAPSHOT} is not present in ${dir} (truncated out of history?); re-point RESTORE_SNAPSHOT at a commit that still carries ${RESTORE_PATH}/"
             exit 1
@@ -109,12 +120,6 @@ jobs:
           if [[ "$(git -C "${dir}" cat-file -t "${RESTORE_SNAPSHOT}:${RESTORE_PATH}" 2> /dev/null || true)" != "tree" ]]; then
             echo "::error::restore snapshot ${RESTORE_SNAPSHOT} does not carry ${RESTORE_PATH}/ as a directory; fix RESTORE_SNAPSHOT"
             exit 1
-          fi
-          # Only a populated directory counts as the fetcher writing the tree
-          # again; anything else (nothing, an empty directory) gets restored.
-          if [[ -d "${dir}/${RESTORE_PATH}" && -n $(find "${dir}/${RESTORE_PATH}" -type f -print -quit) ]]; then
-            echo "::warning::the fetch wrote ${RESTORE_PATH}/ again; upstream is back, drop this step"
-            exit 0
           fi
 
           # Restore to both the index and the worktree so the recovered tree
