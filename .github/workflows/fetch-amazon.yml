@@ -1,0 +1,141 @@
+name: Fetch Amazon
+
+run-name: "Fetch vuls-data-raw-amazon by @${{ github.actor }}"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  fetch:
+    name: Fetch vuls-data-raw-amazon
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    env:
+      GOEXPERIMENT: jsonv2
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
+        with:
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+          remove-large-packages: "true"
+          remove-cached-tools: "true"
+          remove-swapfile: "true"
+
+      - name: Set global git config
+        run: |
+          git config --global gc.auto 0
+          git config --global maintenance.auto false
+          git config --global init.defaultBranch main
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: MaineK00n/vuls-data-update
+          ref: main
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "go.mod"
+
+      - name: Install vuls-data-update
+        run: go install ./cmd/vuls-data-update
+
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-amazon
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-amazon
+
+      - name: Fetch
+        run: vuls-data-update fetch amazon --dir ghcr.io/${{ github.repository }}/vuls-data-raw-amazon
+
+      - name: Set Git remote
+        run: |
+          if git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon remote | grep -q "^origin$"; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon remote set-url origin ghcr.io/${{ github.repository }}:vuls-data-raw-amazon
+          else
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon remote add origin ghcr.io/${{ github.repository }}:vuls-data-raw-amazon
+          fi
+
+      # A run that writes nothing leaves the repository empty, and committing
+      # that is a green run that quietly dropped the data. Stop before the
+      # commit -- and before any restore, which would put the files back and
+      # hide it.
+      - name: Ensure the repository was left populated
+        run: |
+          set -euo pipefail
+
+          if [[ -z $(find ghcr.io/${{ github.repository }}/vuls-data-raw-amazon -name .git -prune -o -type f -print -quit) ]]; then
+            echo "::error::no files left on disk in ghcr.io/${{ github.repository }}/vuls-data-raw-amazon. refusing to commit an empty repository"
+            exit 1
+          fi
+
+      # Amazon Linux 2022 was the tech preview that became Amazon Linux 2023.
+      # Since 2026-10-15 cdn.amazonlinux.com/al2022 answers 403 (the mirror.list
+      # still resolves, but the GUID directory behind it is gone), and the
+      # fetcher no longer fetches it (MaineK00n/vuls-data-update#991). It keeps
+      # a 2022/ already on disk, but the dotgit pull leaves the worktree empty,
+      # so without this step the commit would record the 277 ALAS2022
+      # advisories under 2022/ as deleted -- and upstream no longer serves
+      # them, so this repository is their last copy.
+      #
+      # Restore 2022/ from a pinned commit rather than from the index: the index
+      # only carries the tree until the first commit without it, after which a
+      # restore from it is a silent no-op. If a restore is needed and the
+      # snapshot is gone from this tag's history, the step hard-fails --
+      # re-point it at a commit that still carries 2022/ rather than restoring
+      # nothing.
+      - name: Restore the retired Amazon Linux 2022 tree
+        env:
+          # vuls-data-raw-amazon "update" of 2026-10-14T16:05:37Z, the last
+          # commit before the AL2022 repository went away.
+          RESTORE_SNAPSHOT: 10d86847a905afae897a186258999445950923cf
+          RESTORE_PATH: "2022"
+        run: |
+          set -euo pipefail
+          dir="ghcr.io/${{ github.repository }}/vuls-data-raw-amazon"
+
+          # The dotgit pull leaves the worktree empty and the fetcher no longer
+          # writes 2022/ (it only keeps one already on disk), so a populated
+          # 2022/ here was on disk before the fetch. Nothing to restore, and no
+          # reason to require the snapshot.
+          if [[ -d "${dir}/${RESTORE_PATH}" && -n $(find "${dir}/${RESTORE_PATH}" -type f -print -quit) ]]; then
+            echo "::warning::${RESTORE_PATH}/ was already on disk before the fetch; nothing to restore"
+            exit 0
+          fi
+
+          if ! git -C "${dir}" rev-parse --verify -q "${RESTORE_SNAPSHOT}^{commit}" > /dev/null; then
+            echo "::error::restore snapshot ${RESTORE_SNAPSHOT} is not present in ${dir} (truncated out of history?); re-point RESTORE_SNAPSHOT at a commit that still carries ${RESTORE_PATH}/"
+            exit 1
+          fi
+          if [[ "$(git -C "${dir}" cat-file -t "${RESTORE_SNAPSHOT}:${RESTORE_PATH}" 2> /dev/null || true)" != "tree" ]]; then
+            echo "::error::restore snapshot ${RESTORE_SNAPSHOT} does not carry ${RESTORE_PATH}/ as a directory; fix RESTORE_SNAPSHOT"
+            exit 1
+          fi
+
+          # Restore to both the index and the worktree so the recovered tree
+          # is committed even if the later Commit step's staging changes.
+          git -C "${dir}" restore --staged --worktree --source="${RESTORE_SNAPSHOT}" -- "${RESTORE_PATH}"
+          echo "restored $(git -C "${dir}" ls-files -- "${RESTORE_PATH}" | wc -l) file(s) under ${RESTORE_PATH}/ from ${RESTORE_SNAPSHOT}"
+
+      - name: Commit
+        run: |
+          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon status --porcelain) ]]; then
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon add .
+            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+          fi
+
+      - name: Create dotgit tarball
+        run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-amazon
+
+      - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-amazon
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-amazon vuls-data-raw-amazon.tar.zst

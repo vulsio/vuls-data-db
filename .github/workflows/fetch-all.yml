@@ -26,7 +26,6 @@ jobs:
           - "alpine-osv"
           - "alpine-secdb"
           - "alt-oval"
-          - "amazon"
           - "android-osv"
           - "anolis-oval"
           - "apple-security-releases"
@@ -187,6 +186,13 @@ jobs:
   fetch-alma-errata:
     name: Fetch vuls-data-raw-alma-errata
     uses: ./.github/workflows/fetch-alma-errata.yml
+    permissions:
+      contents: read
+      packages: write
+
+  fetch-amazon:
+    name: Fetch vuls-data-raw-amazon
+    uses: ./.github/workflows/fetch-amazon.yml
     permissions:
       contents: read
       packages: write
@@ -362,6 +368,7 @@ jobs:
       [
         fetch-main,
         fetch-alma-errata,
+        fetch-amazon,
         fetch-cisco-json,
         fetch-cisco-cvrf-or-csaf,
         fetch-enisa-euvd-list,
