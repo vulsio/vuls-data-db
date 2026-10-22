@@ -42,7 +42,6 @@ jobs:
       REPOSITORY: ghcr.io/vulsio/vuls-nightly-db
       DIGEST: ${{ inputs.digest }}
       TAG: ${{ inputs.tag }}
-      GOEXPERIMENT: jsonv2
     steps:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
