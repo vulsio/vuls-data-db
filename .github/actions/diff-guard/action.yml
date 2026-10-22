@@ -329,6 +329,8 @@ runs:
         # uses encoding/json/v2.SkipFunc, which Go 1.27 removed. Build it on
         # Go 1.26; "+auto" still lets a newer pinned commit select its own.
         GOTOOLCHAIN: go1.26.10+auto
+        # Go 1.26 needs the experiment for encoding/json/v2 (default in 1.27).
+        GOEXPERIMENT: jsonv2
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
         mkdir -p /tmp/vuls0-old-bin

@@ -82,7 +82,6 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     env:
-      GOEXPERIMENT: jsonv2
       # Persistent diff-guard threshold config — the single source of
       # truth, applied to BOTH scheduled and manually-dispatched runs.
       # workflow_dispatch input defaults are NOT visible to `schedule`
