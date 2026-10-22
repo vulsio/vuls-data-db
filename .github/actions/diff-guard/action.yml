@@ -325,6 +325,10 @@ runs:
     - name: Install vuls0 for older-binary check (pinned commit)
       shell: bash
       env:
+        # The pinned commit predates vuls0's move to Go 1.27 and its Trivy
+        # uses encoding/json/v2.SkipFunc, which Go 1.27 removed. Build it on
+        # Go 1.26; "+auto" still lets a newer pinned commit select its own.
+        GOTOOLCHAIN: go1.26.10+auto
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
         mkdir -p /tmp/vuls0-old-bin
