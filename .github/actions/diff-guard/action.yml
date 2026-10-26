@@ -159,7 +159,7 @@ inputs:
   vuls0_old_ref:
     description: future-architect/vuls commit SHA for the older-binary detection check.
     required: false
-    default: 3266337a725b1209503128a32187e09b39c89b5d
+    default: f7331a921fd3237bca383d28a241c03c085301de # v0.41.0
 
 runs:
   using: composite
@@ -325,6 +325,12 @@ runs:
     - name: Install vuls0 for older-binary check (pinned commit)
       shell: bash
       env:
+        # The pinned commit predates vuls0's move to Go 1.27 and its Trivy
+        # uses encoding/json/v2.SkipFunc, which Go 1.27 removed. Build it on
+        # Go 1.26; "+auto" still lets a newer pinned commit select its own.
+        GOTOOLCHAIN: go1.26.10+auto
+        # Go 1.26 needs the experiment for encoding/json/v2 (default in 1.27).
+        GOEXPERIMENT: jsonv2
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
         mkdir -p /tmp/vuls0-old-bin
@@ -351,23 +357,12 @@ runs:
         # are retained automatically; only known-broken ones need listing
         # here. Update this set when bumping `vuls0_old_ref`.
         #
-        # Windows is removed here but KEPT for the master-HEAD check above:
-        # the pinned older vuls0 predates "detect windows with vuls2" and
-        # still routes Windows to gost, so it does not exercise the vuls2 DB.
-        # Drop windows from this older-binary set until `vuls0_old_ref` is
-        # bumped past that change.
-        #
-        # Every cpe_*.json (pseudo servers with cpeNames) is likewise removed:
-        # the pinned older vuls0 predates "detect CPE with vuls2" and routes
-        # CPE URIs to an unconfigured go-cve-dictionary, which errors out.
-        # Drop these until `vuls0_old_ref` is bumped past the commits that
-        # moved NVD, VulnCheck, JVN, Fortinet, Cisco and Palo Alto CPE
-        # detection to vuls2.
+        # The set is currently empty: the pinned v0.41.0 already detects
+        # Windows and CPE (NVD, VulnCheck, JVN, Fortinet, Cisco, Palo Alto)
+        # with vuls2, so the windows_*.json and cpe_*.json fixtures exercise
+        # the DB under test here as well.
         mkdir -p ./scan-results-old
         cp ./scan-results/*.json ./scan-results-old/
-        rm -f \
-          ./scan-results-old/windows_*.json \
-          ./scan-results-old/cpe_*.json
         ls -1 ./scan-results-old
 
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
