@@ -148,6 +148,12 @@ jobs:
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
 
+      # Loose objects are pushed as whole copies, and nothing else packs them
+      # until the tag crosses the archive or truncate threshold. Without -f
+      # this keeps the deltas already in the pack, so it takes minutes at most.
+      - name: Repack
+        run: git -C ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api repack -a -d
+
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api
 

@@ -121,6 +121,12 @@ jobs:
             echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Loose objects are pushed as whole copies, and nothing else packs them
+      # until the tag crosses the archive or truncate threshold. Without -f
+      # this keeps the deltas already in the pack, so it takes minutes at most.
+      - name: Repack
+        run: git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v2-rhel repack -a -d
+
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-redhat-oval-v2-rhel
 
