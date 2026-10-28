@@ -23,6 +23,7 @@ run-name: "Pipelines (${{ github.event.schedule || inputs.sources }})"
 #            extract-redhat.yml; "frozen": that repository is kept as it is
 #   archive  false: not archived by size; epss is split by year in
 #            archive-epss.yml instead
+# Backup All and Restore All take every repository listed, frozen or not.
 
 on:
   schedule:
