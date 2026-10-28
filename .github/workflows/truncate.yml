@@ -17,65 +17,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
+        description: "e.g. vuls-data-extracted-alpine-secdb"
         required: true
-        type: choice
-        options:
-          - vuls-data-extracted-alma-errata
-          - vuls-data-extracted-alma-osv
-          - vuls-data-extracted-alpine-osv
-          - vuls-data-extracted-alpine-secdb
-          - vuls-data-extracted-amazon
-          - vuls-data-extracted-apple-security-releases
-          - vuls-data-extracted-arch
-          - vuls-data-extracted-cargo-ghsa
-          - vuls-data-extracted-cisa-kev
-          - vuls-data-extracted-cisco-json
-          - vuls-data-extracted-debian-security-tracker-salsa
-          - vuls-data-extracted-eol
-          - vuls-data-extracted-enisa-euvd-list
-          - vuls-data-extracted-enisa-kev
-          - vuls-data-extracted-epss
-          - vuls-data-extracted-exploit-exploitdb
-          - vuls-data-extracted-exploit-github
-          - vuls-data-extracted-exploit-inthewild
-          - vuls-data-extracted-exploit-trickest
-          - vuls-data-extracted-fedora-api
-          - vuls-data-extracted-fortinet-csaf
-          - vuls-data-extracted-fortinet-cvrf
-          - vuls-data-extracted-freebsd
-          - vuls-data-extracted-jvn-feed-detail
-          - vuls-data-extracted-jvn-feed-rss
-          - vuls-data-extracted-microsoft-bulletin
-          - vuls-data-extracted-microsoft-cvrf
-          - vuls-data-extracted-microsoft-msuc
-          - vuls-data-extracted-microsoft-servicing
-          - vuls-data-extracted-microsoft-wsusscn2
-          - vuls-data-extracted-mitre-attack
-          - vuls-data-extracted-mitre-capec
-          - vuls-data-extracted-mitre-cve-v5
-          - vuls-data-extracted-mitre-cwe
-          - vuls-data-extracted-msf
-          - vuls-data-extracted-nuclei-repository
-          - vuls-data-extracted-nvd-api-cve
-          - vuls-data-extracted-nvd-feed-cve-v2
-          - vuls-data-extracted-oracle-linux
-          - vuls-data-extracted-paloalto-json
-          - vuls-data-extracted-redhat-cve
-          - vuls-data-extracted-redhat-csaf
-          - vuls-data-extracted-redhat-csaf-rhel
-          - vuls-data-extracted-redhat-oval-v1
-          - vuls-data-extracted-redhat-oval-v1-rhel
-          - vuls-data-extracted-redhat-oval-v2
-          - vuls-data-extracted-redhat-oval-v2-rhel
-          - vuls-data-extracted-redhat-vex-v1
-          - vuls-data-extracted-redhat-vex-v1-rhel
-          - vuls-data-extracted-redhat-vex-v2
-          - vuls-data-extracted-redhat-vex-v2-rhel
-          - vuls-data-extracted-rocky-errata
-          - vuls-data-extracted-suse-oval
-          - vuls-data-extracted-ubuntu-cve-tracker
-          - vuls-data-extracted-vulncheck-kev
-          - vuls-data-extracted-vulncheck-nist-nvd2
+        type: string
       threshold-mb:
         required: true
         type: number
