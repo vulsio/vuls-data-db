@@ -11,6 +11,20 @@ on:
       branch:
         required: true
         type: string
+      raw:
+        description: Whether the target has a vuls-data-raw repository to extract from
+        required: false
+        type: boolean
+        default: true
+      reads:
+        description: Other raw sources the extractor takes after the target's own, space-separated
+        required: false
+        type: string
+        default: ""
+    outputs:
+      committed:
+        description: Whether the extract committed a change to the branch
+        value: ${{ jobs.extract.outputs.committed }}
   workflow_dispatch:
     inputs:
       target:
@@ -149,6 +163,15 @@ on:
         options:
           - main
           - nightly
+      raw:
+        description: Whether the target has a vuls-data-raw repository to extract from
+        required: true
+        default: true
+        type: boolean
+      reads:
+        description: "Other raw sources the extractor takes, as \"reads\" in sources.json lists them, space-separated"
+        required: false
+        type: string
 
 permissions: {}
 
@@ -159,6 +182,8 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -195,13 +220,34 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+        if: ${{ inputs.raw }}
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+
+      - name: Pull the other raw repositories the extractor reads
+        if: ${{ inputs.reads != '' }}
+        env:
+          READS: ${{ inputs.reads }}
+        run: |
+          for name in ${READS}; do
+            vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-${name}
+          done
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
 
       - name: Extract
-        run: vuls-data-update extract ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
+        env:
+          RAW: ${{ inputs.raw }}
+          READS: ${{ inputs.reads }}
+        run: |
+          raws=()
+          if [[ "${RAW}" == "true" ]]; then
+            raws+=(ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }})
+          fi
+          for name in ${READS}; do
+            raws+=(ghcr.io/${{ github.repository }}/vuls-data-raw-${name})
+          done
+          vuls-data-update extract ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} "${raws[@]}"
 
       - name: Set Git remote
         run: |
@@ -225,10 +271,12 @@ jobs:
           fi
 
       - name: Commit
+        id: commit
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} add .
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create dotgit tarball

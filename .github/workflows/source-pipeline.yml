@@ -1,0 +1,173 @@
+name: Source Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        description: The source's entry in sources.json, as the plan job in pipelines.yml normalizes it
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  # A source with a dedicated fetcher was fetched by its own job in
+  # pipelines.yml before this was called.
+  fetch:
+    name: Fetch
+    if: ${{ fromJSON(inputs.source).fetch == 'main' }}
+    uses: ./.github/workflows/fetch-main.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ fromJSON(inputs.source).name }}
+
+  # A failed fetch leaves the raw repository as it was, and that is still worth
+  # extracting: an extractor fix should not wait for upstream to recover.
+  extract:
+    name: Extract@main
+    needs: [fetch]
+    if: ${{ !cancelled() && fromJSON(inputs.source).main && !fromJSON(inputs.source).rhel }}
+    uses: ./.github/workflows/extract-main.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ fromJSON(inputs.source).name }}
+      branch: main
+      raw: ${{ fromJSON(inputs.source).fetch != 'none' }}
+      reads: ${{ fromJSON(inputs.source).reads }}
+
+  extract-redhat:
+    name: Extract@main
+    needs: [fetch]
+    if: ${{ !cancelled() && fromJSON(inputs.source).main && fromJSON(inputs.source).rhel }}
+    uses: ./.github/workflows/extract-redhat.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ fromJSON(inputs.source).name }}
+      branch: main
+      reads: ${{ fromJSON(inputs.source).reads }}
+
+  # Both branches live in the one vuls-data-extracted tag, and each extract
+  # force-pushes the whole tag, so the two must not overlap.
+  extract-nightly:
+    name: Extract@nightly
+    needs: [fetch, extract, extract-redhat]
+    if: ${{ !cancelled() && fromJSON(inputs.source).nightly && !fromJSON(inputs.source).rhel }}
+    uses: ./.github/workflows/extract-main.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ fromJSON(inputs.source).name }}
+      branch: nightly
+      raw: ${{ fromJSON(inputs.source).fetch != 'none' }}
+      reads: ${{ fromJSON(inputs.source).reads }}
+
+  extract-redhat-nightly:
+    name: Extract@nightly
+    needs: [fetch, extract, extract-redhat]
+    if: ${{ !cancelled() && fromJSON(inputs.source).nightly && fromJSON(inputs.source).rhel }}
+    uses: ./.github/workflows/extract-redhat.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ fromJSON(inputs.source).name }}
+      branch: nightly
+      reads: ${{ fromJSON(inputs.source).reads }}
+
+  db:
+    name: Request DB builds
+    needs: [extract, extract-redhat, extract-nightly, extract-redhat-nightly]
+    if: ${{ !cancelled() && (contains(needs.*.outputs.committed, 'true') || contains(needs.*.outputs.rhel-committed, 'true')) }}
+    permissions:
+      actions: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the DB makefiles
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          sparse-checkout: |
+            db-main.mk
+            db-nightly.mk
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # A build pulls every repository as it starts, so one that has not
+      # started yet already takes this commit. Requesting another would only
+      # replace it in the DB workflow's concurrency group.
+      - name: Request the builds that take what was committed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REPO: vuls-data-extracted-${{ fromJSON(inputs.source).name }}
+          MAIN: ${{ needs.extract.outputs.committed || needs.extract-redhat.outputs.committed }}
+          MAIN_RHEL: ${{ needs.extract-redhat.outputs.rhel-committed }}
+          NIGHTLY: ${{ needs.extract-nightly.outputs.committed || needs.extract-redhat-nightly.outputs.committed }}
+          NIGHTLY_RHEL: ${{ needs.extract-redhat-nightly.outputs.rhel-committed }}
+        run: |
+          set -euo pipefail
+
+          request() {
+            local committed=$1 repo=$2 makefile=$3 workflow=$4
+
+            if [[ "${committed}" != "true" ]] || ! grep -qP "^\t.* REPO=${repo} " "${makefile}"; then
+              return 0
+            fi
+            if [[ $(gh run list --workflow "${workflow}" --json status --jq 'map(select(.status != "in_progress" and .status != "completed")) | length') -gt 0 ]]; then
+              echo "${workflow} has a build waiting to start already"
+              return 0
+            fi
+            gh workflow run "${workflow}" --ref main
+          }
+
+          request "${MAIN}" "${REPO}" db-main.mk db-main.yml
+          request "${MAIN_RHEL}" "${REPO}-rhel" db-main.mk db-main.yml
+          request "${NIGHTLY}" "${REPO}" db-nightly.mk db-nightly.yml
+          request "${NIGHTLY_RHEL}" "${REPO}-rhel" db-nightly.mk db-nightly.yml
+
+  # The extracts read the raw repository from their own copy, so archiving it
+  # need not wait for them.
+  archive:
+    name: Archive
+    needs: [fetch]
+    if: ${{ !cancelled() && fromJSON(inputs.source).archive }}
+    uses: ./.github/workflows/archive.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      tag: vuls-data-raw-${{ fromJSON(inputs.source).name }}
+      threshold-mb: 1024
+
+  truncate:
+    name: Truncate
+    needs: [extract, extract-redhat, extract-nightly, extract-redhat-nightly]
+    if: ${{ !cancelled() && (fromJSON(inputs.source).main || fromJSON(inputs.source).nightly) }}
+    uses: ./.github/workflows/truncate.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      tag: vuls-data-extracted-${{ fromJSON(inputs.source).name }}
+      threshold-mb: 1024
+      log-ratio: 0.8
+
+  truncate-rhel:
+    name: Truncate -rhel
+    needs: [extract, extract-redhat, extract-nightly, extract-redhat-nightly]
+    if: ${{ !cancelled() && fromJSON(inputs.source).rhel }}
+    uses: ./.github/workflows/truncate.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      tag: vuls-data-extracted-${{ fromJSON(inputs.source).name }}-rhel
+      threshold-mb: 1024
+      log-ratio: 0.8

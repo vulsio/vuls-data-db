@@ -11,6 +11,10 @@ on:
       branch:
         required: true
         type: string
+    outputs:
+      committed:
+        description: Whether the extract committed a change to the branch
+        value: ${{ jobs.extract.outputs.committed }}
   workflow_dispatch:
     inputs:
       target:
@@ -36,6 +40,8 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -103,10 +109,12 @@ jobs:
           fi
 
       - name: Commit
+        id: commit
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel add .
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create dotgit tarball
