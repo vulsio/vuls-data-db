@@ -14,191 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
+        description: "e.g. vuls-data-raw-alpine-secdb"
         required: true
-        type: choice
-        options:
-          - vuls-data-raw-alma-errata
-          - vuls-data-raw-alma-osv
-          - vuls-data-raw-alma-oval
-          - vuls-data-raw-alma-updateinfo
-          - vuls-data-raw-alpine-osv
-          - vuls-data-raw-alpine-secdb
-          - vuls-data-raw-alt-oval
-          - vuls-data-raw-amazon
-          - vuls-data-raw-android-osv
-          - vuls-data-raw-anolis-oval
-          - vuls-data-raw-apple-security-releases
-          - vuls-data-raw-arch
-          - vuls-data-raw-bitnami-osv
-          - vuls-data-raw-bottlerocket
-          # - vuls-data-raw-cargo-db
-          - vuls-data-raw-cargo-ghsa
-          - vuls-data-raw-cargo-osv
-          - vuls-data-raw-cert-bund-csaf
-          - vuls-data-raw-chainguard-osv
-          - vuls-data-raw-chainguard-secdb
-          - vuls-data-raw-cisa-coun7er
-          - vuls-data-raw-cisa-csaf
-          - vuls-data-raw-cisa-kev
-          - vuls-data-raw-cisco-csaf
-          - vuls-data-raw-cisco-cvrf
-          - vuls-data-raw-cisco-json
-          # - vuls-data-raw-composer-db
-          - vuls-data-raw-composer-ghsa
-          - vuls-data-raw-composer-glsa
-          - vuls-data-raw-composer-osv
-          - vuls-data-raw-conan-glsa
-          - vuls-data-raw-debian-osv
-          - vuls-data-raw-debian-oval
-          - vuls-data-raw-debian-security-tracker-api
-          - vuls-data-raw-debian-security-tracker-salsa
-          - vuls-data-raw-echo-data
-          - vuls-data-raw-echo-osv
-          - vuls-data-raw-endoflife-date-api
-          - vuls-data-raw-endoflife-date-products
-          - vuls-data-raw-enisa-kev
-          - vuls-data-raw-erlang-ghsa
-          - vuls-data-raw-erlang-osv
-          # - vuls-data-raw-enisa-euvd-detail
-          - vuls-data-raw-enisa-euvd-list
-          - vuls-data-raw-exploit-exploitdb
-          - vuls-data-raw-exploit-github
-          - vuls-data-raw-exploit-inthewild
-          - vuls-data-raw-exploit-trickest
-          - vuls-data-raw-fedora-api
-          - vuls-data-raw-fedora-updateinfo
-          - vuls-data-raw-fortinet
-          - vuls-data-raw-fortinet-csaf
-          - vuls-data-raw-fortinet-cvrf
-          - vuls-data-raw-freebsd
-          - vuls-data-raw-gentoo
-          - vuls-data-raw-ghactions-osv
-          - vuls-data-raw-git-osv
-          # - vuls-data-raw-golang-db
-          - vuls-data-raw-golang-ghsa
-          - vuls-data-raw-golang-glsa
-          - vuls-data-raw-golang-osv
-          # - vuls-data-raw-golang-vulndb
-          - vuls-data-raw-haskell-ghc-osv
-          - vuls-data-raw-haskell-hackage-osv
-          - vuls-data-raw-jvn-feed-detail
-          - vuls-data-raw-jvn-feed-product
-          - vuls-data-raw-jvn-feed-rss
-          - vuls-data-raw-k8s-json
-          - vuls-data-raw-k8s-osv
-          - vuls-data-raw-linux-osv
-          - vuls-data-raw-mageia-osv
-          - vuls-data-raw-maven-ghsa
-          - vuls-data-raw-maven-glsa
-          - vuls-data-raw-maven-osv
-          - vuls-data-raw-microsoft-advisory
-          - vuls-data-raw-microsoft-azure-oval
-          - vuls-data-raw-microsoft-bulletin
-          - vuls-data-raw-microsoft-csaf
-          - vuls-data-raw-microsoft-cvrf
-          - vuls-data-raw-microsoft-deployment
-          - vuls-data-raw-microsoft-msuc
-          - vuls-data-raw-microsoft-servicing
-          - vuls-data-raw-microsoft-product
-          - vuls-data-raw-microsoft-vulnerability
-          - vuls-data-raw-microsoft-wsusscn2
-          - vuls-data-raw-minimos-osv
-          - vuls-data-raw-minimos-secdb
-          - vuls-data-raw-mitre-attack
-          - vuls-data-raw-mitre-capec
-          - vuls-data-raw-mitre-cve-cvrf
-          - vuls-data-raw-mitre-cve-v4
-          - vuls-data-raw-mitre-cve-v5
-          - vuls-data-raw-mitre-cwe
-          - vuls-data-raw-mitre-emb3d
-          - vuls-data-raw-msf
-          - vuls-data-raw-ncsc-csaf
-          - vuls-data-raw-netbsd
-          - vuls-data-raw-nozominetworks-csaf
-          # - vuls-data-raw-npm-db
-          - vuls-data-raw-npm-ghsa
-          - vuls-data-raw-npm-glsa
-          - vuls-data-raw-npm-osv
-          - vuls-data-raw-nuclei-api
-          - vuls-data-raw-nuclei-repository
-          - vuls-data-raw-nuget-ghsa
-          - vuls-data-raw-nuget-glsa
-          - vuls-data-raw-nuget-osv
-          - vuls-data-raw-nvd-api-cpe
-          - vuls-data-raw-nvd-api-cpematch
-          - vuls-data-raw-nvd-api-cve
-          - vuls-data-raw-nvd-api-cvehistory
-          - vuls-data-raw-nvd-feed-cpe-v1
-          - vuls-data-raw-nvd-feed-cpematch-v1
-          - vuls-data-raw-nvd-feed-cve-v1
-          - vuls-data-raw-nvd-feed-cpe-v2
-          - vuls-data-raw-nvd-feed-cpematch-v2
-          - vuls-data-raw-nvd-feed-cve-v2
-          - vuls-data-raw-openeuler-csaf
-          - vuls-data-raw-openeuler-cvrf
-          - vuls-data-raw-openssh-security
-          - vuls-data-raw-openssl-secjson
-          - vuls-data-raw-oracle-linux
-          - vuls-data-raw-oss-fuzz-osv
-          - vuls-data-raw-ox-csaf
-          - vuls-data-raw-paloalto-csaf
-          - vuls-data-raw-paloalto-json
-          - vuls-data-raw-paloalto-list
-          # - vuls-data-raw-perl-db
-          - vuls-data-raw-photon-cve
-          - vuls-data-raw-photon-oval
-          # - vuls-data-raw-pip-db
-          - vuls-data-raw-pip-ghsa
-          - vuls-data-raw-pip-glsa
-          - vuls-data-raw-pip-osv
-          - vuls-data-raw-pub-ghsa
-          - vuls-data-raw-pub-osv
-          - vuls-data-raw-r-osv
-          - vuls-data-raw-redhat-appstream-lifecycle
-          - vuls-data-raw-redhat-csaf
-          - vuls-data-raw-redhat-cve
-          - vuls-data-raw-redhat-cvrf
-          - vuls-data-raw-redhat-osv
-          - vuls-data-raw-redhat-oval-v1
-          - vuls-data-raw-redhat-oval-v2
-          - vuls-data-raw-redhat-package-manifest
-          - vuls-data-raw-redhat-repository-to-cpe
-          - vuls-data-raw-redhat-vex-v1
-          - vuls-data-raw-redhat-vex-v2
-          - vuls-data-raw-rocky-errata
-          - vuls-data-raw-rocky-osv
-          - vuls-data-raw-rocky-updateinfo
-          - vuls-data-raw-rootio
-          # - vuls-data-raw-rubygems-db
-          - vuls-data-raw-rubygems-ghsa
-          - vuls-data-raw-rubygems-glsa
-          - vuls-data-raw-rubygems-osv
-          - vuls-data-raw-sick-csaf
-          - vuls-data-raw-siemens-csaf
-          - vuls-data-raw-snort
-          - vuls-data-raw-suse-csaf
-          - vuls-data-raw-suse-csaf-vex
-          - vuls-data-raw-suse-cvrf
-          - vuls-data-raw-suse-cvrf-cve
-          - vuls-data-raw-suse-osv
-          - vuls-data-raw-suse-oval
-          - vuls-data-raw-swift-ghsa
-          - vuls-data-raw-swift-osv
-          - vuls-data-raw-ubuntu-cve
-          - vuls-data-raw-ubuntu-cve-tracker
-          - vuls-data-raw-ubuntu-notice
-          - vuls-data-raw-ubuntu-osv
-          - vuls-data-raw-ubuntu-oval
-          - vuls-data-raw-ubuntu-usndb
-          - vuls-data-raw-ubuntu-vex
-          - vuls-data-raw-variot-exploits
-          - vuls-data-raw-variot-vulns
-          - vuls-data-raw-vulncheck-kev
-          - vuls-data-raw-vulncheck-nist-nvd
-          - vuls-data-raw-vulncheck-nist-nvd2
-          - vuls-data-raw-wolfi-osv
-          - vuls-data-raw-wolfi-secdb
-          - vuls-data-raw-wrlinux
+        type: string
       threshold-mb:
         required: true
         type: number
@@ -210,32 +28,8 @@ defaults:
     shell: bash
 
 jobs:
-  check-before-gc:
-    name: Check Layer Size before Git GC
-    uses: ./.github/workflows/check-layer-size.yml
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-      threshold-mb: ${{ inputs.threshold-mb }}
-
-  gc:
-    name: Git GC ${{ inputs.tag }}
-    needs: [check-before-gc]
-    if: ${{ needs.check-before-gc.outputs.exceeded == 'true' }}
-    uses: ./.github/workflows/gc.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      pack-threads: 1
-      pack-windowMemory: 4g
-
-  check-after-gc:
-    name: Check Layer Size after Git GC
-    needs: [gc]
+  check:
+    name: Check Layer Size
     uses: ./.github/workflows/check-layer-size.yml
     with:
       repository: ${{ github.repository }}
@@ -249,10 +43,8 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
-    needs: [check-after-gc]
-    if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
-    outputs:
-      tag: ${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
+    needs: [check]
+    if: ${{ needs.check.outputs.exceeded == 'true' }}
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -315,21 +107,33 @@ jobs:
 
           vuls-data-update dotgit compress ${{ inputs.tag }}
 
+      # A tag whose latest commit alone nears the threshold would be archived
+      # on nearly every run, each archive a copy of that one commit. Wait until
+      # the history the archive takes away outweighs the commit that stays.
+      - name: Check the history outweighs the latest commit
+        id: history
+        run: |
+          SIZE=$(vuls-data-update dotgit registry status ghcr.io/${{ github.repository }}:${{ inputs.tag }} | jq '.layers[] | select(.mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .size')
+          LATEST=$(stat -c %s ${{ inputs.tag }}.tar.zst)
+          echo "repository size [MB]: $(( SIZE / 1024 / 1024 ))"
+          echo "latest commit size [MB]: $(( LATEST / 1024 / 1024 ))"
+          if [[ ${SIZE} -gt $(( LATEST * 2 )) ]]; then
+            echo "archive=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only the latest commit gets the aggressive GC. It is what every pull
+      # downloads, and its GC time does not grow with the history; the history
+      # goes to the archive as the writers' repack left it.
+      - name: Run git gc on the latest commit
+        if: ${{ steps.history.outputs.archive == 'true' }}
+        run: |
+          /usr/bin/time -v git -C ${{ inputs.tag }} -c pack.threads=1 -c pack.windowMemory=4g gc --aggressive --force
+          vuls-data-update dotgit compress ${{ inputs.tag }}
+
       - name: Push archive dotgit
+        if: ${{ steps.history.outputs.archive == 'true' }}
         run: vuls-data-update dotgit registry cp --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
 
       - name: Push latest dotgit
+        if: ${{ steps.history.outputs.archive == 'true' }}
         run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
-
-  gc-archive:
-    name: GC vulsio/vuls-data-db-archive:${{ needs.archive.outputs.tag }}
-    needs: [archive]
-    uses: ./.github/workflows/gc.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      repository: vulsio/vuls-data-db-archive
-      tag: ${{ needs.archive.outputs.tag }}
-      pack-threads: 1
-      pack-windowMemory: 4g

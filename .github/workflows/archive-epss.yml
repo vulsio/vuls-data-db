@@ -1,7 +1,10 @@
 name: Archive EPSS
 
 on:
-  workflow_call:
+  # Moves the past years out of vuls-data-raw-epss once the year has turned
+  # over; sources.json keeps the size-based archive off it.
+  schedule:
+    - cron: "0 1 1 4 *"
   workflow_dispatch:
 
 permissions: {}
@@ -9,6 +12,10 @@ permissions: {}
 jobs:
   archive:
     name: Archive vuls-data-raw-epss
+    # The group the epss pipeline in pipelines.yml holds, so the two never
+    # push vuls-data-raw-epss over each other.
+    concurrency:
+      group: source-epss
     permissions:
       contents: read
       packages: write

@@ -1,0 +1,732 @@
+name: Pipelines
+
+run-name: "Pipelines (${{ github.event.schedule || inputs.sources }})"
+
+# Runs every source in sources.json through its own pipeline
+# (source-pipeline.yml): fetch, extract, request the DB builds that take it,
+# then archive and truncate. A source moves on as soon as its own fetch is
+# done, instead of waiting for every other source.
+#
+# sources.json holds one object per source, for vuls-data-raw-<name> and
+# vuls-data-extracted-<name>:
+#   name     the source
+#   every    its tier, i.e. which cron below runs it; absent when nothing
+#            about the source runs any more
+#   fetch    absent: fetch-main.yml; "<kind>": fetch-<kind>.yml, run by the
+#            fetch-<kind> job below; "frozen": the raw repository is kept as
+#            it is; "none": there is no raw repository
+#   extract  the vuls-data-update branches to extract with; "frozen": the
+#            extracted repository is kept as it is; absent: there is none
+#   reads    other raw sources the extractor takes after the source's own, as
+#            they stand when it starts; their pipelines are not waited for
+#   rhel     true: also derive vuls-data-extracted-<name>-rhel, see
+#            extract-redhat.yml; "frozen": that repository is kept as it is
+#   archive  false: not archived by size; epss is split by year in
+#            archive-epss.yml instead
+# Backup All and Restore All take every repository listed, frozen or not.
+
+on:
+  schedule:
+    # One cron per tier, told apart by the minute; TIERS in the plan job maps
+    # each back to its tier.
+    - cron: "10 */2 * * *"
+    - cron: "40 */6 * * *"
+    - cron: "20 */12 * * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Sources to run: names from sources.json, or tiers (e.g. 6h) for all of theirs, space-separated"
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      kinds: ${{ steps.plan.outputs.kinds }}
+    steps:
+      - name: Check out sources.json and this workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          sparse-checkout: |
+            .github/workflows/sources.json
+            .github/workflows/pipelines.yml
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # Every run checks the whole list, not only what it runs: a source whose
+      # tier no cron runs, or whose fetcher no job below calls, would quietly
+      # stop updating.
+      - name: Pick the sources to run
+        id: plan
+        env:
+          TIERS: |
+            {
+              "10 */2 * * *": "2h",
+              "40 */6 * * *": "6h",
+              "20 */12 * * *": "12h"
+            }
+          SCHEDULE: ${{ github.event.schedule }}
+          REQUESTED: ${{ inputs.sources }}
+        run: |
+          set -euo pipefail
+
+          for kind in $(jq -r '[.[].fetch // empty | select(IN("frozen", "none") | not)] | unique[]' .github/workflows/sources.json); do
+            if ! grep -qF "uses: ./.github/workflows/fetch-${kind}.yml" .github/workflows/pipelines.yml; then
+              echo "::error::no job in pipelines.yml fetches with fetch-${kind}.yml"
+              exit 1
+            fi
+          done
+
+          # The sources to run, grouped by the job that fetches them: "main"
+          # for fetch-main.yml and for the sources not fetched at all.
+          kinds=$(jq -c --argjson tiers "${TIERS}" --arg schedule "${SCHEDULE}" --arg requested "${REQUESTED}" '
+            def fetched: (.fetch // "main") | IN("frozen", "none") | not;
+            def active: fetched or (.extract | type) == "array" or .rhel == true;
+
+            map(select(active and (.every | IN($tiers[]) | not)) | .name) as $stranded
+            | if $stranded != [] then error("no cron runs \($stranded | join(", "))") else . end
+
+            | (if $schedule != "" then [$tiers[$schedule] // error("no tier runs on \"\($schedule)\"")]
+               else [$requested | splits("\\s+") | select(. != "")] end) as $words
+            | ($words - map(.name, .every)) as $unknown
+            | if $unknown != [] then error("neither a source nor a tier in sources.json: \($unknown | join(", "))") else . end
+
+            | map(select(active and ([.name, .every] | any(IN($words[])))) | {
+                name,
+                fetch: (.fetch // "main"),
+                main: ([.extract[]?] | index("main") != null),
+                nightly: ([.extract[]?] | index("nightly") != null),
+                reads: (.reads // [] | join(" ")),
+                rhel: (.rhel == true),
+                archive: (fetched and .archive != false)
+              })
+            | reduce .[] as $s ({}; .[$s.fetch | if IN("frozen", "none") then "main" else . end] += [$s])
+          ' .github/workflows/sources.json)
+
+          jq 'map_values(map(.name))' <<< "${kinds}"
+          echo "kinds=${kinds}" >> "$GITHUB_OUTPUT"
+
+  main:
+    name: ${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).main }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).main }}
+    # One pipeline per source at a time, whatever started it: a run that finds
+    # the source's previous one still going waits, and a third replaces the
+    # one waiting. The fetch-<kind> jobs below and the pipelines that follow
+    # them hold the same group, so a dedicated fetch never overlaps another
+    # run's pipeline for the source either.
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  # Each source with a dedicated fetcher gets two jobs: the fetch, then the
+  # rest of its pipeline. A failed fetch still goes on to extract what the raw
+  # repository already holds, as the main sources' pipelines do.
+  fetch-alma-errata:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).alma-errata }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).alma-errata }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-alma-errata.yml
+    permissions:
+      contents: read
+      packages: write
+
+  alma-errata:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-alma-errata]
+    if: ${{ !cancelled() && (needs.fetch-alma-errata.result == 'success' || needs.fetch-alma-errata.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).alma-errata }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-amazon:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).amazon }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).amazon }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-amazon.yml
+    permissions:
+      contents: read
+      packages: write
+
+  amazon:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-amazon]
+    if: ${{ !cancelled() && (needs.fetch-amazon.result == 'success' || needs.fetch-amazon.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).amazon }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-cisco-cvrf-or-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).cisco-cvrf-or-csaf }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).cisco-cvrf-or-csaf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-cisco-cvrf-or-csaf.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ matrix.source.name }}
+
+  cisco-cvrf-or-csaf:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-cisco-cvrf-or-csaf]
+    if: ${{ !cancelled() && (needs.fetch-cisco-cvrf-or-csaf.result == 'success' || needs.fetch-cisco-cvrf-or-csaf.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).cisco-cvrf-or-csaf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-cisco-json:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).cisco-json }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).cisco-json }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-cisco-json.yml
+    permissions:
+      contents: read
+      packages: write
+    secrets:
+      CISCO_CLIENT_KEY: ${{ secrets.CISCO_CLIENT_KEY }}
+      CISCO_CLIENT_SECRET: ${{ secrets.CISCO_CLIENT_SECRET }}
+
+  cisco-json:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-cisco-json]
+    if: ${{ !cancelled() && (needs.fetch-cisco-json.result == 'success' || needs.fetch-cisco-json.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).cisco-json }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-enisa-euvd-list:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).enisa-euvd-list }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).enisa-euvd-list }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-enisa-euvd-list.yml
+    permissions:
+      contents: read
+      packages: write
+
+  enisa-euvd-list:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-enisa-euvd-list]
+    if: ${{ !cancelled() && (needs.fetch-enisa-euvd-list.result == 'success' || needs.fetch-enisa-euvd-list.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).enisa-euvd-list }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-epss:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).epss }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).epss }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-epss.yml
+    permissions:
+      contents: read
+      packages: write
+
+  epss:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-epss]
+    if: ${{ !cancelled() && (needs.fetch-epss.result == 'success' || needs.fetch-epss.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).epss }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-fedora-api:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).fedora-api }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).fedora-api }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-fedora-api.yml
+    permissions:
+      contents: read
+      packages: write
+
+  fedora-api:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-fedora-api]
+    if: ${{ !cancelled() && (needs.fetch-fedora-api.result == 'success' || needs.fetch-fedora-api.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).fedora-api }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-fortinet-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).fortinet-csaf }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).fortinet-csaf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-fortinet-csaf.yml
+    permissions:
+      contents: read
+      packages: write
+
+  fortinet-csaf:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-fortinet-csaf]
+    if: ${{ !cancelled() && (needs.fetch-fortinet-csaf.result == 'success' || needs.fetch-fortinet-csaf.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).fortinet-csaf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-fortinet-cvrf:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).fortinet-cvrf }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).fortinet-cvrf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-fortinet-cvrf.yml
+    permissions:
+      contents: read
+      packages: write
+
+  fortinet-cvrf:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-fortinet-cvrf]
+    if: ${{ !cancelled() && (needs.fetch-fortinet-cvrf.result == 'success' || needs.fetch-fortinet-cvrf.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).fortinet-cvrf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-microsoft-servicing:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).microsoft-servicing }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).microsoft-servicing }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-microsoft-servicing.yml
+    permissions:
+      contents: read
+      packages: write
+
+  microsoft-servicing:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-microsoft-servicing]
+    if: ${{ !cancelled() && (needs.fetch-microsoft-servicing.result == 'success' || needs.fetch-microsoft-servicing.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).microsoft-servicing }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-msuc:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).msuc }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).msuc }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-msuc.yml
+    permissions:
+      contents: read
+      packages: write
+
+  msuc:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-msuc]
+    if: ${{ !cancelled() && (needs.fetch-msuc.result == 'success' || needs.fetch-msuc.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).msuc }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-nuclei-api:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).nuclei-api }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).nuclei-api }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-nuclei-api.yml
+    permissions:
+      contents: read
+      packages: write
+    secrets:
+      NUCLEI_API_KEY: ${{ secrets.NUCLEI_API_KEY }}
+
+  nuclei-api:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-nuclei-api]
+    if: ${{ !cancelled() && (needs.fetch-nuclei-api.result == 'success' || needs.fetch-nuclei-api.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).nuclei-api }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-nvd-api:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).nvd-api }}
+    strategy:
+      fail-fast: false
+      # The NVD API key's rate limit is shared by every request.
+      max-parallel: 1
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).nvd-api }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-nvd-api.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ matrix.source.name }}
+    secrets:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+  nvd-api:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-nvd-api]
+    if: ${{ !cancelled() && (needs.fetch-nvd-api.result == 'success' || needs.fetch-nvd-api.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).nvd-api }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-paloalto-json-or-csaf:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).paloalto-json-or-csaf }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).paloalto-json-or-csaf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-paloalto-json-or-csaf.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ matrix.source.name }}
+
+  paloalto-json-or-csaf:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-paloalto-json-or-csaf]
+    if: ${{ !cancelled() && (needs.fetch-paloalto-json-or-csaf.result == 'success' || needs.fetch-paloalto-json-or-csaf.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).paloalto-json-or-csaf }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-redhat-package-manifest:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).redhat-package-manifest }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).redhat-package-manifest }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-redhat-package-manifest.yml
+    permissions:
+      contents: read
+      packages: write
+
+  redhat-package-manifest:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-redhat-package-manifest]
+    if: ${{ !cancelled() && (needs.fetch-redhat-package-manifest.result == 'success' || needs.fetch-redhat-package-manifest.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).redhat-package-manifest }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-variot:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).variot }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).variot }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-variot.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ matrix.source.name }}
+    secrets:
+      VARIOT_API_KEY: ${{ secrets.VARIOT_API_KEY }}
+
+  variot:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-variot]
+    if: ${{ !cancelled() && (needs.fetch-variot.result == 'success' || needs.fetch-variot.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).variot }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  fetch-vulncheck:
+    name: Fetch vuls-data-raw-${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.kinds).vulncheck }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).vulncheck }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/fetch-vulncheck.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      target: ${{ matrix.source.name }}
+    secrets:
+      VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
+
+  vulncheck:
+    name: ${{ matrix.source.name }}
+    needs: [plan, fetch-vulncheck]
+    if: ${{ !cancelled() && (needs.fetch-vulncheck.result == 'success' || needs.fetch-vulncheck.result == 'failure') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.kinds).vulncheck }}
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+
+  action-run-summary:
+    name: Action run summary
+    if: ${{ !cancelled() }}
+    needs: [main, alma-errata, amazon, cisco-cvrf-or-csaf, cisco-json, enisa-euvd-list, epss, fedora-api, fortinet-csaf, fortinet-cvrf, microsoft-servicing, msuc, nuclei-api, nvd-api, paloalto-json-or-csaf, redhat-package-manifest, variot, vulncheck]
+    uses: ./.github/workflows/action-run-summary.yml
+    permissions:
+      contents: read
+      actions: read
