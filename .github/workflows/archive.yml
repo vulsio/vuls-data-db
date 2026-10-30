@@ -28,32 +28,8 @@ defaults:
     shell: bash
 
 jobs:
-  check-before-gc:
-    name: Check Layer Size before Git GC
-    uses: ./.github/workflows/check-layer-size.yml
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      media-type: application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd
-      threshold-mb: ${{ inputs.threshold-mb }}
-
-  gc:
-    name: Git GC ${{ inputs.tag }}
-    needs: [check-before-gc]
-    if: ${{ needs.check-before-gc.outputs.exceeded == 'true' }}
-    uses: ./.github/workflows/gc.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      repository: ${{ github.repository }}
-      tag: ${{ inputs.tag }}
-      pack-threads: 1
-      pack-windowMemory: 4g
-
-  check-after-gc:
-    name: Check Layer Size after Git GC
-    needs: [gc]
+  check:
+    name: Check Layer Size
     uses: ./.github/workflows/check-layer-size.yml
     with:
       repository: ${{ github.repository }}
@@ -67,10 +43,8 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
-    needs: [check-after-gc]
-    if: ${{ needs.check-after-gc.outputs.exceeded == 'true' }}
-    outputs:
-      tag: ${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
+    needs: [check]
+    if: ${{ needs.check.outputs.exceeded == 'true' }}
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -133,21 +107,33 @@ jobs:
 
           vuls-data-update dotgit compress ${{ inputs.tag }}
 
+      # A tag whose latest commit alone nears the threshold would be archived
+      # on nearly every run, each archive a copy of that one commit. Wait until
+      # the history the archive takes away outweighs the commit that stays.
+      - name: Check the history outweighs the latest commit
+        id: history
+        run: |
+          SIZE=$(vuls-data-update dotgit registry status ghcr.io/${{ github.repository }}:${{ inputs.tag }} | jq '.layers[] | select(.mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .size')
+          LATEST=$(stat -c %s ${{ inputs.tag }}.tar.zst)
+          echo "repository size [MB]: $(( SIZE / 1024 / 1024 ))"
+          echo "latest commit size [MB]: $(( LATEST / 1024 / 1024 ))"
+          if [[ ${SIZE} -gt $(( LATEST * 2 )) ]]; then
+            echo "archive=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only the latest commit gets the aggressive GC. It is what every pull
+      # downloads, and its GC time does not grow with the history; the history
+      # goes to the archive as the writers' repack left it.
+      - name: Run git gc on the latest commit
+        if: ${{ steps.history.outputs.archive == 'true' }}
+        run: |
+          /usr/bin/time -v git -C ${{ inputs.tag }} -c pack.threads=1 -c pack.windowMemory=4g gc --aggressive --force
+          vuls-data-update dotgit compress ${{ inputs.tag }}
+
       - name: Push archive dotgit
+        if: ${{ steps.history.outputs.archive == 'true' }}
         run: vuls-data-update dotgit registry cp --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ghcr.io/vulsio/vuls-data-db-archive:${{ inputs.tag }}-${{ steps.set_archive_suffix.outputs.archive_suffix }}
 
       - name: Push latest dotgit
+        if: ${{ steps.history.outputs.archive == 'true' }}
         run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:${{ inputs.tag }} ${{ inputs.tag }}.tar.zst
-
-  gc-archive:
-    name: GC vulsio/vuls-data-db-archive:${{ needs.archive.outputs.tag }}
-    needs: [archive]
-    uses: ./.github/workflows/gc.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      repository: vulsio/vuls-data-db-archive
-      tag: ${{ needs.archive.outputs.tag }}
-      pack-threads: 1
-      pack-windowMemory: 4g
