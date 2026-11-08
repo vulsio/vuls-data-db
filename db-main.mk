@@ -38,7 +38,15 @@ db-build:
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-oracle-linux BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-paloalto-json BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-cve BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
-	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-vex-v1-rhel BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
+# Pinned: Red Hat regenerated its CSAF VEX files on 2026-11-06 and changed the
+# product_tree CPE of the unfixed RHEL products (cpe:/o:redhat:enterprise_linux:N
+# -> cpe:/a:redhat:enterprise_linux:N, RHEL 6/7 -> cpe:/o:redhat:rhel_els:N).
+# vuls-data-update's redhat vex v1 extractor resolves no RHEL major for the new
+# CPEs and silently drops those products, so the extracted data lost 45-80% of
+# the unfixed detections for RHEL 7-10 (diff guard FAIL on 2026-11-07). Keep the
+# last extracted commit that went into the promoted DB until the extractor
+# handles the new CPEs, then set BRANCH=${BRANCH} again.
+	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-redhat-vex-v1-rhel BRANCH=903371d43e37f71e9b80851147669e1b3c2ded25 DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-rocky-errata BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-suse-oval BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
 	$(MAKE) -f ${MAKEFILE} db-add REPO=vuls-data-extracted-ubuntu-cve-tracker BRANCH=${BRANCH} DBTYPE=${DBTYPE} DBPATH=${DBPATH}
