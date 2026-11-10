@@ -15,9 +15,13 @@ Two workflows run the diff guard, each on a 6-hour cron:
 
 - **`db-main.yml`** (workflow name `DB`) — builds from `BRANCH=main`, installs
   `vuls@main`, baseline is the previous `:<schema_version>` image.
-- **`db-nightly.yml`** (workflow name `DB(Nightly)`) — builds from
-  `BRANCH=nightly`, installs `vuls@nightly`, baseline is the previous
-  `:nightly` image.
+- **`db-nightly.yml`** (workflow name `DB(Nightly)`) — no DB-side guard any
+  more: it builds from `db-nightly.lock.json` in `vulsio/vuls-nightly-db`,
+  whose rows are moved by the per-source guard that runs after each nightly
+  extract (`.github/workflows/guard-extracted.yml`, failures show up as
+  `guard <source>@nightly` jobs in `Extract All`). That guard reads its
+  defaults and overrides from `.thresholds` in `db-guard.json`, with the same
+  keys and axes as the lists below.
 
 The guard judges every target on separate change axes — **added**, **changed**
 (`vuls diff db` only; `vuls diff detection` compares CVE ID sets and has no
@@ -85,12 +89,12 @@ Do **not** fetch every run's log. You need:
 
 ### How to compute the extract-anchor tuple
 
-The enabled data sources for each pipeline are listed in `db-main.mk` /
-`db-nightly.mk`. For each enabled source, pull the extracted dotgit once and
-read its full commit log. Match the dotgit branch to the workflow you are
-grooming — db-main runs `make ... BRANCH=main`, db-nightly runs
-`make ... BRANCH=nightly`, and the two branches can have independent commit
-histories:
+The enabled data sources are listed in `db-main.mk` (and, for nightly, in
+`db-nightly.lock.json` in `vulsio/vuls-nightly-db`). For each enabled source,
+pull the extracted dotgit once and read its full commit log. Match the dotgit
+branch to the workflow you are grooming — db-main runs `make ... BRANCH=main`,
+nightly reads the `nightly` branch, and the two branches can have independent
+commit histories:
 
 ```text
 vuls-data-update dotgit pull --dir /tmp/ex \
@@ -203,8 +207,8 @@ include/exclude rationale.
 
 ## Step 6 — Apply
 
-Edit the `env:` blocks in **both** `.github/workflows/db-main.yml` and
-`.github/workflows/db-nightly.yml`:
+Edit the `env:` block in `.github/workflows/db-main.yml` and `.thresholds`
+in `db-guard.json` (read by the nightly per-source guard):
 
 - `DB_RATE_THRESHOLD_OVERRIDES` / `DETECTION_RATE_THRESHOLD_OVERRIDES`.
 - One `<key>=<axis>:<rate>` per line. **No `#` comments inside the lists** —
