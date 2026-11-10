@@ -21,7 +21,7 @@ The DB workflow exists in two flavors. The baseline tag differs:
 | Workflow file | Baseline tag | Notes |
 | --- | --- | --- |
 | `.github/workflows/db-main.yml` (workflow name: **DB**) | `ghcr.io/vulsio/vuls-nightly-db:<schema_version>` (computed at build time, e.g. `:0`) | Promoted to `:latest` and `:<schema_version>` on pass |
-| `.github/workflows/db-nightly.yml` (workflow name: **DB(Nightly)**) | `ghcr.io/vulsio/vuls-nightly-db:nightly` (literal) | Promoted to `:nightly` on pass |
+| `.github/workflows/db-nightly.yml` (workflow name: **DB(Nightly)**) | — | No DB-side diff guard: it builds from `db-nightly.lock.json` in `vulsio/vuls-nightly-db` and always publishes `:nightly`. Nightly diffs run per source after each extract (`.github/workflows/guard-extracted.yml`) and fail as `guard <source>@nightly` jobs in `Extract All` |
 
 Read the failed run's workflow name from `gh run view <run-id> --repo vulsio/vuls-data-db --json workflowName` and pick the right baseline tag. The `schema_version` comes from a `Save vuls.db schema_version` step that runs `vuls db search metadata --dbpath ./vuls.db | jq .schema_version` — re-derive it from the run's logs if you need the exact value at the time.
 
@@ -65,7 +65,7 @@ vuls db search datasources --dbpath ./baseline.db | jq '.[] | select(.id=="<sour
 vuls db search datasources --dbpath ./target.db   | jq '.[] | select(.id=="<source>")'
 ```
 
-The `<source>` is the datasource id from `db-main.mk` / `db-nightly.mk` — e.g. `ubuntu-cve-tracker`, `redhat-vex`, `debian-security-tracker-salsa`.
+The `<source>` is the datasource id of a source in `db-main.mk` — e.g. `ubuntu-cve-tracker`, `redhat-vex`, `debian-security-tracker-salsa`.
 
 For ubuntu specifically, only one source is enabled (`ubuntu-cve-tracker`). For other OS families, multiple sources may need to be checked.
 
@@ -113,7 +113,7 @@ git -C "$EX" log --format='%h %ci' <baseline_ext>..<target_ext>
 git -C "$EX" diff --shortstat <baseline_ext>..<target_ext>
 ```
 
-`--checkout` must match the triaged workflow's branch — `main` for **DB**, `nightly` for **DB(Nightly)** (its build runs `make -f db-nightly.mk ... BRANCH=nightly`). The default is `main`, and the anchor commits from step 3 may only exist on the matching branch. The same applies to the raw dotgit pull below.
+`--checkout` must match the triaged workflow's branch — `main` for **DB**, `nightly` for a nightly per-source guard (the nightly lock reads the `nightly` branch). The default is `main`, and the anchor commits from step 3 may only exist on the matching branch. The same applies to the raw dotgit pull below.
 
 The range may span multiple commits. If it does, examine **each step**, not just the cumulative diff — different commits often represent different upstream activities (schema expansion vs. bulk triage, etc.).
 
