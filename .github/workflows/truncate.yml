@@ -111,17 +111,15 @@ jobs:
       - name: Decide log length
         id: decide_log_length
         run: |
-          TOTAL=$(git -C ghcr.io/${{ github.repository }}/${{ inputs.tag }} log --oneline main | wc -l)
+          TOTAL=$(vuls-data-update dotgit status --git ghcr.io/${{ github.repository }}/${{ inputs.tag }} | jq '.git.branches.main.commits')
           LENGTH=$(echo "scale=0; ${TOTAL} * ${{ inputs.log-ratio }} / 1" | bc)
           echo "Will truncate log length ${TOTAL} -> ${LENGTH}"
           echo "length=${LENGTH}" >> ${GITHUB_OUTPUT}
 
+      # The last commits of every branch, with the origin of the tag.
       - name: Truncate dotgit
         run: |
-          echo "Create the truncated repository..."
-          git clone --depth ${{ steps.decide_log_length.outputs.length }} --no-single-branch --no-checkout --branch main file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
-          git -C ${{ inputs.tag }} reset
-          git -C ${{ inputs.tag }} branch nightly origin/nightly
+          vuls-data-update dotgit shallow --dir . --depth ${{ steps.decide_log_length.outputs.length }} ghcr.io/${{ github.repository }}/${{ inputs.tag }}
 
           rm -rf ghcr.io/${{ github.repository }}/${{ inputs.tag }}
           vuls-data-update dotgit compress ${{ inputs.tag }}
