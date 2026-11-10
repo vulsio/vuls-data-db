@@ -37,21 +37,23 @@ on:
 permissions: {}
 
 jobs:
-  approve:
-    name: approve
+  # Keyless: this job runs the downloaded vuls-data-update, so the deploy key
+  # is not in it. It hands the lock writer a plain name -> commit list.
+  resolve:
+    name: resolve commits
     permissions:
       contents: read
-      actions: write
     runs-on: ubuntu-latest
+    outputs:
+      updates: ${{ steps.resolve.outputs.updates }}
+      lock_repository: ${{ steps.config.outputs.lock_repository }}
+      workflow: ${{ steps.config.outputs.workflow }}
     env:
       DB: ${{ inputs.db }}
       TARGET: ${{ inputs.target }}
       COMMIT: ${{ inputs.commit }}
-      REASON: ${{ inputs.reason }}
     steps:
       - name: Check inputs
-        env:
-          LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
         run: |
           set -euo pipefail
           if [ "${TARGET}" = "all" ] && [ -n "${COMMIT}" ]; then
@@ -60,10 +62,6 @@ jobs:
           fi
           if [ -n "${COMMIT}" ] && [[ ! "${COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::commit '${COMMIT}' is not 40 lowercase hex digits"
-            exit 1
-          fi
-          if [ -z "${LOCK_DEPLOY_KEY}" ]; then
-            echo "::error::the LOCK_DEPLOY_KEY secret is not set"
             exit 1
           fi
 
@@ -83,7 +81,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           repository: ${{ steps.config.outputs.lock_repository }}
-          ssh-key: ${{ secrets.LOCK_DEPLOY_KEY }}
           path: lock
 
       - name: Set up Go 1.x
@@ -98,6 +95,7 @@ jobs:
       # The same checks `vuls db build` makes, done before the push: a typo
       # written to the lock would otherwise stop the next build as a whole.
       - name: Resolve and check the commits
+        id: resolve
         run: |
           set -euo pipefail
           lock="lock/db-${DB}.lock.json"
@@ -113,7 +111,7 @@ jobs:
             names=("${TARGET}")
           fi
 
-          echo '{}' > updates.json
+          updates='{}'
           for name in "${names[@]}"; do
             vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${registry}:vuls-data-extracted-${name}"
             dir="./work/${registry}/vuls-data-extracted-${name}"
@@ -129,11 +127,47 @@ jobs:
               echo "::error::${commit} is not on ${branch} of vuls-data-extracted-${name}"
               exit 1
             fi
-            jq --arg n "${name}" --arg c "${commit}" '.[$n] = $c' updates.json > updates.json.tmp
-            mv updates.json.tmp updates.json
+            updates=$(jq -c --arg n "${name}" --arg c "${commit}" '.[$n] = $c' <<< "${updates}")
             rm -rf ./work
           done
-          cat updates.json
+          echo "${updates}" | jq .
+          echo "updates=${updates}" >> "$GITHUB_OUTPUT"
+
+  # Holds the deploy key and runs nothing but git, jq and gh from the runner
+  # image. It takes the resolved list as data and checks its shape again.
+  write:
+    name: write lock
+    needs: resolve
+    permissions:
+      contents: read
+      actions: write
+    runs-on: ubuntu-latest
+    env:
+      DB: ${{ inputs.db }}
+      TARGET: ${{ inputs.target }}
+      REASON: ${{ inputs.reason }}
+      UPDATES: ${{ needs.resolve.outputs.updates }}
+    steps:
+      - name: Check the deploy key and the update list
+        env:
+          LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${LOCK_DEPLOY_KEY}" ]; then
+            echo "::error::the LOCK_DEPLOY_KEY secret is not set"
+            exit 1
+          fi
+          if ! jq -e 'type == "object" and length > 0 and all(.[]; type == "string" and test("^[0-9a-f]{40}$"))' <<< "${UPDATES}" > /dev/null; then
+            echo "::error::unexpected update list: ${UPDATES}"
+            exit 1
+          fi
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ needs.resolve.outputs.lock_repository }}
+          ssh-key: ${{ secrets.LOCK_DEPLOY_KEY }}
+          path: lock
 
       - name: Write the lock
         working-directory: lock
@@ -151,12 +185,12 @@ jobs:
             git fetch --quiet origin "${branch}"
             git reset --quiet --hard "origin/${branch}"
 
-            changes=$(jq -r --slurpfile u ../updates.json '.sources[] | select($u[0][.name] != null and $u[0][.name] != .commit) | "\(.name) \(.commit[0:12])..\($u[0][.name][0:12])"' "${lock}")
+            changes=$(jq -r --argjson u "${UPDATES}" '.sources[] | select($u[.name] != null and $u[.name] != .commit) | "\(.name) \(.commit[0:12])..\($u[.name][0:12])"' "${lock}")
             if [ -z "${changes}" ]; then
               echo "${lock} already has these commits" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
-            jq --slurpfile u ../updates.json '.sources |= map(if $u[0][.name] then .commit = $u[0][.name] else . end)' "${lock}" > "${lock}.tmp"
+            jq --argjson u "${UPDATES}" '.sources |= map(if $u[.name] then .commit = $u[.name] else . end)' "${lock}" > "${lock}.tmp"
             mv "${lock}.tmp" "${lock}"
             git add "${lock}"
             git commit --quiet -m "approve: ${TARGET} (${DB})" -m "By @${ACTOR}: ${REASON}" -m "${changes}" -m "${RUN_URL}"
@@ -178,7 +212,7 @@ jobs:
       - name: Start the DB build
         env:
           GH_TOKEN: ${{ github.token }}
-          WORKFLOW: ${{ steps.config.outputs.workflow }}
+          WORKFLOW: ${{ needs.resolve.outputs.workflow }}
         run: |
           set -euo pipefail
           gh workflow run "${WORKFLOW}" -R "${GITHUB_REPOSITORY}" --ref "${GITHUB_REF_NAME}"
@@ -187,7 +221,7 @@ jobs:
   action-run-summary:
     name: Action run summary
     if: ${{ success() || failure() }}
-    needs: [approve]
+    needs: [resolve, write]
     uses: ./.github/workflows/action-run-summary.yml
     permissions:
       contents: read
