@@ -64,11 +64,27 @@ Window: the trailing ~2 months from today. Metadata only (cheap):
 ```
 gh run list --workflow db-main.yml    --created '>=<YYYY-MM-DD>' --limit 400 \
   --json databaseId,conclusion,createdAt,event
-gh run list --workflow db-nightly.yml --created '>=<YYYY-MM-DD>' --limit 400 \
-  --json databaseId,conclusion,createdAt,event
 ```
 
-You now have, per workflow, every run with its conclusion (~240 runs each).
+You now have every db-main run with its conclusion (~240 runs).
+
+**Nightly** has no DB-side guard (see "What you are grooming"); its change
+rates come from the per-source guard jobs in `Extract All`. List those runs
+and, in each, the guard jobs that ran a diff:
+
+```
+gh run list --workflow extract-all.yml --created '>=<YYYY-MM-DD>' --limit 400 \
+  --json databaseId,conclusion,createdAt
+gh run view <run-id> --json jobs \
+  --jq '.jobs[] | select(.name | test("guard .*@nightly / guard ")) | {name, conclusion, databaseId}'
+```
+
+Each such job judged one source from the lock's commit B to the extracted
+head H; the `plan` job next to it prints `db-nightly.lock.json: <source> <B>
+-> <H>`. Use (source, B, H) as the grouping key instead of the extract-anchor
+tuple of Step 2 and read one log per key. Steps 3–5 then apply as for
+db-main (the reports have the same format), and nightly overrides go into
+`.thresholds` in `db-guard.json` (Step 6).
 
 ## Step 2 — Decide which run logs to read
 
