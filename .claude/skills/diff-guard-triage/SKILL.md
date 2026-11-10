@@ -29,6 +29,15 @@ Both workflows use the same OCI repository: `ghcr.io/vulsio/vuls-nightly-db`. Th
 
 ## 2. Pin both anchors
 
+**Nightly per-source guard** (a failed `guard <source>@nightly` job in an `Extract All` run): nothing is pushed, so the digests below do not exist. The job's `Make mini-locks` step prints the two locks it built from: the baseline (the source at the lock's commit B, with the other members of its group) and the target (the same, with the source at the extracted head H). Copy them from the job log into `base.lock.json` and `target.lock.json`, install the vuls2 ref in `db-guard.json` `.dbs.nightly.vuls2`, and rebuild the pair:
+
+```sh
+vuls db build --lock base.lock.json   --dbpath ./baseline.db
+vuls db build --lock target.lock.json --dbpath ./target.db
+```
+
+Then continue from step 3 with these two files; B and H are the extracted anchors of the source for step 4. The rest of this section is for the **DB** (main) workflow.
+
 **Target** (the failed candidate, untagged):
 - Read the run summary's "Pushed candidate image" section, or scrape `digest=` from the `Push vuls.db to GHCR (tagless, digest-only)` step's log. `<digest>` below always means the full `sha256:<64hex>` string exactly as it appears there.
 - Form the ref: `ghcr.io/vulsio/vuls-nightly-db@<digest>`.
