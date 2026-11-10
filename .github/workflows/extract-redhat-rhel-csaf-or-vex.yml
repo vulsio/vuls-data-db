@@ -137,6 +137,13 @@ jobs:
     name: guard ${{ inputs.target }}-rhel@${{ inputs.branch }}
     needs: extract
     if: ${{ inputs.branch == 'nightly' }}
+    # One guard per source and branch at a time, in extract order: a newer
+    # guard waits for the running one, and a waiting older one is replaced
+    # by a newer, so an older candidate is never judged against a lock a
+    # newer guard has already moved (which would roll the row back).
+    concurrency:
+      group: guard-${{ inputs.target }}-rhel-${{ inputs.branch }}
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: read
