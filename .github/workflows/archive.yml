@@ -78,7 +78,26 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:${{ inputs.tag }}
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:${{ inputs.tag }}
 
+      # A tag whose latest commit alone nears the threshold would be archived
+      # on nearly every run, each archive a copy of that one commit. Wait until
+      # the history the archive takes away outweighs the commit that stays.
+      # disk.tips is what the branch tips reach, as the latest repository will
+      # hold it, a few percent below a real copy; disk.all is everything.
+      - name: Check the history outweighs the latest commit
+        id: history
+        run: |
+          GIT=$(vuls-data-update dotgit status --git ghcr.io/${{ github.repository }}/${{ inputs.tag }} | jq -c '.git')
+          echo "${GIT}" | jq .
+          ALL=$(echo "${GIT}" | jq '.disk.all')
+          TIPS=$(echo "${GIT}" | jq '.disk.tips')
+          echo "all objects [MB]: $(( ALL / 1024 / 1024 ))"
+          echo "branch tips [MB]: $(( TIPS / 1024 / 1024 ))"
+          if [[ ${ALL} -gt $(( TIPS * 2 )) ]]; then
+            echo "archive=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set archive suffix
+        if: ${{ steps.history.outputs.archive == 'true' }}
         id: set_archive_suffix
         run: |
           ARCHIVE_MAX=$(
@@ -93,33 +112,10 @@ jobs:
           ARCHIVE_SUFFIX=archive-$(( ${ARCHIVE_MAX} + 1 ))
           echo "archive_suffix=${ARCHIVE_SUFFIX}" | tee ${GITHUB_OUTPUT}
 
-      - name: Split archive
-        id: split_archive
-        run: |
-          echo "Create the latest repository..."
-          git clone --depth 1 --no-single-branch --no-checkout --branch main file://${PWD}/ghcr.io/${{ github.repository }}/${{ inputs.tag }} ${{ inputs.tag }}
-          if git -C ${{ inputs.tag }} remote | grep -q "^origin$"; then
-            git -C ${{ inputs.tag }} remote set-url origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
-          else
-            git -C ${{ inputs.tag }} remote add origin ghcr.io/${{ github.repository }}:${{ inputs.tag }}
-          fi
-          git -C ${{ inputs.tag }} reset
-
-          vuls-data-update dotgit compress ${{ inputs.tag }}
-
-      # A tag whose latest commit alone nears the threshold would be archived
-      # on nearly every run, each archive a copy of that one commit. Wait until
-      # the history the archive takes away outweighs the commit that stays.
-      - name: Check the history outweighs the latest commit
-        id: history
-        run: |
-          SIZE=$(vuls-data-update dotgit registry status ghcr.io/${{ github.repository }}:${{ inputs.tag }} | jq '.layers[] | select(.mediaType == "application/vnd.vulsio.vuls-data-db.dotgit.layer.v1.tar+zstd") | .size')
-          LATEST=$(stat -c %s ${{ inputs.tag }}.tar.zst)
-          echo "repository size [MB]: $(( SIZE / 1024 / 1024 ))"
-          echo "latest commit size [MB]: $(( LATEST / 1024 / 1024 ))"
-          if [[ ${SIZE} -gt $(( LATEST * 2 )) ]]; then
-            echo "archive=true" >> "$GITHUB_OUTPUT"
-          fi
+      # The latest commit of every branch, with the origin of the tag.
+      - name: Create the latest repository
+        if: ${{ steps.history.outputs.archive == 'true' }}
+        run: vuls-data-update dotgit shallow --dir . --depth 1 ghcr.io/${{ github.repository }}/${{ inputs.tag }}
 
       # Only the latest commit gets the aggressive GC. It is what every pull
       # downloads, and its GC time does not grow with the history; the history
