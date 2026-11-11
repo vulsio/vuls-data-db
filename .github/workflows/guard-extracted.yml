@@ -170,7 +170,7 @@ jobs:
             echo "vuls2=$(jq -r --arg db "${DB}" '.dbs[$db].vuls2' db-guard.json)"
             echo "vuls0_old_ref=$(jq -r --arg db "${DB}" '.dbs[$db].vuls0_old_ref' db-guard.json)"
             echo "fixtures<<EOF"
-            jq -r --arg n "${NAME}" '.sources[$n].fixtures | if length == 0 then "none" else .[] end' db-guard.json
+            jq -r --arg n "${NAME}" '.sources[$n].fixtures[]' db-guard.json
             echo "EOF"
             for kind in db detection; do
               for list in defaults overrides; do
