@@ -123,10 +123,11 @@ inputs:
     description: |
       Scan-result fixtures to run `vuls diff detection` on, as newline-
       separated globs matched against the file names under
-      vulsio/integration's data/results (e.g. "alma_*"). Empty (the
-      default) takes every fixture. The single value "none" skips both
-      detection checks and runs `vuls diff db` only. A glob that matches
-      no fixture is an error, so a renamed fixture is not silently lost.
+      vulsio/integration's data/results (e.g. "alma_*"; "*" takes every
+      fixture). Empty (the default) skips both detection checks and runs
+      `vuls diff db` only. A glob that matches no fixture is an error, so
+      a renamed fixture is not silently lost. CentOS fixtures are dropped
+      whatever the globs match.
     required: false
     default: ""
   db_rate_thresholds:
@@ -259,26 +260,23 @@ runs:
       run: |
         set -euo pipefail
         mkdir -p ./scan-results
-        # Copy the selected scan results (all by default) then drop CentOS,
-        # which vuls2 does not handle (see vuls/detector/detector.go
-        # DetectPkgCves switch). Windows is now KEPT: vuls0 master detects
-        # Windows via vuls2, so the windows fixtures exercise the microsoft
-        # data in the DB under test. "none" leaves the directory empty and
-        # the detection steps below record themselves as skipped.
-        if [ -z "${FIXTURES}" ]; then
-          cp ./integration/data/results/*.json ./scan-results/
-        elif [ "${FIXTURES}" != "none" ]; then
-          shopt -s nullglob
-          while IFS= read -r glob; do
-            [ -n "${glob}" ] || continue
-            matched=(./integration/data/results/${glob}.json)
-            if [ "${#matched[@]}" -eq 0 ]; then
-              echo "::error::fixture glob '${glob}' matches no scan result in vulsio/integration"
-              exit 1
-            fi
-            cp "${matched[@]}" ./scan-results/
-          done <<< "${FIXTURES}"
-        fi
+        # Copy the scan results the globs select, then drop CentOS, which
+        # vuls2 does not handle (see vuls/detector/detector.go
+        # DetectPkgCves switch) and which a broad glob such as "*" picks
+        # up. Windows is KEPT: vuls0 master detects Windows via vuls2, so
+        # the windows fixtures exercise the microsoft data in the DB under
+        # test. No globs leave the directory empty and the detection steps
+        # below record themselves as skipped.
+        shopt -s nullglob
+        while IFS= read -r glob; do
+          [ -n "${glob}" ] || continue
+          matched=(./integration/data/results/${glob}.json)
+          if [ "${#matched[@]}" -eq 0 ]; then
+            echo "::error::fixture glob '${glob}' matches no scan result in vulsio/integration"
+            exit 1
+          fi
+          cp "${matched[@]}" ./scan-results/
+        done <<< "${FIXTURES}"
         rm -f ./scan-results/centos_*.json
         ls -1 ./scan-results
 
