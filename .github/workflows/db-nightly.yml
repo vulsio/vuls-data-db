@@ -50,10 +50,16 @@ jobs:
         id: config
         run: |
           set -euo pipefail
+          # Without a tag the DB would be pushed and left untagged in a
+          # green run, so a missing or empty list stops the build here.
+          tags=$(jq -er --arg db "${DB}" '.dbs[$db].tags | select(length > 0) | join(" ")' db-guard.json) || {
+            echo "::error::db-guard.json .dbs.${DB}.tags is missing or empty"
+            exit 1
+          }
           {
             echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)"
             echo "vuls2=$(jq -r --arg db "${DB}" '.dbs[$db].vuls2' db-guard.json)"
-            echo "tags=$(jq -r --arg db "${DB}" '.dbs[$db].tags | join(" ")' db-guard.json)"
+            echo "tags=${tags}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Check out lock repository
