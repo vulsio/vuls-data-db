@@ -1,21 +1,18 @@
 name: DB(Approve)
 
-run-name: "Approve ${{ inputs.target }}@${{ inputs.to || 'HEAD' }} into ${{ inputs.db }} by @${{ github.actor }}"
+run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }} into ${{ inputs.db }} by @${{ github.actor }}"
 
-# Sets a source's row in a DB's lock (db-<db>.lock.json in the lock
+# Moves one source's row in a DB's lock (db-<db>.lock.json in the lock
 # repository, see db-guard.json) by hand, then starts that DB's build. For:
 #   - a guard that failed on a change judged correct: from B to H, as the
 #     failed guard run prints them in its summary;
 #   - a source that went in but was wrong upstream: to an older commit;
-#   - a lock commit lost to truncate / restore: to one that still exists;
-#   - an extractor change that failed every guard: target "all" sets every
-#     source to its branch head.
-# A judgment is about a change, so a single target names both ends: `from`
-# is the row as the operator saw it and `to` the commit they looked at. The
-# row is written only while it is still at `from` (a guard or another
-# approve that moved it meanwhile fails this run), and `to` is never
-# widened to a newer head. "all" is the one bulk override: no ends, every
-# source to the head at the time of the run.
+#   - a lock commit lost to truncate / restore: to one that still exists.
+# A judgment is about a change, so both ends are required: `from` is the row
+# as the operator saw it and `to` the commit they looked at. The row is
+# written only while it is still at `from` (a guard or another approve that
+# moved it meanwhile fails this run), and exactly `to` is set. One source per
+# run: each change is judged on its own, as the guard does.
 # Adding or removing a source is a pull request to the lock repository.
 
 on:
@@ -28,19 +25,17 @@ on:
         options:
           - nightly
       target:
-        description: Source name as in the lock (vuls-data-extracted-<target>), or "all"
+        description: Source name as in the lock (vuls-data-extracted-<target>)
         required: true
         type: string
       from:
-        description: Commit (40 hex) the row is at now, as judged; the run fails if the row has moved. Empty for "all"
-        required: false
+        description: Commit (40 hex) the row is at now, as judged; the run fails if the row has moved
+        required: true
         type: string
-        default: ""
       to:
-        description: Extracted commit (40 hex) to set. Empty for "all" (every source to its branch head)
-        required: false
+        description: Extracted commit (40 hex) to set
+        required: true
         type: string
-        default: ""
       reason:
         description: Why (goes into the lock commit message)
         required: true
@@ -50,14 +45,14 @@ permissions: {}
 
 jobs:
   # Keyless: this job runs the downloaded vuls-data-update, so the deploy key
-  # is not in it. It hands the lock writer a plain name -> commit list.
-  resolve:
-    name: resolve commits
+  # is not in it. It only checks `to`; the writer takes the row to write from
+  # the inputs, never from this job.
+  check:
+    name: check the commit
     permissions:
       contents: read
     runs-on: ubuntu-latest
     outputs:
-      updates: ${{ steps.resolve.outputs.updates }}
       lock_repository: ${{ steps.config.outputs.lock_repository }}
       workflow: ${{ steps.config.outputs.workflow }}
     env:
@@ -69,16 +64,9 @@ jobs:
       - name: Check inputs
         run: |
           set -euo pipefail
-          if [ "${TARGET}" = "all" ]; then
-            if [ -n "${FROM}" ] || [ -n "${TO}" ]; then
-              echo "::error::\"all\" takes neither from nor to"
-              exit 1
-            fi
-            exit 0
-          fi
           for end in FROM TO; do
             if [[ ! "${!end}" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "::error::${end,,} '${!end}' is not 40 lowercase hex digits (both are required for a single target)"
+              echo "::error::${end,,} '${!end}' is not 40 lowercase hex digits"
               exit 1
             fi
           done
@@ -116,50 +104,33 @@ jobs:
 
       # The same checks `vuls db build` makes, done before the push: a typo
       # written to the lock would otherwise stop the next build as a whole.
-      - name: Resolve and check the commits
-        id: resolve
+      - name: Check the commit
         run: |
           set -euo pipefail
           lock="lock/db-${DB}.lock.json"
           branch=$(jq -r '.branch' "${lock}")
           registry=$(jq -r '.registry' "${lock}")
-          if [ "${TARGET}" = "all" ]; then
-            mapfile -t names < <(jq -r '.sources[].name' "${lock}")
-          else
-            if ! jq -e --arg n "${TARGET}" '.sources[] | select(.name == $n)' "${lock}" > /dev/null; then
-              echo "::error::${TARGET} is not in db-${DB}.lock.json; adding a source is a pull request to the lock repository"
-              exit 1
-            fi
-            names=("${TARGET}")
+          if ! jq -e --arg n "${TARGET}" '.sources[] | select(.name == $n)' "${lock}" > /dev/null; then
+            echo "::error::${TARGET} is not in db-${DB}.lock.json; adding a source is a pull request to the lock repository"
+            exit 1
           fi
 
-          updates='{}'
-          for name in "${names[@]}"; do
-            vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${registry}:vuls-data-extracted-${name}"
-            dir="./work/${registry}/vuls-data-extracted-${name}"
-            commit="${TO}"
-            if [ -z "${commit}" ]; then
-              commit=$(git -C "${dir}" rev-parse "refs/heads/${branch}")
-            fi
-            if ! git -C "${dir}" rev-parse --verify --quiet "${commit}^{commit}" > /dev/null; then
-              echo "::error::${commit} is not a commit of vuls-data-extracted-${name}"
-              exit 1
-            fi
-            if ! git -C "${dir}" merge-base --is-ancestor "${commit}" "refs/heads/${branch}"; then
-              echo "::error::${commit} is not on ${branch} of vuls-data-extracted-${name}"
-              exit 1
-            fi
-            updates=$(jq -c --arg n "${name}" --arg c "${commit}" '.[$n] = $c' <<< "${updates}")
-            rm -rf ./work
-          done
-          echo "${updates}" | jq .
-          echo "updates=${updates}" >> "$GITHUB_OUTPUT"
+          vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${registry}:vuls-data-extracted-${TARGET}"
+          dir="./work/${registry}/vuls-data-extracted-${TARGET}"
+          if ! git -C "${dir}" rev-parse --verify --quiet "${TO}^{commit}" > /dev/null; then
+            echo "::error::${TO} is not a commit of vuls-data-extracted-${TARGET}"
+            exit 1
+          fi
+          if ! git -C "${dir}" merge-base --is-ancestor "${TO}" "refs/heads/${branch}"; then
+            echo "::error::${TO} is not on ${branch} of vuls-data-extracted-${TARGET}"
+            exit 1
+          fi
 
   # Holds the deploy key and runs nothing but git, jq and gh from the runner
-  # image. It takes the resolved list as data and checks its shape again.
+  # image. The row it writes comes from the inputs alone.
   write:
     name: write lock
-    needs: resolve
+    needs: check
     permissions:
       contents: read
       actions: write
@@ -168,27 +139,22 @@ jobs:
       DB: ${{ inputs.db }}
       TARGET: ${{ inputs.target }}
       FROM: ${{ inputs.from }}
+      TO: ${{ inputs.to }}
       REASON: ${{ inputs.reason }}
-      UPDATES: ${{ needs.resolve.outputs.updates }}
     steps:
-      - name: Check the deploy key and the update list
+      - name: Check the deploy key
         env:
           LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
         run: |
-          set -euo pipefail
           if [ -z "${LOCK_DEPLOY_KEY}" ]; then
             echo "::error::the LOCK_DEPLOY_KEY secret is not set"
-            exit 1
-          fi
-          if ! jq -e 'type == "object" and length > 0 and all(.[]; type == "string" and test("^[0-9a-f]{40}$"))' <<< "${UPDATES}" > /dev/null; then
-            echo "::error::unexpected update list: ${UPDATES}"
             exit 1
           fi
 
       - name: Check out lock repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
-          repository: ${{ needs.resolve.outputs.lock_repository }}
+          repository: ${{ needs.check.outputs.lock_repository }}
           ssh-key: ${{ secrets.LOCK_DEPLOY_KEY }}
           path: lock
 
@@ -208,31 +174,24 @@ jobs:
             git fetch --quiet origin "${branch}"
             git reset --quiet --hard "origin/${branch}"
 
-            changes=$(jq -r --argjson u "${UPDATES}" '.sources[] | select($u[.name] != null and $u[.name] != .commit) | "\(.name) \(.commit[0:12])..\($u[.name][0:12])"' "${lock}")
-            if [ -z "${changes}" ]; then
-              echo "${lock} already has these commits" | tee -a "$GITHUB_STEP_SUMMARY"
+            # Compare-and-swap on the row: the judgment was made against
+            # FROM, so a row that moved since is not ours to write.
+            current=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | .commit' "${lock}")
+            if [ "${current}" = "${TO}" ]; then
+              echo "${lock}: ${TARGET} is already at ${TO}" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
-            # Compare-and-swap on the row for a single target: the judgment
-            # was made against FROM, so a row that moved since is not ours.
-            if [ -n "${FROM}" ]; then
-              current=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | .commit' "${lock}")
-              if [ "${current}" != "${FROM}" ]; then
-                echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
-                exit 1
-              fi
+            if [ "${current}" != "${FROM}" ]; then
+              echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
+              exit 1
             fi
-            jq --argjson u "${UPDATES}" '.sources |= map(if $u[.name] then .commit = $u[.name] else . end)' "${lock}" > "${lock}.tmp"
+
+            jq --arg n "${TARGET}" --arg c "${TO}" '.sources |= map(if .name == $n then .commit = $c else . end)' "${lock}" > "${lock}.tmp"
             mv "${lock}.tmp" "${lock}"
             git add "${lock}"
-            git commit --quiet -m "approve: ${TARGET} (${DB})" -m "By @${ACTOR}: ${REASON}" -m "${changes}" -m "${RUN_URL}"
+            git commit --quiet -m "approve: ${TARGET} ${FROM:0:12}..${TO:0:12} (${DB})" -m "By @${ACTOR}: ${REASON}" -m "${RUN_URL}"
             if git push --quiet origin "HEAD:${branch}"; then
-              {
-                echo "## ${lock}"
-                echo '```text'
-                echo "${changes}"
-                echo '```'
-              } >> "$GITHUB_STEP_SUMMARY"
+              echo "${lock}: ${TARGET} ${FROM} -> ${TO}" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "push rejected (attempt ${attempt}); refetching"
@@ -244,7 +203,7 @@ jobs:
       - name: Start the DB build
         env:
           GH_TOKEN: ${{ github.token }}
-          WORKFLOW: ${{ needs.resolve.outputs.workflow }}
+          WORKFLOW: ${{ needs.check.outputs.workflow }}
         run: |
           set -euo pipefail
           gh workflow run "${WORKFLOW}" -R "${GITHUB_REPOSITORY}" --ref "${GITHUB_REF_NAME}"
@@ -253,7 +212,7 @@ jobs:
   action-run-summary:
     name: Action run summary
     if: ${{ success() || failure() }}
-    needs: [resolve, write]
+    needs: [check, write]
     uses: ./.github/workflows/action-run-summary.yml
     permissions:
       contents: read
