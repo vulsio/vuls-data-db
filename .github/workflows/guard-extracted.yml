@@ -85,6 +85,12 @@ jobs:
             file=$(basename "${lock}")
             db=${file#db-}
             db=${db%.lock.json}
+            # set -e does not reach a jq inside [ ], so a broken lock would
+            # otherwise be skipped here as a lock of another branch.
+            if ! jq -e '.branch and .sources' "${lock}" > /dev/null; then
+              echo "::error::${file} is not a valid lock"
+              exit 1
+            fi
             [ "$(jq -r '.branch' "${lock}")" = "${BRANCH}" ] || continue
             base=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .commit' "${lock}")
             [ -n "${base}" ] || continue
