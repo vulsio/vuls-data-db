@@ -218,8 +218,8 @@ jobs:
         if: ${{ matrix.diff }}
         run: |
           set -euo pipefail
-          vuls db build --lock base.lock.json --dbpath ./baseline.db --dir ./work --download-concurrency 4 --restore-concurrency 1
-          vuls db build --lock target.lock.json --dbpath ./vuls.db --dir ./work --download-concurrency 4 --restore-concurrency 1
+          vuls db build --lock base.lock.json --dbpath ./baseline.db --dir ./work
+          vuls db build --lock target.lock.json --dbpath ./vuls.db --dir ./work
 
       - name: Run diff guard
         if: ${{ matrix.diff }}
