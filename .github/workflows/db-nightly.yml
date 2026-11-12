@@ -83,12 +83,8 @@ jobs:
       - name: Install vuls
         run: go install "github.com/MaineK00n/vuls2/cmd/vuls@${{ steps.config.outputs.vuls2 }}"
 
-      # Concurrency is set explicitly rather than left to the defaults
-      # (download: number of CPUs), so a different runner does not change
-      # how much is on disk at once: every dotgit (.git only, 5.4 GB in
-      # all) plus at most restore+1 extracted trees (suse-oval is 8.5 GB).
       - name: Build DB
-        run: vuls db build --lock "lock/db-${DB}.lock.json" --dbpath ./vuls.db --report ./report.json --dir ./work --download-concurrency 4 --restore-concurrency 1
+        run: vuls db build --lock "lock/db-${DB}.lock.json" --dbpath ./vuls.db --dir ./work
 
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
@@ -110,11 +106,7 @@ jobs:
             vuls-data-update dotgit registry tag --token "${{ secrets.GITHUB_TOKEN }}" "${REPOSITORY}@${DIGEST}" "${tag}"
           done
 
-      # Which lock the DB was built from, and how far each source's lock
-      # commit is behind its branch. The age is counted from the first
-      # commit after the lock's (when the source started waiting), not from
-      # the branch head, which would overstate rarely updated sources and
-      # not grow for sources whose upstream stopped.
+      # Which lock the DB was built from.
       - name: Write summary
         if: ${{ success() || failure() }}
         env:
@@ -133,13 +125,6 @@ jobs:
               echo "tags       : ${TAGS}"
             fi
             echo '```'
-            if [ -s ./report.json ]; then
-              echo "built with $(jq -r '.vuls_version' ./report.json)"
-              echo ""
-              echo "| source | lock commit | branch head | behind | waiting (days) |"
-              echo "| --- | --- | --- | ---: | ---: |"
-              jq -r --argjson now "$(date +%s)" '.sources[] | "| \(.name) | \(.commit[0:12]) | \(.branch_head[0:12]) | \(.behind) | \(if .next_commit_date then (($now - (.next_commit_date | fromdateiso8601)) / 86400 | floor) else "" end) |"' ./report.json
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   action-run-summary:
