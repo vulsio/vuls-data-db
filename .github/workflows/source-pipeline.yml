@@ -273,10 +273,13 @@ jobs:
         run: |
           set -euo pipefail
 
+          # A build takes the repository's branch only where the makefile
+          # passes BRANCH on; a repository pinned to a commit there does not
+          # change the build when the branch moves.
           request() {
             local committed=$1 repo=$2 makefile=$3 workflow=$4
 
-            if [[ "${committed}" != "true" ]] || ! grep -qP "^\t.* REPO=${repo} " "${makefile}"; then
+            if [[ "${committed}" != "true" ]] || ! grep -qF " REPO=${repo} BRANCH=\${BRANCH} " "${makefile}"; then
               return 0
             fi
             if [[ $(gh run list --workflow "${workflow}" --json status --jq 'map(select(.status != "in_progress" and .status != "completed")) | length') -gt 0 ]]; then
