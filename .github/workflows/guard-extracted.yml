@@ -240,6 +240,25 @@ jobs:
           detection_rate_thresholds: ${{ steps.config.outputs.detection_defaults }}
           detection_rate_threshold_overrides: ${{ steps.config.outputs.detection_overrides }}
 
+      # The judgment a failed guard asks for is about this change, B..H, so
+      # the command to approve it names both ends (approve.yml writes only
+      # while the row is still at B, and sets exactly H).
+      - name: Print the approve command
+        if: ${{ failure() && matrix.diff }}
+        env:
+          NAME: ${{ inputs.name }}
+          DB: ${{ matrix.db }}
+          BASE_COMMIT: ${{ matrix.base }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+        run: |
+          {
+            echo "## Approve by hand"
+            echo "If ${NAME} ${BASE_COMMIT:0:12}..${HEAD_COMMIT:0:12} is judged correct:"
+            echo '```sh'
+            echo "gh workflow run approve.yml -R ${GITHUB_REPOSITORY} -f db=${DB} -f target=${NAME} -f from=${BASE_COMMIT} -f to=${HEAD_COMMIT} -f reason='<why>'"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   # A separate job so the deploy key never shares a job with go install and
   # the diff tools.
   lock:

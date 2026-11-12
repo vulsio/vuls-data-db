@@ -1,14 +1,21 @@
 name: DB(Approve)
 
-run-name: "Approve ${{ inputs.target }}@${{ inputs.commit || 'HEAD' }} into ${{ inputs.db }} by @${{ github.actor }}"
+run-name: "Approve ${{ inputs.target }}@${{ inputs.to || 'HEAD' }} into ${{ inputs.db }} by @${{ github.actor }}"
 
 # Sets a source's row in a DB's lock (db-<db>.lock.json in the lock
 # repository, see db-guard.json) by hand, then starts that DB's build. For:
-#   - a guard that failed on a change judged correct: set the branch head;
-#   - a source that went in but was wrong upstream: set an older commit;
-#   - a lock commit lost to truncate / restore: set one that still exists;
+#   - a guard that failed on a change judged correct: from B to H, as the
+#     failed guard run prints them in its summary;
+#   - a source that went in but was wrong upstream: to an older commit;
+#   - a lock commit lost to truncate / restore: to one that still exists;
 #   - an extractor change that failed every guard: target "all" sets every
 #     source to its branch head.
+# A judgment is about a change, so a single target names both ends: `from`
+# is the row as the operator saw it and `to` the commit they looked at. The
+# row is written only while it is still at `from` (a guard or another
+# approve that moved it meanwhile fails this run), and `to` is never
+# widened to a newer head. "all" is the one bulk override: no ends, every
+# source to the head at the time of the run.
 # Adding or removing a source is a pull request to the lock repository.
 
 on:
@@ -24,8 +31,13 @@ on:
         description: Source name as in the lock (vuls-data-extracted-<target>), or "all"
         required: true
         type: string
-      commit:
-        description: Extracted commit (40 hex) to set; empty sets the branch head. Must be empty for "all"
+      from:
+        description: Commit (40 hex) the row is at now, as judged; the run fails if the row has moved. Empty for "all"
+        required: false
+        type: string
+        default: ""
+      to:
+        description: Extracted commit (40 hex) to set. Empty for "all" (every source to its branch head)
         required: false
         type: string
         default: ""
@@ -51,17 +63,27 @@ jobs:
     env:
       DB: ${{ inputs.db }}
       TARGET: ${{ inputs.target }}
-      COMMIT: ${{ inputs.commit }}
+      FROM: ${{ inputs.from }}
+      TO: ${{ inputs.to }}
     steps:
       - name: Check inputs
         run: |
           set -euo pipefail
-          if [ "${TARGET}" = "all" ] && [ -n "${COMMIT}" ]; then
-            echo "::error::a commit can only be given for a single target"
-            exit 1
+          if [ "${TARGET}" = "all" ]; then
+            if [ -n "${FROM}" ] || [ -n "${TO}" ]; then
+              echo "::error::\"all\" takes neither from nor to"
+              exit 1
+            fi
+            exit 0
           fi
-          if [ -n "${COMMIT}" ] && [[ ! "${COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::commit '${COMMIT}' is not 40 lowercase hex digits"
+          for end in FROM TO; do
+            if [[ ! "${!end}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::${end,,} '${!end}' is not 40 lowercase hex digits (both are required for a single target)"
+              exit 1
+            fi
+          done
+          if [ "${FROM}" = "${TO}" ]; then
+            echo "::error::from and to are the same commit"
             exit 1
           fi
 
@@ -115,7 +137,7 @@ jobs:
           for name in "${names[@]}"; do
             vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${registry}:vuls-data-extracted-${name}"
             dir="./work/${registry}/vuls-data-extracted-${name}"
-            commit="${COMMIT}"
+            commit="${TO}"
             if [ -z "${commit}" ]; then
               commit=$(git -C "${dir}" rev-parse "refs/heads/${branch}")
             fi
@@ -145,6 +167,7 @@ jobs:
     env:
       DB: ${{ inputs.db }}
       TARGET: ${{ inputs.target }}
+      FROM: ${{ inputs.from }}
       REASON: ${{ inputs.reason }}
       UPDATES: ${{ needs.resolve.outputs.updates }}
     steps:
@@ -189,6 +212,15 @@ jobs:
             if [ -z "${changes}" ]; then
               echo "${lock} already has these commits" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
+            fi
+            # Compare-and-swap on the row for a single target: the judgment
+            # was made against FROM, so a row that moved since is not ours.
+            if [ -n "${FROM}" ]; then
+              current=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | .commit' "${lock}")
+              if [ "${current}" != "${FROM}" ]; then
+                echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
+                exit 1
+              fi
             fi
             jq --argjson u "${UPDATES}" '.sources |= map(if $u[.name] then .commit = $u[.name] else . end)' "${lock}" > "${lock}.tmp"
             mv "${lock}.tmp" "${lock}"
