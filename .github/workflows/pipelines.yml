@@ -48,7 +48,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      kinds: ${{ steps.plan.outputs.kinds }}
+      sources: ${{ steps.plan.outputs.sources }}
     steps:
       - name: Check out sources.json and source-pipeline.yml
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -83,9 +83,7 @@ jobs:
             fi
           done
 
-          # The sources to run: "nvd-api" for those that share the NVD API
-          # key, "main" for the rest.
-          kinds=$(jq -c --argjson tiers "${TIERS}" --arg schedule "${SCHEDULE}" --arg requested "${REQUESTED}" '
+          sources=$(jq -c --argjson tiers "${TIERS}" --arg schedule "${SCHEDULE}" --arg requested "${REQUESTED}" '
             def fetched: (.fetch // "main") | IN("frozen", "none") | not;
             def active: fetched or (.extract | type) == "array" or .rhel == true;
 
@@ -106,20 +104,19 @@ jobs:
                 rhel: (.rhel == true),
                 archive: (fetched and .archive != false)
               })
-            | reduce .[] as $s ({}; .[if $s.fetch == "nvd-api" then "nvd-api" else "main" end] += [$s])
           ' .github/workflows/sources.json)
 
-          jq 'map_values(map(.name))' <<< "${kinds}"
-          echo "kinds=${kinds}" >> "$GITHUB_OUTPUT"
+          jq -c 'map(.name)' <<< "${sources}"
+          echo "sources=${sources}" >> "$GITHUB_OUTPUT"
 
-  main:
+  pipeline:
     name: ${{ matrix.source.name }}
     needs: [plan]
-    if: ${{ fromJSON(needs.plan.outputs.kinds).main }}
+    if: ${{ fromJSON(needs.plan.outputs.sources)[0] }}
     strategy:
       fail-fast: false
       matrix:
-        source: ${{ fromJSON(needs.plan.outputs.kinds).main }}
+        source: ${{ fromJSON(needs.plan.outputs.sources) }}
     # One pipeline per source at a time, whatever started it: a run that finds
     # the source's previous one still going waits, and a third replaces the
     # one waiting. The lock covers the whole pipeline, fetch included, so a
@@ -137,33 +134,10 @@ jobs:
     # The dedicated fetchers' API keys.
     secrets: inherit
 
-  # The NVD API key's rate limit is shared by every request, so the nvd-api
-  # sources run one at a time. Their pipelines take the whole lock, fetch
-  # through extract, as the others do.
-  nvd-api:
-    name: ${{ matrix.source.name }}
-    needs: [plan]
-    if: ${{ fromJSON(needs.plan.outputs.kinds).nvd-api }}
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        source: ${{ fromJSON(needs.plan.outputs.kinds).nvd-api }}
-    concurrency:
-      group: source-${{ matrix.source.name }}
-    uses: ./.github/workflows/source-pipeline.yml
-    permissions:
-      actions: write
-      contents: read
-      packages: write
-    with:
-      source: ${{ toJSON(matrix.source) }}
-    secrets: inherit
-
   action-run-summary:
     name: Action run summary
     if: ${{ !cancelled() }}
-    needs: [main, nvd-api]
+    needs: [pipeline]
     uses: ./.github/workflows/action-run-summary.yml
     permissions:
       contents: read

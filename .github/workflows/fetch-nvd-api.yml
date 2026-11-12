@@ -27,6 +27,12 @@ permissions: {}
 jobs:
   fetch:
     name: Fetch vuls-data-raw-${{ inputs.target }}
+    # Every request counts against the one NVD API key's rate limit, so the
+    # fetches run one at a time across runs. A pending fetch waits in line
+    # rather than replacing another source's.
+    concurrency:
+      group: nvd-api-key
+      queue: max
     permissions:
       contents: read
       packages: write
