@@ -144,7 +144,12 @@ jobs:
           fi
           # grep finding nothing is a non-zero exit, which set -e turns into a
           # step that fails without saying why. Catch it and say why.
-          if ! paste -d= "${RUNNER_TEMP}/ids" "${RUNNER_TEMP}/titles" | grep '^FG-IR-' > "${RUNNER_TEMP}/rss"; then
+          #
+          # The delimiter goes in as an argument of its own. uutils coreutils,
+          # the default on ubuntu-26.04, reads "-d=" as -d with an empty list
+          # and pastes ID and title together with nothing between them; that
+          # line still starts with FG-IR-, so grep requires the "=" as well.
+          if ! paste -d '=' "${RUNNER_TEMP}/ids" "${RUNNER_TEMP}/titles" | grep -E '^FG-IR-[0-9]+-[0-9]+=' > "${RUNNER_TEMP}/rss"; then
             echo "::error::none of the ${ids} entries the RSS feed names look like an advisory ID"
             exit 1
           fi
