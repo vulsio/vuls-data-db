@@ -11,6 +11,10 @@ on:
       branch:
         required: true
         type: string
+    secrets:
+      LOCK_DEPLOY_KEY:
+        description: Deploy key of the lock repository, for the guard (see guard-extracted.yml).
+        required: false
   workflow_dispatch:
     inputs:
       target:
@@ -158,6 +162,13 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # main and nightly live in the same image and the extract force-pushes
+    # the whole .git, so extracts of one image run one at a time.
+    concurrency:
+      group: extract-${{ inputs.target }}
+      cancel-in-progress: false
+    outputs:
+      commit: ${{ steps.head.outputs.commit }}
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -236,3 +247,32 @@ jobs:
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
         run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }} vuls-data-extracted-${{ inputs.target }}.tar.zst
+
+      # The guard compares the lock's commit with this one; it is output
+      # even when the run made no commit, so a source whose last guard
+      # failed is judged again.
+      - name: Record the extracted head
+        id: head
+        run: echo "commit=$(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  guard:
+    name: guard ${{ inputs.target }}@${{ inputs.branch }}
+    needs: extract
+    if: ${{ inputs.branch == 'nightly' }}
+    # One guard per source and branch at a time, in extract order: a newer
+    # guard waits for the running one, and a waiting older one is replaced
+    # by a newer, so an older candidate is never judged against a lock a
+    # newer guard has already moved (which would roll the row back).
+    concurrency:
+      group: guard-${{ inputs.target }}-${{ inputs.branch }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/guard-extracted.yml
+    with:
+      name: ${{ inputs.target }}
+      branch: ${{ inputs.branch }}
+      commit: ${{ needs.extract.outputs.commit }}
+    secrets:
+      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}

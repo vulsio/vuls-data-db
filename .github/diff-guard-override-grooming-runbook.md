@@ -15,9 +15,13 @@ Two workflows run the diff guard, each on a 6-hour cron:
 
 - **`db-main.yml`** (workflow name `DB`) — builds from `BRANCH=main`, installs
   `vuls@main`, baseline is the previous `:<schema_version>` image.
-- **`db-nightly.yml`** (workflow name `DB(Nightly)`) — builds from
-  `BRANCH=nightly`, installs `vuls@nightly`, baseline is the previous
-  `:nightly` image.
+- **`db-nightly.yml`** (workflow name `DB(Nightly)`) — no DB-side guard any
+  more: it builds from `db-nightly.lock.json` in `vulsio/vuls-nightly-db`,
+  whose rows are moved by the per-source guard that runs after each nightly
+  extract (`.github/workflows/guard-extracted.yml`, failures show up as
+  `guard <source>@nightly` jobs in `Extract All`). That guard reads its
+  defaults and overrides from `.thresholds` in `db-guard.json`, with the same
+  keys and axes as the lists below.
 
 The guard judges every target on separate change axes — **added**, **changed**
 (`vuls diff db` only; `vuls diff detection` compares CVE ID sets and has no
@@ -60,11 +64,27 @@ Window: the trailing ~2 months from today. Metadata only (cheap):
 ```
 gh run list --workflow db-main.yml    --created '>=<YYYY-MM-DD>' --limit 400 \
   --json databaseId,conclusion,createdAt,event
-gh run list --workflow db-nightly.yml --created '>=<YYYY-MM-DD>' --limit 400 \
-  --json databaseId,conclusion,createdAt,event
 ```
 
-You now have, per workflow, every run with its conclusion (~240 runs each).
+You now have every db-main run with its conclusion (~240 runs).
+
+**Nightly** has no DB-side guard (see "What you are grooming"); its change
+rates come from the per-source guard jobs in `Extract All`. List those runs
+and, in each, the guard jobs that ran a diff:
+
+```
+gh run list --workflow extract-all.yml --created '>=<YYYY-MM-DD>' --limit 400 \
+  --json databaseId,conclusion,createdAt
+gh run view <run-id> --json jobs \
+  --jq '.jobs[] | select(.name | test("guard .*@nightly / guard ")) | {name, conclusion, databaseId}'
+```
+
+Each such job judged one source from the lock's commit B to the extracted
+head H; the `plan` job next to it prints `db-nightly.lock.json: <source> <B>
+-> <H>`. Use (source, B, H) as the grouping key instead of the extract-anchor
+tuple of Step 2 and read one log per key. Steps 3–5 then apply as for
+db-main (the reports have the same format), and nightly overrides go into
+`.thresholds` in `db-guard.json` (Step 6).
 
 ## Step 2 — Decide which run logs to read
 
@@ -85,12 +105,12 @@ Do **not** fetch every run's log. You need:
 
 ### How to compute the extract-anchor tuple
 
-The enabled data sources for each pipeline are listed in `db-main.mk` /
-`db-nightly.mk`. For each enabled source, pull the extracted dotgit once and
-read its full commit log. Match the dotgit branch to the workflow you are
-grooming — db-main runs `make ... BRANCH=main`, db-nightly runs
-`make ... BRANCH=nightly`, and the two branches can have independent commit
-histories:
+The enabled data sources are listed in `db-main.mk` (and, for nightly, in
+`db-nightly.lock.json` in `vulsio/vuls-nightly-db`). For each enabled source,
+pull the extracted dotgit once and read its full commit log. Match the dotgit
+branch to the workflow you are grooming — db-main runs `make ... BRANCH=main`,
+nightly reads the `nightly` branch, and the two branches can have independent
+commit histories:
 
 ```text
 vuls-data-update dotgit pull --dir /tmp/ex \
@@ -203,8 +223,8 @@ include/exclude rationale.
 
 ## Step 6 — Apply
 
-Edit the `env:` blocks in **both** `.github/workflows/db-main.yml` and
-`.github/workflows/db-nightly.yml`:
+Edit the `env:` block in `.github/workflows/db-main.yml` and `.thresholds`
+in `db-guard.json` (read by the nightly per-source guard):
 
 - `DB_RATE_THRESHOLD_OVERRIDES` / `DETECTION_RATE_THRESHOLD_OVERRIDES`.
 - One `<key>=<axis>:<rate>` per line. **No `#` comments inside the lists** —

@@ -1,0 +1,219 @@
+name: DB(Approve)
+
+run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }} into ${{ inputs.db }} by @${{ github.actor }}"
+
+# Moves one source's row in a DB's lock (db-<db>.lock.json in the lock
+# repository, see db-guard.json) by hand, then starts that DB's build. For:
+#   - a guard that failed on a change judged correct: from B to H, as the
+#     failed guard run prints them in its summary;
+#   - a source that went in but was wrong upstream: to an older commit;
+#   - a lock commit lost to truncate / restore: to one that still exists.
+# A judgment is about a change, so both ends are required: `from` is the row
+# as the operator saw it and `to` the commit they looked at. The row is
+# written only while it is still at `from` (a guard or another approve that
+# moved it meanwhile fails this run), and exactly `to` is set. One source per
+# run: each change is judged on its own, as the guard does.
+# Adding or removing a source is a pull request to the lock repository.
+
+on:
+  workflow_dispatch:
+    inputs:
+      db:
+        description: DB name (the lock is db-<db>.lock.json)
+        required: true
+        type: choice
+        options:
+          - nightly
+      target:
+        description: Source name as in the lock (vuls-data-extracted-<target>)
+        required: true
+        type: string
+      from:
+        description: Commit (40 hex) the row is at now, as judged; the run fails if the row has moved
+        required: true
+        type: string
+      to:
+        description: Extracted commit (40 hex) to set
+        required: true
+        type: string
+      reason:
+        description: Why (goes into the lock commit message)
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  # Keyless: this job runs the downloaded vuls-data-update, so the deploy key
+  # is not in it. It only checks `to`; the writer takes the row to write from
+  # the inputs, never from this job.
+  check:
+    name: check the commit
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      lock_repository: ${{ steps.config.outputs.lock_repository }}
+      workflow: ${{ steps.config.outputs.workflow }}
+    env:
+      DB: ${{ inputs.db }}
+      TARGET: ${{ inputs.target }}
+      FROM: ${{ inputs.from }}
+      TO: ${{ inputs.to }}
+    steps:
+      - name: Check inputs
+        run: |
+          set -euo pipefail
+          for end in FROM TO; do
+            if [[ ! "${!end}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::${end,,} '${!end}' is not 40 lowercase hex digits"
+              exit 1
+            fi
+          done
+          if [ "${FROM}" = "${TO}" ]; then
+            echo "::error::from and to are the same commit"
+            exit 1
+          fi
+
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Read DB config
+        id: config
+        run: |
+          set -euo pipefail
+          {
+            echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)"
+            echo "workflow=$(jq -r --arg db "${DB}" '.dbs[$db].workflow' db-guard.json)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ steps.config.outputs.lock_repository }}
+          path: lock
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
+
+      # The same checks `vuls db build` makes, done before the push: a typo
+      # written to the lock would otherwise stop the next build as a whole.
+      - name: Check the commit
+        run: |
+          set -euo pipefail
+          lock="lock/db-${DB}.lock.json"
+          branch=$(jq -r '.branch' "${lock}")
+          registry=$(jq -r '.registry' "${lock}")
+          if ! jq -e --arg n "${TARGET}" '.sources[] | select(.name == $n)' "${lock}" > /dev/null; then
+            echo "::error::${TARGET} is not in db-${DB}.lock.json; adding a source is a pull request to the lock repository"
+            exit 1
+          fi
+
+          vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${registry}:vuls-data-extracted-${TARGET}"
+          dir="./work/${registry}/vuls-data-extracted-${TARGET}"
+          if ! git -C "${dir}" rev-parse --verify --quiet "${TO}^{commit}" > /dev/null; then
+            echo "::error::${TO} is not a commit of vuls-data-extracted-${TARGET}"
+            exit 1
+          fi
+          if ! git -C "${dir}" merge-base --is-ancestor "${TO}" "refs/heads/${branch}"; then
+            echo "::error::${TO} is not on ${branch} of vuls-data-extracted-${TARGET}"
+            exit 1
+          fi
+
+  # Holds the deploy key and runs nothing but git, jq and gh from the runner
+  # image. The row it writes comes from the inputs alone.
+  write:
+    name: write lock
+    needs: check
+    permissions:
+      contents: read
+      actions: write
+    runs-on: ubuntu-latest
+    env:
+      DB: ${{ inputs.db }}
+      TARGET: ${{ inputs.target }}
+      FROM: ${{ inputs.from }}
+      TO: ${{ inputs.to }}
+      REASON: ${{ inputs.reason }}
+    steps:
+      - name: Check the deploy key
+        env:
+          LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
+        run: |
+          if [ -z "${LOCK_DEPLOY_KEY}" ]; then
+            echo "::error::the LOCK_DEPLOY_KEY secret is not set"
+            exit 1
+          fi
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ needs.check.outputs.lock_repository }}
+          ssh-key: ${{ secrets.LOCK_DEPLOY_KEY }}
+          path: lock
+
+      - name: Write the lock
+        working-directory: lock
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          lock="db-${DB}.lock.json"
+
+          for attempt in 1 2 3 4 5; do
+            git fetch --quiet origin "${branch}"
+            git reset --quiet --hard "origin/${branch}"
+
+            # Compare-and-swap on the row: the judgment was made against
+            # FROM, so a row that moved since is not ours to write.
+            current=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | .commit' "${lock}")
+            if [ "${current}" = "${TO}" ]; then
+              echo "${lock}: ${TARGET} is already at ${TO}" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if [ "${current}" != "${FROM}" ]; then
+              echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
+              exit 1
+            fi
+
+            jq --arg n "${TARGET}" --arg c "${TO}" '.sources |= map(if .name == $n then .commit = $c else . end)' "${lock}" > "${lock}.tmp"
+            mv "${lock}.tmp" "${lock}"
+            git add "${lock}"
+            git commit --quiet -m "approve: ${TARGET} ${FROM:0:12}..${TO:0:12} (${DB})" -m "By @${ACTOR}: ${REASON}" -m "${RUN_URL}"
+            if git push --quiet origin "HEAD:${branch}"; then
+              echo "${lock}: ${TARGET} ${FROM} -> ${TO}" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}); refetching"
+            sleep $((attempt * 5))
+          done
+          echo "::error::could not push ${lock} after 5 attempts"
+          exit 1
+
+      - name: Start the DB build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: ${{ needs.check.outputs.workflow }}
+        run: |
+          set -euo pipefail
+          gh workflow run "${WORKFLOW}" -R "${GITHUB_REPOSITORY}" --ref "${GITHUB_REF_NAME}"
+          echo "started ${WORKFLOW}" >> "$GITHUB_STEP_SUMMARY"
+
+  action-run-summary:
+    name: Action run summary
+    if: ${{ success() || failure() }}
+    needs: [check, write]
+    uses: ./.github/workflows/action-run-summary.yml
+    permissions:
+      contents: read
+      actions: read

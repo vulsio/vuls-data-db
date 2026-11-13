@@ -1,7 +1,7 @@
 name: diff-guard
 description: |
-  Compare a freshly built vuls.db against a baseline pulled from a container
-  registry. Runs `vuls diff detection` (against two vuls0 binaries: master HEAD
+  Compare a freshly built vuls.db against a baseline, pulled from a container
+  registry or (baseline_db) already on disk. Runs `vuls diff detection` (against two vuls0 binaries: master HEAD
   and a pinned older commit) and `vuls diff db`, emitting step summaries and
   failing the job if any check exceeds its configured thresholds.
 
@@ -107,8 +107,29 @@ inputs:
     description: Path to the freshly built vuls.db to validate.
     required: true
   baseline_repository:
-    description: OCI reference (repo:tag) to fetch the baseline vuls.db from.
-    required: true
+    description: |
+      OCI reference (repo:tag) to fetch the baseline vuls.db from. Not used
+      when baseline_db is set; one of the two is required.
+    required: false
+    default: ""
+  baseline_db:
+    description: |
+      Path to a baseline vuls.db already on disk (e.g. built from a lock by
+      the per-source guard). When set, nothing is fetched and
+      baseline_repository is ignored.
+    required: false
+    default: ""
+  fixtures:
+    description: |
+      Scan-result fixtures to run `vuls diff detection` on, as newline-
+      separated globs matched against the file names under
+      vulsio/integration's data/results (e.g. "alma_*"; "*" takes every
+      fixture). Empty (the default) skips both detection checks and runs
+      `vuls diff db` only. A glob that matches no fixture is an error, so
+      a renamed fixture is not silently lost. CentOS fixtures are dropped
+      whatever the globs match.
+    required: false
+    default: ""
   db_rate_thresholds:
     description: |
       `vuls diff db` default thresholds (%) per (ecosystem, data source),
@@ -185,7 +206,21 @@ runs:
 
     - name: Fetch baseline vuls.db
       shell: bash
-      run: vuls db fetch --dbpath ./baseline.db --repository "${{ inputs.baseline_repository }}" --no-progress
+      env:
+        BASELINE_DB: ${{ inputs.baseline_db }}
+        BASELINE_REPOSITORY: ${{ inputs.baseline_repository }}
+      run: |
+        set -euo pipefail
+        if [ -n "${BASELINE_DB}" ]; then
+          echo "BASELINE_DB=${BASELINE_DB}" >> "$GITHUB_ENV"
+          exit 0
+        fi
+        if [ -z "${BASELINE_REPOSITORY}" ]; then
+          echo "::error::one of baseline_db or baseline_repository is required"
+          exit 1
+        fi
+        vuls db fetch --dbpath ./baseline.db --repository "${BASELINE_REPOSITORY}" --no-progress
+        echo "BASELINE_DB=./baseline.db" >> "$GITHUB_ENV"
 
     - name: Install vuls0 (future-architect/vuls master)
       shell: bash
@@ -220,13 +255,28 @@ runs:
 
     - name: Prepare scan results (vuls2-supported families only)
       shell: bash
+      env:
+        FIXTURES: ${{ inputs.fixtures }}
       run: |
+        set -euo pipefail
         mkdir -p ./scan-results
-        # Copy all scan results then drop CentOS, which vuls2 does not handle
-        # (see vuls/detector/detector.go DetectPkgCves switch). Windows is now
-        # KEPT: vuls0 master detects Windows via vuls2, so the windows fixtures
-        # exercise the microsoft data in the DB under test.
-        cp ./integration/data/results/*.json ./scan-results/
+        # Copy the scan results the globs select, then drop CentOS, which
+        # vuls2 does not handle (see vuls/detector/detector.go
+        # DetectPkgCves switch) and which a broad glob such as "*" picks
+        # up. Windows is KEPT: vuls0 master detects Windows via vuls2, so
+        # the windows fixtures exercise the microsoft data in the DB under
+        # test. No globs leave the directory empty and the detection steps
+        # below record themselves as skipped.
+        shopt -s nullglob
+        while IFS= read -r glob; do
+          [ -n "${glob}" ] || continue
+          matched=(./integration/data/results/${glob}.json)
+          if [ "${#matched[@]}" -eq 0 ]; then
+            echo "::error::fixture glob '${glob}' matches no scan result in vulsio/integration"
+            exit 1
+          fi
+          cp "${matched[@]}" ./scan-results/
+        done <<< "${FIXTURES}"
         rm -f ./scan-results/centos_*.json
         ls -1 ./scan-results
 
@@ -295,6 +345,13 @@ runs:
         set +e
         set -o pipefail
 
+        if [ -z "$(ls -A ./scan-results)" ]; then
+          echo "---" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Diff detection (vuls0 master HEAD) — skipped (no fixtures)" >> "$GITHUB_STEP_SUMMARY"
+          echo "rc=skip" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
         # `$THRESHOLDS_CSV` / `$OVERRIDES_CSV` come from the `Parse
         # thresholds and overrides` step. Passed verbatim: vuls2's
         # StringSlice flag parses an empty value into an empty list, so
@@ -302,7 +359,7 @@ runs:
         # special-casing here.
         vuls diff detection \
           ./scan-results \
-          ./baseline.db "$VULS0" \
+          "$BASELINE_DB" "$VULS0" \
           "$TARGET_DB" "$VULS0" \
           --rate-threshold "$THRESHOLDS_CSV" \
           --rate-threshold-override "$OVERRIDES_CSV" \
@@ -362,7 +419,9 @@ runs:
         # with vuls2, so the windows_*.json and cpe_*.json fixtures exercise
         # the DB under test here as well.
         mkdir -p ./scan-results-old
-        cp ./scan-results/*.json ./scan-results-old/
+        if [ -n "$(ls -A ./scan-results)" ]; then
+          cp ./scan-results/*.json ./scan-results-old/
+        fi
         ls -1 ./scan-results-old
 
     - name: Diff detection with older vuls0 binary (baseline vs target DB)
@@ -382,12 +441,19 @@ runs:
         set +e
         set -o pipefail
 
+        if [ -z "$(ls -A ./scan-results-old)" ]; then
+          echo "---" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Diff detection (older pinned vuls0 @${VULS0_OLD_REF:0:7}) — skipped (no fixtures)" >> "$GITHUB_STEP_SUMMARY"
+          echo "rc=skip" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
         # `$THRESHOLDS_CSV` / `$OVERRIDES_CSV` come from the `Parse
         # thresholds and overrides` step. See diff_detection_master for
         # the verbatim-pass rationale.
         vuls diff detection \
           ./scan-results-old \
-          ./baseline.db "$VULS0_OLD" \
+          "$BASELINE_DB" "$VULS0_OLD" \
           "$TARGET_DB" "$VULS0_OLD" \
           --rate-threshold "$THRESHOLDS_CSV" \
           --rate-threshold-override "$OVERRIDES_CSV" \
@@ -418,7 +484,7 @@ runs:
         # `$THRESHOLDS_CSV` / `$OVERRIDES_CSV` come from the `Parse
         # thresholds and overrides` step. See diff_detection_master for
         # the verbatim-pass rationale.
-        vuls diff db ./baseline.db "$TARGET_DB" \
+        vuls diff db "$BASELINE_DB" "$TARGET_DB" \
           --rate-threshold "$THRESHOLDS_CSV" \
           --rate-threshold-override "$OVERRIDES_CSV" \
           | tee ./diff-report.md
@@ -445,9 +511,10 @@ runs:
       run: |
         status() {
           case "$1" in
-            "")  echo "MISSING" ;;
-            "0") echo "PASS" ;;
-            *)   echo "FAIL" ;;
+            "")     echo "MISSING" ;;
+            "0")    echo "PASS" ;;
+            "skip") echo "SKIPPED" ;;
+            *)      echo "FAIL" ;;
           esac
         }
         label_master=$(status "${RC_DETECTION_MASTER}")
@@ -482,7 +549,7 @@ runs:
         }
 
         for rc in "${RC_DETECTION_MASTER}" "${RC_DETECTION_OLD}" "${RC_DB}"; do
-          if [ "$rc" != "0" ]; then
+          if [ "$rc" != "0" ] && [ "$rc" != "skip" ]; then
             echo "diff guard failed: detection(master)=${rc_master_disp} detection(old)=${rc_old_disp} db=${rc_db_disp}" >&2
             exit "$(pick_exit "$rc")"
           fi

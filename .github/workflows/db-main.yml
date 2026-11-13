@@ -212,6 +212,7 @@ jobs:
         with:
           target_db: ./vuls.db
           baseline_repository: ghcr.io/vulsio/vuls-nightly-db:${{ steps.save_schema_version.outputs.schema_version }}
+          fixtures: "*"
           db_rate_thresholds: ${{ github.event.inputs.db_rate_thresholds || env.DB_RATE_THRESHOLDS }}
           db_rate_threshold_overrides: ${{ github.event.inputs.db_rate_threshold_overrides || env.DB_RATE_THRESHOLD_OVERRIDES }}
           detection_rate_thresholds: ${{ github.event.inputs.detection_rate_thresholds || env.DETECTION_RATE_THRESHOLDS }}
