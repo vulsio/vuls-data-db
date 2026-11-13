@@ -59,10 +59,23 @@ jobs:
       - name: Install vuls-data-update
         run: go install ./cmd/vuls-data-update
 
+      # A release can have no security update -- most container releases have
+      # none -- so a shard can rightly fetch nothing. Since
+      # MaineK00n/vuls-data-update#1033 the fetcher fails a run that wrote
+      # nothing unless told otherwise, and a failed shard holds back the
+      # commit job, so every release would wait on the emptiest one. The
+      # merged repository is still checked as a whole there.
+      #
+      # This runs vuls-data-update@main, so the flag is passed only once the
+      # fetcher knows it: passed earlier, an unknown flag fails every shard.
       - name: Fetch
         run: |
           mkdir vuls-data-raw-fedora-api
-          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api ${{ matrix.release }} --retry 10
+          flags=()
+          if [[ $(vuls-data-update fetch fedora-api --help) == *--allow-empty* ]]; then
+            flags+=(--allow-empty)
+          fi
+          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api "${flags[@]}" ${{ matrix.release }} --retry 10
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-fedora-api.tar.zst vuls-data-raw-fedora-api || [[ $? == 1 ]]
