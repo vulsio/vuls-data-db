@@ -1,0 +1,144 @@
+name: Pipelines
+
+run-name: "Pipelines (${{ github.event.schedule || inputs.sources }})"
+
+# Runs every source in sources.json through its own pipeline
+# (source-pipeline.yml): fetch, extract, request the DB builds that take it,
+# then archive and truncate. A source moves on as soon as its own fetch is
+# done, instead of waiting for every other source.
+#
+# sources.json holds one object per source, for vuls-data-raw-<name> and
+# vuls-data-extracted-<name>:
+#   name     the source
+#   every    its tier, i.e. which cron below runs it; absent when nothing
+#            about the source runs any more
+#   fetch    absent: fetch-main.yml; "<kind>": fetch-<kind>.yml, run by the
+#            fetch-<kind> job in source-pipeline.yml; "frozen": the raw
+#            repository is kept as it is; "none": there is no raw repository
+#   extract  the vuls-data-update branches to extract with; "frozen": the
+#            extracted repository is kept as it is; absent: there is none
+#   reads    other raw sources the extractor takes after the source's own, as
+#            they stand when it starts; their pipelines are not waited for
+#   rhel     true: also derive vuls-data-extracted-<name>-rhel, see
+#            extract-redhat.yml; "frozen": that repository is kept as it is
+#   archive  false: not archived by size; epss is split by year in
+#            archive-epss.yml instead
+# Backup All and Restore All take every repository listed, frozen or not.
+
+on:
+  schedule:
+    # One cron per tier, told apart by the minute; TIERS in the plan job maps
+    # each back to its tier.
+    - cron: "10 */2 * * *"
+    - cron: "40 */6 * * *"
+    - cron: "20 */12 * * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Sources to run: names from sources.json, or tiers (e.g. 6h) for all of theirs, space-separated"
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      sources: ${{ steps.plan.outputs.sources }}
+    steps:
+      - name: Check out sources.json and source-pipeline.yml
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          sparse-checkout: |
+            .github/workflows/sources.json
+            .github/workflows/source-pipeline.yml
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # Every run checks the whole list, not only what it runs: a source whose
+      # tier no cron runs, or whose fetcher no job in source-pipeline.yml
+      # calls, would quietly stop updating.
+      - name: Pick the sources to run
+        id: plan
+        env:
+          TIERS: |
+            {
+              "10 */2 * * *": "2h",
+              "40 */6 * * *": "6h",
+              "20 */12 * * *": "12h"
+            }
+          SCHEDULE: ${{ github.event.schedule }}
+          REQUESTED: ${{ inputs.sources }}
+        run: |
+          set -euo pipefail
+
+          for kind in $(jq -r '[.[].fetch // empty | select(IN("frozen", "none") | not)] | unique[]' .github/workflows/sources.json); do
+            if ! grep -qF "uses: ./.github/workflows/fetch-${kind}.yml" .github/workflows/source-pipeline.yml; then
+              echo "::error::no job in source-pipeline.yml fetches with fetch-${kind}.yml"
+              exit 1
+            fi
+          done
+
+          sources=$(jq -c --argjson tiers "${TIERS}" --arg schedule "${SCHEDULE}" --arg requested "${REQUESTED}" '
+            def fetched: (.fetch // "main") | IN("frozen", "none") | not;
+            def active: fetched or (.extract | type) == "array" or .rhel == true;
+
+            map(select(active and (.every | IN($tiers[]) | not)) | .name) as $stranded
+            | if $stranded != [] then error("no cron runs \($stranded | join(", "))") else . end
+
+            | (if $schedule != "" then [$tiers[$schedule] // error("no tier runs on \"\($schedule)\"")]
+               else [$requested | splits("\\s+") | select(. != "")] end) as $words
+            | ($words - map(.name, .every)) as $unknown
+            | if $unknown != [] then error("neither a source nor a tier in sources.json: \($unknown | join(", "))") else . end
+
+            | map(select(active and ([.name, .every] | any(IN($words[])))) | {
+                name,
+                fetch: (.fetch // "main"),
+                main: ([.extract[]?] | index("main") != null),
+                nightly: ([.extract[]?] | index("nightly") != null),
+                reads: (.reads // [] | join(" ")),
+                rhel: (.rhel == true),
+                archive: (fetched and .archive != false)
+              })
+          ' .github/workflows/sources.json)
+
+          jq -c 'map(.name)' <<< "${sources}"
+          echo "sources=${sources}" >> "$GITHUB_OUTPUT"
+
+  pipeline:
+    name: ${{ matrix.source.name }}
+    needs: [plan]
+    if: ${{ fromJSON(needs.plan.outputs.sources)[0] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.sources) }}
+    # One pipeline per source at a time, whatever started it: a run that finds
+    # the source's previous one still going waits, and a third replaces the
+    # one waiting. The lock covers the whole pipeline, fetch included, so a
+    # fetch that outlasts the cron interval cannot let the next run's fetch in
+    # ahead of its own extract.
+    concurrency:
+      group: source-${{ matrix.source.name }}
+    uses: ./.github/workflows/source-pipeline.yml
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+    with:
+      source: ${{ toJSON(matrix.source) }}
+    # The dedicated fetchers' API keys.
+    secrets: inherit
+
+  action-run-summary:
+    name: Action run summary
+    if: ${{ !cancelled() }}
+    needs: [pipeline]
+    uses: ./.github/workflows/action-run-summary.yml
+    permissions:
+      contents: read
+      actions: read

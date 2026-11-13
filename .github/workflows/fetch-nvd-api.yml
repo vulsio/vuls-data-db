@@ -27,6 +27,12 @@ permissions: {}
 jobs:
   fetch:
     name: Fetch vuls-data-raw-${{ inputs.target }}
+    # Every request counts against the one NVD API key's rate limit, so the
+    # fetches run one at a time across runs. A pending fetch waits in line
+    # rather than replacing another source's.
+    concurrency:
+      group: nvd-api-key
+      queue: max
     permissions:
       contents: read
       packages: write
@@ -109,6 +115,12 @@ jobs:
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} add .
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
+
+      # Loose objects are pushed as whole copies, and nothing else packs them
+      # until the tag crosses the archive or truncate threshold. Without -f
+      # this keeps the deltas already in the pack, so it takes minutes at most.
+      - name: Repack
+        run: git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} repack -a -d
 
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}

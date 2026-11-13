@@ -45,9 +45,9 @@ jobs:
       # is the opposite of fetch-msuc.yml, where the catalog answers a
       # throttled query with silence instead and #237 did lower the rate.
       #
-      # Serialising costs this source wall clock and costs Fetch All nothing:
-      # msuc's branch is what sets that run's length. The 6 hour limit is per
-      # job, not per run, and no shard job has come near it.
+      # Serialising costs this source wall clock and nothing else: each source
+      # runs its own pipeline (pipelines.yml). The 6 hour limit is per job, not
+      # per run, and no shard job has come near it.
       max-parallel: 1
       matrix:
         include: ${{ fromJson(needs.list-names.outputs.include) }}
@@ -200,6 +200,12 @@ jobs:
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing add .
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
           fi
+
+      # Loose objects are pushed as whole copies, and nothing else packs them
+      # until the tag crosses the archive or truncate threshold. Without -f
+      # this keeps the deltas already in the pack, so it takes minutes at most.
+      - name: Repack
+        run: git -C ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing repack -a -d
 
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-microsoft-servicing

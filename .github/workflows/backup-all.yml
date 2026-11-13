@@ -1,0 +1,101 @@
+name: Backup All
+
+run-name: "Backup All (${{ github.event.schedule || inputs.tag-suffix }})"
+
+on:
+  schedule:
+    # SUFFIXES in the plan job maps each cron to the tag suffix it backs up to.
+    - cron: "0 0 * * *"
+    - cron: "0 0 * * 1"
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+    inputs:
+      tag-suffix:
+        required: true
+        default: "backup-manual"
+        type: choice
+        options:
+          - backup-manual
+          - backup-daily
+          - backup-weekly
+          - backup-monthly
+
+permissions: {}
+
+jobs:
+  plan:
+    name: List the repositories in sources.json
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      raw: ${{ steps.list.outputs.raw }}
+      extracted: ${{ steps.list.outputs.extracted }}
+      tag-suffix: ${{ steps.list.outputs.tag-suffix }}
+    steps:
+      - name: Check out sources.json
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          sparse-checkout: .github/workflows/sources.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # Every repository listed, frozen or not; Restore All lists the same.
+      - name: List the repositories and the tag suffix
+        id: list
+        env:
+          SUFFIXES: |
+            {
+              "0 0 * * *": "backup-daily",
+              "0 0 * * 1": "backup-weekly",
+              "0 0 1 * *": "backup-monthly"
+            }
+          SCHEDULE: ${{ github.event.schedule }}
+          TAG_SUFFIX: ${{ inputs.tag-suffix }}
+        run: |
+          set -euo pipefail
+
+          if [[ -n "${SCHEDULE}" ]]; then
+            TAG_SUFFIX=$(jq -er --arg schedule "${SCHEDULE}" '.[$schedule]' <<< "${SUFFIXES}")
+          fi
+          {
+            echo "tag-suffix=${TAG_SUFFIX}"
+            echo "raw=$(jq -c 'map(select(.fetch != "none") | "vuls-data-raw-\(.name)")' .github/workflows/sources.json)"
+            echo "extracted=$(jq -c 'map(select(.extract) | "vuls-data-extracted-\(.name)") + map(select(.rhel) | "vuls-data-extracted-\(.name)-rhel")' .github/workflows/sources.json)"
+          } >> "$GITHUB_OUTPUT"
+
+  # A matrix holds at most 256 jobs, so the raw and the extracted repositories
+  # get one each.
+  backup-raw:
+    name: Backup ghcr.io/${{ github.repository }}:${{ matrix.tag }} to ghcr.io/vulsio/vuls-data-db-backup:${{ matrix.tag }}-${{ needs.plan.outputs.tag-suffix }}
+    needs: [plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJSON(needs.plan.outputs.raw) }}
+    uses: ./.github/workflows/backup.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      src-repository: ${{ github.repository }}
+      dest-repository: vulsio/vuls-data-db-backup
+      tag: ${{ matrix.tag }}
+      tag-suffix: ${{ needs.plan.outputs.tag-suffix }}
+
+  backup-extracted:
+    name: Backup ghcr.io/${{ github.repository }}:${{ matrix.tag }} to ghcr.io/vulsio/vuls-data-db-backup:${{ matrix.tag }}-${{ needs.plan.outputs.tag-suffix }}
+    needs: [plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJSON(needs.plan.outputs.extracted) }}
+    uses: ./.github/workflows/backup.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      src-repository: ${{ github.repository }}
+      dest-repository: vulsio/vuls-data-db-backup
+      tag: ${{ matrix.tag }}
+      tag-suffix: ${{ needs.plan.outputs.tag-suffix }}
