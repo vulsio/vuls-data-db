@@ -81,9 +81,71 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
 
+      # The full refresh asked for the RSS window plus the advisories already
+      # held here, so the RSS feed -- the newest 50 -- was the only way in for
+      # a new advisory. Fortinet published 88 at once for 2026-11-10: the RSS
+      # run at 03:30 UTC the next day fetched exactly 50, and nothing has
+      # asked for the other 38 since. 13 of the 51 released on 2025-01-14 are
+      # missing as well. Fortinet's CVE records link their advisory, so also
+      # ask for every advisory the CVE List names: 1114 on 2026-11-13, 56 of
+      # them not held here. Only HEAD is read, through git grep, so the pull
+      # skips --restore and the 400k records are never written out.
+      - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-mitre-cve-v5
+        if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
+        run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-mitre-cve-v5
+
       - name: Fetch All
         if: ${{ needs.check.outputs.do_fetch_all == 'true' }}
-        run: vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 --wait 3s $(sort <(curl https://filestore.fortinet.com/fortiguard/rss/ir.xml | xq -x //item/link | xargs -L 1 basename | grep '^FG-IR-') <(find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | xargs -I {} sh -c "basename {} .json") | uniq | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' | tr '\n' ' ')
+        run: |
+          set -euo pipefail
+
+          # Plain files rather than process substitution, so a source that
+          # fails fails the step.
+          curl -fsS https://filestore.fortinet.com/fortiguard/rss/ir.xml -o "${RUNNER_TEMP}/ir.xml"
+          if ! xq -x //item/link < "${RUNNER_TEMP}/ir.xml" | xargs -r -L 1 basename | grep '^FG-IR-' > "${RUNNER_TEMP}/rss"; then
+            echo "::error::the RSS feed named no advisories"
+            exit 1
+          fi
+
+          find ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf/ -name "*.json" | sed 's|.*/||; s|\.json$||' > "${RUNNER_TEMP}/held"
+
+          # Any mention, not only the reference URLs: those come in seven
+          # spellings, and the rest of a record (reference names, the legacy
+          # v4 copy, one description) names no advisory they miss. Every
+          # assigner, not only Fortinet: MITRE assigned the older ones. Every
+          # mention is already spelled the way the files here are named.
+          if ! git -C ghcr.io/${{ github.repository }}/vuls-data-raw-mitre-cve-v5 grep -h -o -E 'FG-IR-[0-9]+-[0-9]+' HEAD > "${RUNNER_TEMP}/cve"; then
+            echo "::error::no CVE record in vuls-data-raw-mitre-cve-v5 names a Fortinet advisory"
+            exit 1
+          fi
+
+          # Left out of the list:
+          # - FG-IR-012-00[1-8], FG-IR-013-001: held from an earlier fetch and
+          #   not asked for again. "Restore FG-IR-012-00[1-8]|FG-IR-013-001"
+          #   puts them back after the fetch.
+          # - FG-IR-15-018 (CVE-2015-3626), FG-IR-21-211 (CVE-2021-43067),
+          #   FG-IR-22-448 (CVE-2023-23775), FG-IR-23-434 (CVE-2025-59921),
+          #   FG-IR-25-246 (CVE-2025-46773): named by that CVE record, but
+          #   /psirt/cvrf/ answers with a CVRF that has no document ID, which
+          #   the fetch rejects (checked 2026-11-13).
+          # Any other advisory without a CVRF fails the fetch, and the run with
+          # it. That is on purpose: look at it, then add it here.
+          sort -u "${RUNNER_TEMP}/rss" "${RUNNER_TEMP}/held" "${RUNNER_TEMP}/cve" \
+            | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001|FG-IR-15-018|FG-IR-21-211|FG-IR-22-448|FG-IR-23-434|FG-IR-25-246)$' > "${RUNNER_TEMP}/advisories"
+
+          # The fetch empties the tree before it writes, and only the FG-IR-012
+          # and FG-IR-013 records are put back after it, so a held advisory
+          # left out above would be dropped. That is what would happen to one
+          # of the five once Fortinet serves its CVRF and an RSS run fetches
+          # it. Stop instead, so it comes off the list.
+          if grep -vxF -f "${RUNNER_TEMP}/advisories" "${RUNNER_TEMP}/held" | grep -Ev '^(FG-IR-012-00[1-8]|FG-IR-013-001)$' > "${RUNNER_TEMP}/dropped"; then
+            echo "::error::held here but left out of the list, so the fetch would drop them: $(tr '\n' ' ' < "${RUNNER_TEMP}/dropped")"
+            exit 1
+          fi
+
+          readarray -t advisories < "${RUNNER_TEMP}/advisories"
+          echo "asking for ${#advisories[@]} advisories"
+          vuls-data-update fetch fortinet-cvrf --dir ghcr.io/${{ github.repository }}/vuls-data-raw-fortinet-cvrf --concurrency 1 --wait 3s "${advisories[@]}"
 
       - name: Fetch RSS
         if: ${{ needs.check.outputs.do_fetch_all != 'true' }}
