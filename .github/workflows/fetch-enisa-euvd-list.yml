@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       fetch_single:
-        description: "Fetch EUVD list with single thread"
+        description: "Skip restoring entries missing from this run, so upstream deletions are reflected"
         required: true
         default: false
         type: boolean
@@ -78,13 +78,14 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-enisa-euvd-list
 
-      - name: Fetch with single thread
-        if: ${{ needs.check.outputs.do_fetch_single == 'true' }}
-        run: vuls-data-update fetch enisa-euvd-list --dir ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list --concurrency 1
-
+      # Always page with a single thread. The EUVD API answers 403 once a
+      # client exceeds its request rate (a burst of about 200 requests, then
+      # roughly 40-50 per minute), and two threads trip it on most runs.
+      # A single thread stays under the limit and takes about as long, since
+      # the limit throttles two threads down to the same rate anyway.
+      # fetch_single now only decides whether the Restore step below runs.
       - name: Fetch
-        if: ${{ needs.check.outputs.do_fetch_single != 'true' }}
-        run: vuls-data-update fetch enisa-euvd-list --dir ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list
+        run: vuls-data-update fetch enisa-euvd-list --dir ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list --concurrency 1
 
       # A run that writes nothing leaves the repository empty, and committing
       # that is a green run that quietly dropped the data. Stop before the
