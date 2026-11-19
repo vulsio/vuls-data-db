@@ -76,14 +76,17 @@ jobs:
 
       # Restore on every run. The list is paged by offset and paging takes
       # about two hours, so entries shift between pages while it runs and a
-      # run misses some of them even with a single thread. Every entry the
-      # runs without restore used to drop (301 since 2026-08-12) was still
-      # served upstream, and none was an actual deletion.
+      # run misses some of them even with a single thread. This also keeps
+      # entries upstream really deleted, so log the count: a mass deletion
+      # (254,246 entries on 2026-03-15) shows up only here. Paths go through
+      # stdin, since that many arguments exceed ARG_MAX.
       - name: Restore
         run: |
-          deleted=$(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list ls-files --deleted)
-          if [[ -n ${deleted} ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list restore ${deleted}
+          d=ghcr.io/${{ github.repository }}/vuls-data-raw-enisa-euvd-list
+          n=$(git -C "$d" ls-files --deleted | wc -l)
+          echo "restore ${n} entries this run did not write"
+          if [[ ${n} -gt 0 ]]; then
+            git -C "$d" ls-files -z --deleted | git -C "$d" restore --pathspec-from-file=- --pathspec-file-nul
           fi
 
       - name: Set Git remote
