@@ -25,7 +25,7 @@ on:
         options:
           - nightly
       target:
-        description: Source name as in the lock (vuls-data-extracted-<target>)
+        description: Source name as in the lock (e.g. alma-errata)
         required: true
         type: string
       from:
@@ -109,20 +109,21 @@ jobs:
           set -euo pipefail
           lock="lock/db-${DB}.lock.json"
           branch=$(jq -r '.branch' "${lock}")
-          registry=$(jq -r '.registry' "${lock}")
-          if ! jq -e --arg n "${TARGET}" '.sources[] | select(.name == $n)' "${lock}" > /dev/null; then
+          if ! repository=$(jq -er --arg n "${TARGET}" '.sources[] | select(.name == $n) | .repository' "${lock}"); then
             echo "::error::${TARGET} is not in db-${DB}.lock.json; adding a source is a pull request to the lock repository"
             exit 1
           fi
 
-          vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${registry}:vuls-data-extracted-${TARGET}"
-          dir="./work/${registry}/vuls-data-extracted-${TARGET}"
+          # The pull lays the dotgit out as <host>/<repository path>/<tag>
+          # (the lock names a tag, never a digest).
+          vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${repository}"
+          dir="./work/${repository%:*}/${repository##*:}"
           if ! git -C "${dir}" rev-parse --verify --quiet "${TO}^{commit}" > /dev/null; then
-            echo "::error::${TO} is not a commit of vuls-data-extracted-${TARGET}"
+            echo "::error::${TO} is not a commit of ${repository}"
             exit 1
           fi
           if ! git -C "${dir}" merge-base --is-ancestor "${TO}" "refs/heads/${branch}"; then
-            echo "::error::${TO} is not on ${branch} of vuls-data-extracted-${TARGET}"
+            echo "::error::${TO} is not on ${branch} of ${repository}"
             exit 1
           fi
 
