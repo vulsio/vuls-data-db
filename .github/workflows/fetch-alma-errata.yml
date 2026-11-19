@@ -72,6 +72,13 @@ jobs:
       # purge commit). Nothing unlisted is ever restored, and every file's
       # source commit is explicit in this file.
       #
+      # Only whole-file drops are repaired. The same re-curations also stripped
+      # packages from advisories the feed keeps carrying (2026-11-10: 165 v10
+      # advisories left with their noarch packages only, 18,747 package entries
+      # gone; 2026-05-27: 79 / 6,503; 2025-11-26: 44 / 6,412). Those files take
+      # the feed's version as is: repairing partial edits has no clear end, and
+      # this step deliberately stays a whole-file restore.
+      #
       # The per-version HTML directory index (one GET per version) is the
       # oracle for whether upstream still publishes an advisory:
       #   - a file the pre-fetch HEAD carries but the fresh fetch dropped, and
