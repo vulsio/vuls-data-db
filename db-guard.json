@@ -1,0 +1,66 @@
+{
+  "lock_repository": "vulsio/vuls-nightly-db",
+  "dbs": {
+    "nightly": {
+      "workflow": "db-nightly.yml",
+      "tags": ["nightly"],
+      "vuls2": "nightly",
+      "vuls0_old_ref": "f7331a921fd3237bca383d28a241c03c085301de"
+    }
+  },
+  "thresholds": {
+    "db": {
+      "defaults": ["added:30", "changed:10", "removed:10"],
+      "overrides": [
+        "microsoft/microsoft-msuc=added:35",
+        "microsoft/microsoft-msuc=changed:30",
+        "microsoft/microsoft-wsusscn2=added:35",
+        "microsoft/microsoft-wsusscn2=changed:25"
+      ]
+    },
+    "detection": {
+      "defaults": ["added:30", "removed:5"],
+      "overrides": ["ubuntu_2604=added:50"]
+    }
+  },
+  "sources": {
+    "alma-errata": {"fixtures": ["alma_*"]},
+    "alpine-secdb": {"fixtures": ["alpine_*"]},
+    "amazon": {"fixtures": ["amazon_*"]},
+    "apple-security-releases": {"fixtures": []},
+    "cisa-kev": {"diff": false},
+    "cisco-json": {"fixtures": ["cpe_cisco*"]},
+    "debian-security-tracker-salsa": {"fixtures": ["debian_*"]},
+    "enisa-euvd-list": {"diff": false},
+    "enisa-kev": {"diff": false},
+    "exploit-exploitdb": {"diff": false},
+    "exploit-github": {"diff": false},
+    "exploit-inthewild": {"diff": false},
+    "exploit-trickest": {"diff": false},
+    "fedora-api": {"fixtures": ["fedora_*"]},
+    "fortinet-csaf": {"fixtures": ["cpe_fortinet*"], "group": "fortinet"},
+    "fortinet-cvrf": {"fixtures": ["cpe_fortinet*"], "group": "fortinet"},
+    "jvn-feed-rss": {"fixtures": ["cpe_jvn*"]},
+    "microsoft-bulletin": {"fixtures": ["windows_*"], "group": "microsoft"},
+    "microsoft-cvrf": {"fixtures": ["windows_*"], "group": "microsoft"},
+    "microsoft-msuc": {"fixtures": ["windows_*"], "group": "microsoft"},
+    "microsoft-servicing": {"fixtures": ["windows_*"], "group": "microsoft"},
+    "microsoft-wsusscn2": {"fixtures": ["windows_*"], "group": "microsoft"},
+    "mitre-attack": {"diff": false},
+    "mitre-capec": {"diff": false},
+    "mitre-cve-v5": {"diff": false},
+    "mitre-cwe": {"diff": false},
+    "msf": {"diff": false},
+    "nuclei-repository": {"diff": false},
+    "nvd-feed-cve-v2": {"fixtures": ["cpe_nvd*", "cpe_kernel*"]},
+    "oracle-linux": {"fixtures": ["oracle_*"]},
+    "paloalto-json": {"fixtures": ["cpe_paloalto*"]},
+    "redhat-cve": {"diff": false},
+    "redhat-vex-v1-rhel": {"fixtures": ["rhel_*"]},
+    "rocky-errata": {"fixtures": ["rocky_*"]},
+    "suse-oval": {"fixtures": ["opensuse_*", "sles*"]},
+    "ubuntu-cve-tracker": {"fixtures": ["ubuntu_*"]},
+    "vulncheck-kev": {"diff": false},
+    "vulncheck-nist-nvd2": {"fixtures": ["cpe_nvd*", "cpe_kernel*"]}
+  }
+}

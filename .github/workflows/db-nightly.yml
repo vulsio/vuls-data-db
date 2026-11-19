@@ -1,78 +1,24 @@
 name: DB(Nightly)
 
+# Builds the nightly DB from db-nightly.lock.json in the lock repository
+# (see db-guard.json): every source at the commit its per-source guard
+# approved (guard-extracted.yml, run after each extract) or an operator set
+# (approve.yml). There is no DB-side diff guard: each source was judged on
+# its own before it entered the lock, so a DB built from the lock is
+# published as is.
+
 on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
-    inputs:
-      db_rate_thresholds:
-        description: |
-          `vuls diff db` default thresholds (%) per (ecosystem, data
-          source), as multi-line entries of "<axis>:<rate>" where axis
-          is added, changed or removed; an axis not named keeps the
-          vuls2 built-in default. Leave empty to use the build job's
-          DB_RATE_THRESHOLDS env; a non-empty value here replaces the
-          whole env list for this dispatch, so an axis it does not name
-          falls back to the vuls2 built-in default, not to the env value
-          (a whitespace-only value replaces the list with nothing, i.e.
-          the vuls2 built-in defaults on every axis).
-        required: false
-        type: string
-        default: ""
-      db_rate_threshold_overrides:
-        description: |
-          Overrides of the `vuls diff db` per-axis thresholds, as
-          multi-line entries of "<key>=<axis>:<rate>" where key is
-          "<ecosystem>" (all sources in the ecosystem) or
-          "<ecosystem>/<source>" (single source, e.g.
-          "cpe/cisco-json", wins over the ecosystem key) and axis is
-          added, changed or removed; an entry relaxes only the axis it
-          names. Leave empty to use the persistent list in the build
-          job's DB_RATE_THRESHOLD_OVERRIDES env; a non-empty value here
-          replaces it for this dispatch only. A whitespace-only value
-          still counts as non-empty, so it replaces the env list with
-          nothing — use it to disable all persistent overrides for a
-          single dispatch. Blank/whitespace-only lines are dropped;
-          per-entry whitespace is trimmed by vuls2.
-        required: false
-        type: string
-        default: ""
-      detection_rate_thresholds:
-        description: |
-          `vuls diff detection` default thresholds (%) per (scan
-          result, data source), as multi-line entries of
-          "<axis>:<rate>" where axis is added or removed (the detection
-          diff has no changed axis); an axis not named keeps the vuls2
-          built-in default. Leave empty to use the build job's
-          DETECTION_RATE_THRESHOLDS env; a non-empty value here
-          replaces the whole env list for this dispatch, so an axis it
-          does not name falls back to the vuls2 built-in default, not to
-          the env value (a whitespace-only value replaces the list with
-          nothing, i.e. the vuls2 built-in defaults on every axis).
-        required: false
-        type: string
-        default: ""
-      detection_rate_threshold_overrides:
-        description: |
-          Overrides of the `vuls diff detection` per-axis thresholds,
-          as multi-line entries of "<key>=<axis>:<rate>" where key is
-          "<file-basename>" (all data sources in the file) or
-          "<file-basename>/<source>" (single source, e.g.
-          "cpe_jvn/jvn-feed-rss", wins over the file key) and axis is
-          added or removed (the detection diff has no changed axis);
-          an entry relaxes only the axis it names. Leave empty to use
-          the persistent list in the build job's
-          DETECTION_RATE_THRESHOLD_OVERRIDES env; a non-empty value
-          here replaces it for this dispatch only. A whitespace-only
-          value still counts as non-empty, so it replaces the env list
-          with nothing — use it to disable all persistent overrides for
-          a single dispatch. Blank/whitespace-only lines are dropped;
-          per-entry whitespace is trimmed by vuls2.
-        required: false
-        type: string
-        default: ""
 
 permissions: {}
+
+# A build takes about two hours and also starts from approve.yml; one at a
+# time, so a build of an older lock cannot finish last and move the tag back.
+concurrency:
+  group: db-nightly
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -82,46 +28,8 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     env:
-      # Persistent diff-guard threshold config — the single source of
-      # truth, applied to BOTH scheduled and manually-dispatched runs.
-      # workflow_dispatch input defaults are NOT visible to `schedule`
-      # events, so the `Run diff guard` step falls back to these env
-      # values whenever no dispatch input is supplied; a dispatch input,
-      # when supplied, replaces the corresponding value for that run.
-      # Default per-target change-rate thresholds (%), one "<axis>:<rate>"
-      # per line. The guard judges the added / changed / removed units of
-      # every target separately: additions are the routine pattern of
-      # vulnerability data and get a generous default; changes and
-      # removals stay at the values the single-threshold guard ran with.
-      # These equal the vuls2 built-in defaults and are restated here so
-      # the whole policy reads in one place. `vuls diff detection`
-      # compares CVE ID sets and has no changed axis.
-      DB_RATE_THRESHOLDS: |
-        added:30
-        changed:10
-        removed:10
-      DETECTION_RATE_THRESHOLDS: |
-        added:30
-        removed:5
-      # Per-target threshold overrides (DB and detection lists alike),
-      # one "<key>=<axis>:<rate>" per line; an entry relaxes only the
-      # axis it names, so prefer the narrowest key AND axis that cover
-      # the churn. Each entry covers recurring upstream-driven churn
-      # (new-distro / rolling-release / monthly vendor-data / small-
-      # baseline cycles) surfaced by diff-guard failures. Entries are
-      # added by failure triage and periodically re-derived from the
-      # full pass+fail history per the override grooming runbook
-      # (.github/diff-guard-override-grooming-runbook.md). Run
-      # `git blame` on these lines for the commit that introduced each
-      # entry and its rationale. `#` comments are NOT allowed inside
-      # these lists (vuls2's override parser would reject them).
-      DB_RATE_THRESHOLD_OVERRIDES: |
-        microsoft/microsoft-msuc=added:35
-        microsoft/microsoft-msuc=changed:30
-        microsoft/microsoft-wsusscn2=added:35
-        microsoft/microsoft-wsusscn2=changed:25
-      DETECTION_RATE_THRESHOLD_OVERRIDES: |
-        ubuntu_2604=added:50
+      DB: nightly
+      REPOSITORY: ghcr.io/vulsio/vuls-nightly-db
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -135,8 +43,30 @@ jobs:
           remove-cached-tools: "true"
           remove-swapfile: "true"
 
-      - name: Check out code into the Go module directory
+      - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Read DB config
+        id: config
+        run: |
+          set -euo pipefail
+          # Without a tag the DB would be pushed and left untagged in a
+          # green run, so a missing or empty list stops the build here.
+          tags=$(jq -er --arg db "${DB}" '.dbs[$db].tags | select(length > 0) | join(" ")' db-guard.json) || {
+            echo "::error::db-guard.json .dbs.${DB}.tags is missing or empty"
+            exit 1
+          }
+          {
+            echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)"
+            echo "vuls2=$(jq -r --arg db "${DB}" '.dbs[$db].vuls2' db-guard.json)"
+            echo "tags=${tags}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ steps.config.outputs.lock_repository }}
+          path: lock
 
       - name: Set up Go 1.x
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
@@ -151,79 +81,49 @@ jobs:
         run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
 
       - name: Install vuls
-        run: go install github.com/MaineK00n/vuls2/cmd/vuls@nightly
+        run: go install "github.com/MaineK00n/vuls2/cmd/vuls@${{ steps.config.outputs.vuls2 }}"
 
       - name: Build DB
-        run: make -f db-nightly.mk db-build BRANCH=nightly DBPATH=./vuls.db
+        run: vuls db build --lock "lock/db-${DB}.lock.json" --dbpath ./vuls.db --dir ./work
 
       - name: Compact vuls.db
         run: vuls db compress --dbpath ./vuls.db
 
-      # Design: "always push tagless, operate by digest, promote to :nightly only on pass".
-      # The candidate manifest is pushed BEFORE the guard runs so that a
-      # failing build remains pullable by digest for investigation; the
-      # :nightly tag is moved onto the verified digest only when the guard
-      # step below passes.
-      - name: Push vuls.db to GHCR (tagless, digest-only)
+      - name: Push vuls.db to GHCR
         id: push
         run: |
           set -euo pipefail
-          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" ghcr.io/vulsio/vuls-nightly-db ./vuls.db.zst)
+          digest=$(vuls db push --token "${{ secrets.GITHUB_TOKEN }}" "${REPOSITORY}" ./vuls.db.zst)
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
-          # Collapsed so the diff-guard sections below (and their terminal
-          # "Diff guard summary" table) stay within the first screen of the
-          # job summary.
-          {
-            echo "<details><summary>Pushed candidate image (untagged, digest-only)</summary>"
-            echo ""
-            echo '```text'
-            echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${digest}"
-            echo '```'
-            echo "Image is always pushed before the diff guard runs; a failing"
-            echo "build stays pullable by digest for investigation."
-            echo ""
-            echo "If the diff guard fails and an operator decides the candidate is"
-            echo "safe after inspecting the diff, promote it via the promote-digest"
-            echo "workflow (records an audit trail as an Actions run):"
-            echo '```sh'
-            echo " gh workflow run promote-digest.yml -R ${{ github.repository }} -f digest=${digest} -f tag=nightly"
-            echo '```'
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"
 
-      # Runs on every scheduled and manually dispatched invocation.
-      - name: Run diff guard
-        # On scheduled runs github.event.inputs.* is unset/null, so the
-        # `|| env.*` fallbacks supply every value from the job-level env
-        # block (the single source of truth). A workflow_dispatch input,
-        # when supplied, replaces the corresponding env value for that
-        # run only.
-        uses: ./.github/actions/diff-guard
-        with:
-          target_db: ./vuls.db
-          baseline_repository: ghcr.io/vulsio/vuls-nightly-db:nightly
-          db_rate_thresholds: ${{ github.event.inputs.db_rate_thresholds || env.DB_RATE_THRESHOLDS }}
-          db_rate_threshold_overrides: ${{ github.event.inputs.db_rate_threshold_overrides || env.DB_RATE_THRESHOLD_OVERRIDES }}
-          detection_rate_thresholds: ${{ github.event.inputs.detection_rate_thresholds || env.DETECTION_RATE_THRESHOLDS }}
-          detection_rate_threshold_overrides: ${{ github.event.inputs.detection_rate_threshold_overrides || env.DETECTION_RATE_THRESHOLD_OVERRIDES }}
-
-      # Guard passed: attach :nightly to the verified digest. If the guard
-      # fails this step is skipped and
-      # :nightly stays pointing at the previous verified digest.
-      - name: Promote digest to :nightly
+      - name: Tag the pushed digest
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
+          TAGS: ${{ steps.config.outputs.tags }}
         run: |
           set -euo pipefail
-          vuls-data-update dotgit registry tag \
-            --token "${{ secrets.GITHUB_TOKEN }}" \
-            "ghcr.io/vulsio/vuls-nightly-db@${DIGEST}" nightly
+          for tag in ${TAGS}; do
+            vuls-data-update dotgit registry tag --token "${{ secrets.GITHUB_TOKEN }}" "${REPOSITORY}@${DIGEST}" "${tag}"
+          done
+
+      # Which lock the DB was built from.
+      - name: Write summary
+        if: ${{ success() || failure() }}
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          TAGS: ${{ steps.config.outputs.tags }}
+          LOCK_REPOSITORY: ${{ steps.config.outputs.lock_repository }}
+        run: |
+          set -euo pipefail
+          lock_commit=$(git -C lock rev-parse HEAD 2>/dev/null || echo unknown)
           {
-            echo "## Promoted to :nightly"
+            echo "## DB(${DB})"
             echo '```text'
-            echo "ref        : ghcr.io/vulsio/vuls-nightly-db:nightly"
-            echo "digest ref : ghcr.io/vulsio/vuls-nightly-db@${DIGEST}"
+            echo "lock       : https://github.com/${LOCK_REPOSITORY}/blob/${lock_commit}/db-${DB}.lock.json"
+            if [ -n "${DIGEST}" ]; then
+              echo "digest ref : ${REPOSITORY}@${DIGEST}"
+              echo "tags       : ${TAGS}"
+            fi
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
