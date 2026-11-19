@@ -59,9 +59,10 @@ jobs:
       # AlmaLinux periodically re-curates errata.full.json and drops published
       # advisories from the feed, while the corresponding HTML pages
       # (https://errata.almalinux.org/10/) and the official OSV export
-      # (AlmaLinux/osv-database) keep carrying them. Observed re-curations, both
-      # AlmaLinux 10: 2025-11-26 (-102 advisories) and 2026-05-27 (-143
-      # advisories, ~376 CVEs losing coverage). Upstream inquiry:
+      # (AlmaLinux/osv-database) keep carrying them. Observed re-curations, all
+      # AlmaLinux 10 and each at a minor release: 2025-11-26 (-102 advisories),
+      # 2026-05-27 (-143 advisories, ~376 CVEs losing coverage) and 2026-11-10
+      # (-334 advisories, ~736 CVEs losing coverage). Upstream inquiry:
       # https://bugs.almalinux.org/view.php?id=644
       #
       # After the fetch rewrites the tree from the current feed, restore exactly
@@ -70,6 +71,13 @@ jobs:
       # future re-curation, append a new pair pinning the parent of the new
       # purge commit). Nothing unlisted is ever restored, and every file's
       # source commit is explicit in this file.
+      #
+      # Only whole-file drops are repaired. The same re-curations also stripped
+      # packages from advisories the feed keeps carrying (2026-11-10: 165 v10
+      # advisories left with their noarch packages only, 18,747 package entries
+      # gone; 2026-05-27: 79 / 6,503; 2025-11-26: 44 / 6,412). Those files take
+      # the feed's version as is: repairing partial edits has no clear end, and
+      # this step deliberately stays a whole-file restore.
       #
       # The per-version HTML directory index (one GET per version) is the
       # oracle for whether upstream still publishes an advisory:
@@ -357,6 +365,346 @@ jobs:
             10/ALSA/2025/ALSA-2025:9623.json
             10/ALSA/2025/ALSA-2025:A003.json
             10/ALSA/2025/ALSA-2025:A006.json
+          # HEAD of vuls-data-raw-alma-errata as of the 2026-11-10 re-curation
+          # (AlmaLinux 10.3 release; -334 el10_2-era advisories). The purge was
+          # never committed because this step failed first, so the tag HEAD
+          # still carries every dropped advisory.
+          RESTORE_SNAPSHOT_3: 30d6377c4c03252a0fa69e7cb71781d2cdf6f310
+          RESTORE_PATHS_3: |
+            10/ALSA/2026/ALSA-2026:18142.json
+            10/ALSA/2026/ALSA-2026:18143.json
+            10/ALSA/2026/ALSA-2026:18160.json
+            10/ALSA/2026/ALSA-2026:18162.json
+            10/ALSA/2026/ALSA-2026:18326.json
+            10/ALSA/2026/ALSA-2026:18344.json
+            10/ALSA/2026/ALSA-2026:18421.json
+            10/ALSA/2026/ALSA-2026:18465.json
+            10/ALSA/2026/ALSA-2026:18479.json
+            10/ALSA/2026/ALSA-2026:18480.json
+            10/ALSA/2026/ALSA-2026:18556.json
+            10/ALSA/2026/ALSA-2026:19009.json
+            10/ALSA/2026/ALSA-2026:19010.json
+            10/ALSA/2026/ALSA-2026:19013.json
+            10/ALSA/2026/ALSA-2026:19017.json
+            10/ALSA/2026/ALSA-2026:19019.json
+            10/ALSA/2026/ALSA-2026:19020.json
+            10/ALSA/2026/ALSA-2026:19022.json
+            10/ALSA/2026/ALSA-2026:19024.json
+            10/ALSA/2026/ALSA-2026:19031.json
+            10/ALSA/2026/ALSA-2026:19032.json
+            10/ALSA/2026/ALSA-2026:19034.json
+            10/ALSA/2026/ALSA-2026:19042.json
+            10/ALSA/2026/ALSA-2026:19043.json
+            10/ALSA/2026/ALSA-2026:19053.json
+            10/ALSA/2026/ALSA-2026:19054.json
+            10/ALSA/2026/ALSA-2026:19061.json
+            10/ALSA/2026/ALSA-2026:19064.json
+            10/ALSA/2026/ALSA-2026:19066.json
+            10/ALSA/2026/ALSA-2026:19067.json
+            10/ALSA/2026/ALSA-2026:19068.json
+            10/ALSA/2026/ALSA-2026:19069.json
+            10/ALSA/2026/ALSA-2026:19073.json
+            10/ALSA/2026/ALSA-2026:19074.json
+            10/ALSA/2026/ALSA-2026:19125.json
+            10/ALSA/2026/ALSA-2026:19126.json
+            10/ALSA/2026/ALSA-2026:19127.json
+            10/ALSA/2026/ALSA-2026:19128.json
+            10/ALSA/2026/ALSA-2026:19130.json
+            10/ALSA/2026/ALSA-2026:19133.json
+            10/ALSA/2026/ALSA-2026:19134.json
+            10/ALSA/2026/ALSA-2026:19135.json
+            10/ALSA/2026/ALSA-2026:19136.json
+            10/ALSA/2026/ALSA-2026:19137.json
+            10/ALSA/2026/ALSA-2026:19139.json
+            10/ALSA/2026/ALSA-2026:19141.json
+            10/ALSA/2026/ALSA-2026:19143.json
+            10/ALSA/2026/ALSA-2026:19145.json
+            10/ALSA/2026/ALSA-2026:19146.json
+            10/ALSA/2026/ALSA-2026:19148.json
+            10/ALSA/2026/ALSA-2026:19149.json
+            10/ALSA/2026/ALSA-2026:19150.json
+            10/ALSA/2026/ALSA-2026:19151.json
+            10/ALSA/2026/ALSA-2026:19152.json
+            10/ALSA/2026/ALSA-2026:19153.json
+            10/ALSA/2026/ALSA-2026:19154.json
+            10/ALSA/2026/ALSA-2026:19155.json
+            10/ALSA/2026/ALSA-2026:19157.json
+            10/ALSA/2026/ALSA-2026:19158.json
+            10/ALSA/2026/ALSA-2026:19159.json
+            10/ALSA/2026/ALSA-2026:19160.json
+            10/ALSA/2026/ALSA-2026:19560.json
+            10/ALSA/2026/ALSA-2026:20600.json
+            10/ALSA/2026/ALSA-2026:20613.json
+            10/ALSA/2026/ALSA-2026:21286.json
+            10/ALSA/2026/ALSA-2026:21380.json
+            10/ALSA/2026/ALSA-2026:21754.json
+            10/ALSA/2026/ALSA-2026:22145.json
+            10/ALSA/2026/ALSA-2026:22314.json
+            10/ALSA/2026/ALSA-2026:22325.json
+            10/ALSA/2026/ALSA-2026:22528.json
+            10/ALSA/2026/ALSA-2026:22529.json
+            10/ALSA/2026/ALSA-2026:22649.json
+            10/ALSA/2026/ALSA-2026:22715.json
+            10/ALSA/2026/ALSA-2026:23102.json
+            10/ALSA/2026/ALSA-2026:23231.json
+            10/ALSA/2026/ALSA-2026:23388.json
+            10/ALSA/2026/ALSA-2026:24758.json
+            10/ALSA/2026/ALSA-2026:25111.json
+            10/ALSA/2026/ALSA-2026:25112.json
+            10/ALSA/2026/ALSA-2026:25115.json
+            10/ALSA/2026/ALSA-2026:25216.json
+            10/ALSA/2026/ALSA-2026:25225.json
+            10/ALSA/2026/ALSA-2026:25237.json
+            10/ALSA/2026/ALSA-2026:25930.json
+            10/ALSA/2026/ALSA-2026:25999.json
+            10/ALSA/2026/ALSA-2026:26532.json
+            10/ALSA/2026/ALSA-2026:26566.json
+            10/ALSA/2026/ALSA-2026:27733.json
+            10/ALSA/2026/ALSA-2026:27842.json
+            10/ALSA/2026/ALSA-2026:28231.json
+            10/ALSA/2026/ALSA-2026:28233.json
+            10/ALSA/2026/ALSA-2026:28234.json
+            10/ALSA/2026/ALSA-2026:28235.json
+            10/ALSA/2026/ALSA-2026:28236.json
+            10/ALSA/2026/ALSA-2026:28581.json
+            10/ALSA/2026/ALSA-2026:28584.json
+            10/ALSA/2026/ALSA-2026:29035.json
+            10/ALSA/2026/ALSA-2026:29195.json
+            10/ALSA/2026/ALSA-2026:30845.json
+            10/ALSA/2026/ALSA-2026:30846.json
+            10/ALSA/2026/ALSA-2026:30855.json
+            10/ALSA/2026/ALSA-2026:33124.json
+            10/ALSA/2026/ALSA-2026:33502.json
+            10/ALSA/2026/ALSA-2026:33731.json
+            10/ALSA/2026/ALSA-2026:34355.json
+            10/ALSA/2026/ALSA-2026:34357.json
+            10/ALSA/2026/ALSA-2026:35826.json
+            10/ALSA/2026/ALSA-2026:35827.json
+            10/ALSA/2026/ALSA-2026:35832.json
+            10/ALSA/2026/ALSA-2026:36199.json
+            10/ALSA/2026/ALSA-2026:36203.json
+            10/ALSA/2026/ALSA-2026:36211.json
+            10/ALSA/2026/ALSA-2026:36320.json
+            10/ALSA/2026/ALSA-2026:36673.json
+            10/ALSA/2026/ALSA-2026:36675.json
+            10/ALSA/2026/ALSA-2026:36749.json
+            10/ALSA/2026/ALSA-2026:36782.json
+            10/ALSA/2026/ALSA-2026:38489.json
+            10/ALSA/2026/ALSA-2026:38494.json
+            10/ALSA/2026/ALSA-2026:38499.json
+            10/ALSA/2026/ALSA-2026:38513.json
+            10/ALSA/2026/ALSA-2026:39272.json
+            10/ALSA/2026/ALSA-2026:39296.json
+            10/ALSA/2026/ALSA-2026:39304.json
+            10/ALSA/2026/ALSA-2026:39547.json
+            10/ALSA/2026/ALSA-2026:39573.json
+            10/ALSA/2026/ALSA-2026:39976.json
+            10/ALSA/2026/ALSA-2026:40856.json
+            10/ALSA/2026/ALSA-2026:41892.json
+            10/ALSA/2026/ALSA-2026:41893.json
+            10/ALSA/2026/ALSA-2026:41895.json
+            10/ALSA/2026/ALSA-2026:41897.json
+            10/ALSA/2026/ALSA-2026:41988.json
+            10/ALSA/2026/ALSA-2026:42063.json
+            10/ALSA/2026/ALSA-2026:42096.json
+            10/ALSA/2026/ALSA-2026:42739.json
+            10/ALSA/2026/ALSA-2026:42895.json
+            10/ALSA/2026/ALSA-2026:42899.json
+            10/ALSA/2026/ALSA-2026:44391.json
+            10/ALSA/2026/ALSA-2026:46394.json
+            10/ALSA/2026/ALSA-2026:46398.json
+            10/ALSA/2026/ALSA-2026:47079.json
+            10/ALSA/2026/ALSA-2026:47083.json
+            10/ALSA/2026/ALSA-2026:47085.json
+            10/ALSA/2026/ALSA-2026:47101.json
+            10/ALSA/2026/ALSA-2026:47180.json
+            10/ALSA/2026/ALSA-2026:47757.json
+            10/ALSA/2026/ALSA-2026:48170.json
+            10/ALSA/2026/ALSA-2026:49508.json
+            10/ALSA/2026/ALSA-2026:49514.json
+            10/ALSA/2026/ALSA-2026:49526.json
+            10/ALSA/2026/ALSA-2026:49621.json
+            10/ALSA/2026/ALSA-2026:49668.json
+            10/ALSA/2026/ALSA-2026:49914.json
+            10/ALSA/2026/ALSA-2026:50142.json
+            10/ALSA/2026/ALSA-2026:50144.json
+            10/ALSA/2026/ALSA-2026:50747.json
+            10/ALSA/2026/ALSA-2026:51075.json
+            10/ALSA/2026/ALSA-2026:52675.json
+            10/ALSA/2026/ALSA-2026:53435.json
+            10/ALSA/2026/ALSA-2026:53451.json
+            10/ALSA/2026/ALSA-2026:53845.json
+            10/ALSA/2026/ALSA-2026:53846.json
+            10/ALSA/2026/ALSA-2026:54178.json
+            10/ALSA/2026/ALSA-2026:54210.json
+            10/ALSA/2026/ALSA-2026:54486.json
+            10/ALSA/2026/ALSA-2026:54512.json
+            10/ALSA/2026/ALSA-2026:54541.json
+            10/ALSA/2026/ALSA-2026:54576.json
+            10/ALSA/2026/ALSA-2026:54590.json
+            10/ALSA/2026/ALSA-2026:54650.json
+            10/ALSA/2026/ALSA-2026:55432.json
+            10/ALSA/2026/ALSA-2026:55433.json
+            10/ALSA/2026/ALSA-2026:55434.json
+            10/ALSA/2026/ALSA-2026:55435.json
+            10/ALSA/2026/ALSA-2026:55448.json
+            10/ALSA/2026/ALSA-2026:55679.json
+            10/ALSA/2026/ALSA-2026:55787.json
+            10/ALSA/2026/ALSA-2026:55798.json
+            10/ALSA/2026/ALSA-2026:55858.json
+            10/ALSA/2026/ALSA-2026:55892.json
+            10/ALSA/2026/ALSA-2026:56965.json
+            10/ALSA/2026/ALSA-2026:56969.json
+            10/ALSA/2026/ALSA-2026:57015.json
+            10/ALSA/2026/ALSA-2026:57126.json
+            10/ALSA/2026/ALSA-2026:58561.json
+            10/ALSA/2026/ALSA-2026:58571.json
+            10/ALSA/2026/ALSA-2026:58899.json
+            10/ALSA/2026/ALSA-2026:58927.json
+            10/ALSA/2026/ALSA-2026:58928.json
+            10/ALSA/2026/ALSA-2026:59097.json
+            10/ALSA/2026/ALSA-2026:59133.json
+            10/ALSA/2026/ALSA-2026:59379.json
+            10/ALSA/2026/ALSA-2026:59380.json
+            10/ALSA/2026/ALSA-2026:59972.json
+            10/ALSA/2026/ALSA-2026:60394.json
+            10/ALSA/2026/ALSA-2026:61241.json
+            10/ALSA/2026/ALSA-2026:61340.json
+            10/ALSA/2026/ALSA-2026:61378.json
+            10/ALSA/2026/ALSA-2026:61586.json
+            10/ALSA/2026/ALSA-2026:61625.json
+            10/ALSA/2026/ALSA-2026:61680.json
+            10/ALSA/2026/ALSA-2026:62142.json
+            10/ALSA/2026/ALSA-2026:62577.json
+            10/ALSA/2026/ALSA-2026:62614.json
+            10/ALSA/2026/ALSA-2026:62631.json
+            10/ALSA/2026/ALSA-2026:63022.json
+            10/ALSA/2026/ALSA-2026:63119.json
+            10/ALSA/2026/ALSA-2026:63332.json
+            10/ALSA/2026/ALSA-2026:64777.json
+            10/ALSA/2026/ALSA-2026:64787.json
+            10/ALSA/2026/ALSA-2026:64788.json
+            10/ALSA/2026/ALSA-2026:64795.json
+            10/ALSA/2026/ALSA-2026:64796.json
+            10/ALSA/2026/ALSA-2026:64799.json
+            10/ALSA/2026/ALSA-2026:64810.json
+            10/ALSA/2026/ALSA-2026:64818.json
+            10/ALSA/2026/ALSA-2026:65116.json
+            10/ALSA/2026/ALSA-2026:65159.json
+            10/ALSA/2026/ALSA-2026:65162.json
+            10/ALSA/2026/ALSA-2026:65816.json
+            10/ALSA/2026/ALSA-2026:65887.json
+            10/ALSA/2026/ALSA-2026:65899.json
+            10/ALSA/2026/ALSA-2026:66349.json
+            10/ALSA/2026/ALSA-2026:66392.json
+            10/ALSA/2026/ALSA-2026:66432.json
+            10/ALSA/2026/ALSA-2026:66460.json
+            10/ALSA/2026/ALSA-2026:67129.json
+            10/ALSA/2026/ALSA-2026:67147.json
+            10/ALSA/2026/ALSA-2026:67154.json
+            10/ALSA/2026/ALSA-2026:67166.json
+            10/ALSA/2026/ALSA-2026:67267.json
+            10/ALSA/2026/ALSA-2026:67525.json
+            10/ALSA/2026/ALSA-2026:67528.json
+            10/ALSA/2026/ALSA-2026:67530.json
+            10/ALSA/2026/ALSA-2026:67872.json
+            10/ALSA/2026/ALSA-2026:67886.json
+            10/ALSA/2026/ALSA-2026:68291.json
+            10/ALSA/2026/ALSA-2026:68692.json
+            10/ALSA/2026/ALSA-2026:69099.json
+            10/ALSA/2026/ALSA-2026:69125.json
+            10/ALSA/2026/ALSA-2026:69129.json
+            10/ALSA/2026/ALSA-2026:69308.json
+            10/ALSA/2026/ALSA-2026:69461.json
+            10/ALSA/2026/ALSA-2026:69553.json
+            10/ALSA/2026/ALSA-2026:69609.json
+            10/ALSA/2026/ALSA-2026:70753.json
+            10/ALSA/2026/ALSA-2026:71419.json
+            10/ALSA/2026/ALSA-2026:71586.json
+            10/ALSA/2026/ALSA-2026:71658.json
+            10/ALSA/2026/ALSA-2026:73130.json
+            10/ALSA/2026/ALSA-2026:73429.json
+            10/ALSA/2026/ALSA-2026:73954.json
+            10/ALSA/2026/ALSA-2026:73979.json
+            10/ALSA/2026/ALSA-2026:73998.json
+            10/ALSA/2026/ALSA-2026:74001.json
+            10/ALSA/2026/ALSA-2026:74442.json
+            10/ALSA/2026/ALSA-2026:75570.json
+            10/ALSA/2026/ALSA-2026:75579.json
+            10/ALSA/2026/ALSA-2026:75581.json
+            10/ALSA/2026/ALSA-2026:75583.json
+            10/ALSA/2026/ALSA-2026:76734.json
+            10/ALSA/2026/ALSA-2026:76735.json
+            10/ALSA/2026/ALSA-2026:76737.json
+            10/ALSA/2026/ALSA-2026:76743.json
+            10/ALSA/2026/ALSA-2026:76762.json
+            10/ALSA/2026/ALSA-2026:76764.json
+            10/ALSA/2026/ALSA-2026:76918.json
+            10/ALSA/2026/ALSA-2026:77018.json
+            10/ALSA/2026/ALSA-2026:79122.json
+            10/ALSA/2026/ALSA-2026:79371.json
+            10/ALSA/2026/ALSA-2026:80495.json
+            10/ALSA/2026/ALSA-2026:80512.json
+            10/ALSA/2026/ALSA-2026:80605.json
+            10/ALSA/2026/ALSA-2026:80664.json
+            10/ALSA/2026/ALSA-2026:80674.json
+            10/ALSA/2026/ALSA-2026:81518.json
+            10/ALSA/2026/ALSA-2026:82041.json
+            10/ALSA/2026/ALSA-2026:82280.json
+            10/ALSA/2026/ALSA-2026:82883.json
+            10/ALSA/2026/ALSA-2026:83561.json
+            10/ALSA/2026/ALSA-2026:84721.json
+            10/ALSA/2026/ALSA-2026:84795.json
+            10/ALSA/2026/ALSA-2026:84796.json
+            10/ALSA/2026/ALSA-2026:85191.json
+            10/ALSA/2026/ALSA-2026:85276.json
+            10/ALSA/2026/ALSA-2026:85308.json
+            10/ALSA/2026/ALSA-2026:85847.json
+            10/ALSA/2026/ALSA-2026:85848.json
+            10/ALSA/2026/ALSA-2026:85959.json
+            10/ALSA/2026/ALSA-2026:86056.json
+            10/ALSA/2026/ALSA-2026:86168.json
+            10/ALSA/2026/ALSA-2026:86172.json
+            10/ALSA/2026/ALSA-2026:86195.json
+            10/ALSA/2026/ALSA-2026:86331.json
+            10/ALSA/2026/ALSA-2026:86841.json
+            10/ALSA/2026/ALSA-2026:87070.json
+            10/ALSA/2026/ALSA-2026:87071.json
+            10/ALSA/2026/ALSA-2026:88207.json
+            10/ALSA/2026/ALSA-2026:88248.json
+            10/ALSA/2026/ALSA-2026:88262.json
+            10/ALSA/2026/ALSA-2026:88280.json
+            10/ALSA/2026/ALSA-2026:88316.json
+            10/ALSA/2026/ALSA-2026:88347.json
+            10/ALSA/2026/ALSA-2026:88359.json
+            10/ALSA/2026/ALSA-2026:88360.json
+            10/ALSA/2026/ALSA-2026:89732.json
+            10/ALSA/2026/ALSA-2026:89752.json
+            10/ALSA/2026/ALSA-2026:89758.json
+            10/ALSA/2026/ALSA-2026:89761.json
+            10/ALSA/2026/ALSA-2026:89891.json
+            10/ALSA/2026/ALSA-2026:89905.json
+            10/ALSA/2026/ALSA-2026:89923.json
+            10/ALSA/2026/ALSA-2026:90449.json
+            10/ALSA/2026/ALSA-2026:90504.json
+            10/ALSA/2026/ALSA-2026:90523.json
+            10/ALSA/2026/ALSA-2026:90895.json
+            10/ALSA/2026/ALSA-2026:91003.json
+            10/ALSA/2026/ALSA-2026:91004.json
+            10/ALSA/2026/ALSA-2026:91138.json
+            10/ALSA/2026/ALSA-2026:91612.json
+            10/ALSA/2026/ALSA-2026:91720.json
+            10/ALSA/2026/ALSA-2026:92428.json
+            10/ALSA/2026/ALSA-2026:92430.json
+            10/ALSA/2026/ALSA-2026:92438.json
+            10/ALSA/2026/ALSA-2026:93441.json
+            10/ALSA/2026/ALSA-2026:93442.json
+            10/ALSA/2026/ALSA-2026:93461.json
+            10/ALSA/2026/ALSA-2026:93596.json
+            10/ALSA/2026/ALSA-2026:94514.json
+            10/ALSA/2026/ALSA-2026:95085.json
+            10/ALSA/2026/ALSA-2026:95519.json
+            10/ALSA/2026/ALSA-2026:96092.json
         run: |
           set -euo pipefail
           dir="ghcr.io/${{ github.repository }}/vuls-data-raw-alma-errata"
