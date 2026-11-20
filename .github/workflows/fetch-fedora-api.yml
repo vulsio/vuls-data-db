@@ -62,9 +62,11 @@ jobs:
       # A release can have no security update -- most container releases have
       # none -- so a shard can rightly fetch nothing. Since
       # MaineK00n/vuls-data-update#1033 the fetcher fails a run that wrote
-      # nothing unless told otherwise, and a failed shard holds back the
-      # commit job, so every release would wait on the emptiest one. The
-      # merged repository is still checked as a whole there.
+      # nothing unless told otherwise. The commit job still runs and reuses the
+      # last pushed fedora-data-<release> tag for a failed shard, but such a
+      # shard would fail on every run, and a new release that is empty from
+      # the start has no tag to pull, which fails the commit. The merged
+      # repository is still checked as a whole there.
       #
       # This runs vuls-data-update@main, so the flag is passed only once the
       # fetcher knows it: passed earlier, an unknown flag fails every shard.
