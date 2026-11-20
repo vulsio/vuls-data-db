@@ -24,6 +24,16 @@ permissions: {}
 jobs:
   cleanup:
     name: Cleanup untagged images in ${{ inputs.package }}
+    # Two cleanups of one package at once delete the same versions, and the
+    # second to reach each one fails it with "no matching digest" or a 404. So
+    # a cleanup waits for the one running on its package. A waiting one is
+    # replaced by the next to come, which loses nothing, as each lists the
+    # versions afresh when it starts. The group is per package, so that a
+    # package triggered once a day (vuls-data-db-backup) is never replaced by
+    # one triggered after every pipeline (vuls-data-db).
+    concurrency:
+      group: cleanup-${{ inputs.package }}
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
