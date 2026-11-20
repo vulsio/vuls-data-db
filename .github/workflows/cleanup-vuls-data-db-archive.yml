@@ -1,10 +1,10 @@
 name: Cleanup vulsio/vuls-data-db-archive
 
 on:
-  workflow_run:
-    workflows: [Archive Raw]
-    types:
-      - completed
+  # Each source's pipeline archives whenever it runs, so this runs on a clock
+  # rather than after any one workflow.
+  schedule:
+    - cron: "50 2 * * *"
   workflow_dispatch:
 
 permissions: {}

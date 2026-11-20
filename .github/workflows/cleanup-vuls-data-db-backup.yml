@@ -2,7 +2,7 @@ name: Cleanup vulsio/vuls-data-db-backup
 
 on:
   workflow_run:
-    workflows: [Backup Daily, Backup Weekly, Backup Monthly]
+    workflows: [Backup All]
     types:
       - completed
   workflow_dispatch:
