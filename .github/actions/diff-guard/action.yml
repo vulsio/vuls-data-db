@@ -159,7 +159,7 @@ inputs:
   vuls0_old_ref:
     description: future-architect/vuls commit SHA for the older-binary detection check.
     required: false
-    default: f7331a921fd3237bca383d28a241c03c085301de # v0.41.0
+    default: 031f637cadf5f0c26b3387578172d9c8aa4afcd6 # v0.42.1-0.20261028023522-031f637cadf5
 
 runs:
   using: composite
@@ -325,12 +325,6 @@ runs:
     - name: Install vuls0 for older-binary check (pinned commit)
       shell: bash
       env:
-        # The pinned commit predates vuls0's move to Go 1.27 and its Trivy
-        # uses encoding/json/v2.SkipFunc, which Go 1.27 removed. Build it on
-        # Go 1.26; "+auto" still lets a newer pinned commit select its own.
-        GOTOOLCHAIN: go1.26.10+auto
-        # Go 1.26 needs the experiment for encoding/json/v2 (default in 1.27).
-        GOEXPERIMENT: jsonv2
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
         mkdir -p /tmp/vuls0-old-bin
@@ -357,8 +351,9 @@ runs:
         # are retained automatically; only known-broken ones need listing
         # here. Update this set when bumping `vuls0_old_ref`.
         #
-        # The set is currently empty: the pinned v0.41.0 already detects
-        # Windows and CPE (NVD, VulnCheck, JVN, Fortinet, Cisco, Palo Alto)
+        # The set is currently empty: the older vuls0 pinned by
+        # `vuls0_old_ref` already detects Windows and CPE (NVD, VulnCheck,
+        # JVN, Fortinet, Cisco, Palo Alto)
         # with vuls2, so the windows_*.json and cpe_*.json fixtures exercise
         # the DB under test here as well.
         mkdir -p ./scan-results-old
