@@ -59,6 +59,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/${{ inputs.package }}" --token ${{ secrets.GITHUB_TOKEN }} \
+          vuls-data-update dotgit registry ls --repositories "ghcr.io/vulsio/${{ inputs.package }}" --token "${{ secrets.GITHUB_TOKEN }}" \
             | jq -r --arg repository "ghcr.io/vulsio/${{ inputs.package }}" --argjson grace "${GRACE_SECONDS}" '.[] | select(.name == "" and (.created_at | fromdateiso8601) < (now - $grace)) | "\($repository)@\(.digest)"' \
-            | xargs -r vuls-data-update dotgit registry delete --token ${{ secrets.GITHUB_TOKEN }}
+            | xargs -r vuls-data-update dotgit registry delete --token "${{ secrets.GITHUB_TOKEN }}"
