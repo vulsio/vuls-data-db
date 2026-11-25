@@ -8,8 +8,10 @@ description: |
   though another try a few seconds later goes through. What a failed try did
   download stays in the module cache, so the next one picks up from there.
 
-  Workflows that do not check out this repository call it as
-  `vulsio/vuls-data-db/.github/actions/go-install@main`.
+  Workflows, most of which do not check out this repository, call it as
+  `vulsio/vuls-data-db/.github/actions/go-install@main`. An action of this
+  repository calls it as `./.github/actions/go-install`, so that it runs the
+  revision it was checked out with.
 
 inputs:
   package:
@@ -21,8 +23,8 @@ inputs:
     required: true
   gobin:
     description: |
-      The directory to install into, as GOBIN. Created if missing. Empty
-      installs where `go install` does by default.
+      The directory to install into, as GOBIN: an absolute path, created if
+      missing. Empty installs where `go install` does by default.
     required: false
     default: ""
   attempts:
@@ -40,6 +42,11 @@ runs:
         INSTALL_DIR: ${{ inputs.gobin }}
         ATTEMPTS: ${{ inputs.attempts }}
       run: |
+        if [[ ! "${ATTEMPTS}" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::attempts must be a positive integer, not '${ATTEMPTS}'"
+          exit 1
+        fi
+
         if [[ -n "${INSTALL_DIR}" ]]; then
           mkdir -p "${INSTALL_DIR}"
           export GOBIN="${INSTALL_DIR}"

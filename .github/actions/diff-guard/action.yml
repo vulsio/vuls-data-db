@@ -188,7 +188,7 @@ runs:
       run: vuls db fetch --dbpath ./baseline.db --repository "${{ inputs.baseline_repository }}" --no-progress
 
     - name: Install vuls0 (future-architect/vuls master)
-      uses: vulsio/vuls-data-db/.github/actions/go-install@main
+      uses: ./.github/actions/go-install
       with:
         package: github.com/future-architect/vuls/cmd/vuls@master
         gobin: /tmp/vuls0-bin
@@ -327,7 +327,7 @@ runs:
     # Additional check with a slightly older vuls0 binary (pinned commit) to
     # catch regressions that only surface against past vuls0 versions.
     - name: Install vuls0 for older-binary check (pinned commit)
-      uses: vulsio/vuls-data-db/.github/actions/go-install@main
+      uses: ./.github/actions/go-install
       with:
         package: github.com/future-architect/vuls/cmd/vuls@${{ inputs.vuls0_old_ref }}
         gobin: /tmp/vuls0-old-bin
