@@ -148,10 +148,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y jq zstd
 
       - name: Install vuls-data-update
-        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Install vuls
-        run: go install github.com/MaineK00n/vuls2/cmd/vuls@main
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls2/cmd/vuls@main
 
       - name: Build DB
         run: make -f db-main.mk db-build BRANCH=main DBPATH=./vuls.db

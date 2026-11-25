@@ -53,7 +53,9 @@ jobs:
           cache: false
 
       - name: Install vuls-data-update
-        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
 
       - name: Validate and normalize digest
         run: |

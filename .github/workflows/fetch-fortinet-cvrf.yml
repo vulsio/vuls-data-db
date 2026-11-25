@@ -73,10 +73,14 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Install vuls-data-update
-        run: go install ./cmd/vuls-data-update
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: ./cmd/vuls-data-update
 
       - name: Install xq
-        run: go install github.com/sibprogrammer/xq@v1.4.0
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/sibprogrammer/xq@v1.4.0
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-fortinet-cvrf
