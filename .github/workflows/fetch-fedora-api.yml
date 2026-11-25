@@ -70,14 +70,23 @@ jobs:
       # the start has no tag to pull, which fails the commit. The merged
       # repository is still checked as a whole there.
       - name: Fetch
+        env:
+          # Read from the environment, rather than interpolated into the
+          # script: the expression is substituted before bash parses it, and
+          # the release names come from Bodhi, so a name holding a quote, a ;
+          # or a $( would run as commands in a job that can push packages.
+          RELEASE: ${{ matrix.release }}
         run: |
           mkdir vuls-data-raw-fedora-api
-          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api --allow-empty ${{ matrix.release }} --retry 10
+          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api --allow-empty "${RELEASE}" --retry 10
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-fedora-api.tar.zst vuls-data-raw-fedora-api || [[ $? == 1 ]]
       - name: Push ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }}
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }} vuls-data-raw-fedora-api.tar.zst
+        env:
+          # From the environment, as in Fetch.
+          RELEASE: ${{ matrix.release }}
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} "ghcr.io/vulsio/vuls-data-db:fedora-data-${RELEASE}" vuls-data-raw-fedora-api.tar.zst
 
   commit:
     name: Commit vuls-data-raw-fedora-api
@@ -123,13 +132,17 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
 
       - name: Aggregate fedora-data-*
+        env:
+          # From the environment, as in the fetch job: the names come from
+          # Bodhi, and inside '...' an apostrophe in one would end the string.
+          RELEASES: ${{ needs.fedora-release.outputs.release }}
         run: |
-          for release in $(echo '${{ needs.fedora-release.outputs.release }}' | jq -r '.[]'); do
-            vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${release}
-            if ls ghcr.io/${{ github.repository }}/fedora-data-${release}/* >/dev/null 2>&1; then
-              mv ghcr.io/${{ github.repository }}/fedora-data-${release}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api/ 
+          for release in $(jq -r '.[]' <<< "${RELEASES}"); do
+            vuls-data-update dotgit pull --dir . --checkout "" "ghcr.io/${{ github.repository }}:fedora-data-${release}"
+            if ls "ghcr.io/${{ github.repository }}/fedora-data-${release}"/* >/dev/null 2>&1; then
+              mv "ghcr.io/${{ github.repository }}/fedora-data-${release}"/* "ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api/"
             fi
-            rmdir ghcr.io/${{ github.repository }}/fedora-data-${release}
+            rmdir "ghcr.io/${{ github.repository }}/fedora-data-${release}"
           done
 
       - name: Set Git remote
