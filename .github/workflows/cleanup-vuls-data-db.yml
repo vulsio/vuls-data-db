@@ -1,11 +1,10 @@
 name: Cleanup vulsio/vuls-data-db
 
 on:
-  workflow_run:
-    workflows:
-      [Fetch All, Extract All, Truncate Extracted, Restore All, Git GC Raw, Git GC Extracted]
-    types:
-      - completed
+  # Pipelines pushes around the clock, so this runs on a clock too rather
+  # than after any one workflow.
+  schedule:
+    - cron: "30 */6 * * *"
   workflow_dispatch:
 
 permissions: {}

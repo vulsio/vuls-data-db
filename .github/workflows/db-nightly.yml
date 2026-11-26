@@ -74,6 +74,15 @@ on:
 
 permissions: {}
 
+# Pipelines requests a build whenever an extract in db-nightly.mk commits, on top
+# of the schedule. A build pulls every repository as it starts, so one run
+# waiting here covers every request made while another builds: a newer run
+# replaces the waiting one rather than queueing behind it. That includes a
+# run dispatched by hand, so dispatch a custom-threshold run while nothing
+# waits. One build at a time also keeps promotions in the order builds start.
+concurrency:
+  group: db-nightly
+
 jobs:
   build:
     name: build vuls.db

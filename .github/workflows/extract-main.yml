@@ -11,144 +11,41 @@ on:
       branch:
         required: true
         type: string
+      raw:
+        description: Whether the target has a vuls-data-raw repository to extract from
+        required: false
+        type: boolean
+        default: true
+      reads:
+        description: Other raw sources the extractor takes after the target's own, space-separated
+        required: false
+        type: string
+        default: ""
+    outputs:
+      committed:
+        description: Whether the extract committed a change to the branch
+        value: ${{ jobs.extract.outputs.committed }}
   workflow_dispatch:
     inputs:
       target:
+        description: "A source in sources.json, e.g. alpine-secdb"
         required: true
-        type: choice
-        options:
-          - alma-errata
-          - alma-osv
-          # - alma-oval
-          # - alma-updateinfo
-          - alpine-secdb
-          - alpine-osv
-          - amazon
-          # - android-osv
-          - apple-security-releases
-          - arch
-          # - bitnami-osv
-          # - cargo-ghsa
-          # - cargo-osv
-          # - cargo-db
-          # - chainguard-osv
-          - cisa-kev
-          - cisco-json
-          # - composer-ghsa
-          # - composer-glsa
-          # - composer-osv
-          # - composer-db
-          # - conan-glsa
-          # - debian-osv
-          # - debian-oval
-          # - debian-security-tracker-api
-          - debian-security-tracker-salsa
-          - enisa-euvd-list
-          - enisa-kev
-          - epss
-          # - erlang-ghsa
-          # - erlang-osv
-          - exploit-exploitdb
-          - exploit-github
-          - exploit-inthewild
-          - exploit-trickest
-          - fedora-api
-          # - fedora-updateinfo
-          # - fortinet-handmade
-          - fortinet-csaf
-          - fortinet-cvrf
-          - freebsd
-          # - gentoo
-          # - ghactions-osv
-          # - git-osv
-          # - golang-ghsa
-          # - golang-glsa
-          # - golang-osv
-          # - golang-db
-          # - golang-vulndb
-          # - haskell-ghc-osv
-          # - haskell-hackage-osv
-          - jvn-feed-detail
-          # - jvn-feed-product
-          - jvn-feed-rss
-          # - linux-osv
-          # - maven-ghsa
-          # - maven-glsa
-          # - maven-osv
-          - microsoft-bulletin
-          - microsoft-cvrf
-          - microsoft-msuc
-          - microsoft-servicing
-          - microsoft-wsusscn2
-          - mitre-attack
-          - mitre-capec
-          # - mitre-cve-cvrf
-          # - mitre-cve-v4
-          - mitre-cve-v5
-          - mitre-cwe
-          # - mitre-emb3d
-          - msf
-          # - netbsd
-          # - npm-ghsa
-          # - npm-glsa
-          # - npm-osv
-          # - npm-db
-          # - nuget-ghsa
-          # - nuget-glsa
-          # - nuget-osv
-          - nuclei-repository
-          # - nvd-api-cpe
-          # - nvd-feed-cve-v1
-          # - nvd-feed-cpe-v1
-          # - nvd-feed-cpematch-v1
-          # - nvd-feed-cve-v2
-          # - nvd-feed-cpe-v2
-          # - nvd-feed-cpematch-v2
-          # - openssh-security
-          # - openssl-secjson
-          - oracle-linux
-          # - oss-fuzz-osv
-          - paloalto-json
-          # - perl-db
-          # - pip-ghsa
-          # - pip-glsa
-          # - pip-osv
-          # - pip-db
-          # - pub-ghsa
-          # - pub-osv
-          # - r-osv
-          - redhat-cve
-          # - redhat-cvrf
-          # - redhat-osv
-          - rocky-errata
-          # - rocky-osv
-          # - rocky-updateinfo
-          # - rubygems-ghsa
-          # - rubygems-glsa
-          # - rubygems-osv
-          # - rubygems-db
-          # - snort
-          - suse-oval
-          # - suse-cvrf
-          # - suse-cvrf-cve
-          # - suse-csaf
-          # - suse-csaf-vex
-          # - suse-osv
-          # - swift-ghsa
-          # - swift-osv
-          # - ubuntu-oval
-          - ubuntu-cve-tracker
-          # - ubuntu-osv
-          # - ubuntu-vex
-          - vulncheck-kev
-          - vulncheck-nist-nvd2
-          # - wolfi-osv
+        type: string
       branch:
         required: true
         type: choice
         options:
           - main
           - nightly
+      raw:
+        description: Whether the target has a vuls-data-raw repository to extract from
+        required: true
+        default: true
+        type: boolean
+      reads:
+        description: "Other raw sources the extractor takes, as \"reads\" in sources.json lists them, space-separated"
+        required: false
+        type: string
 
 permissions: {}
 
@@ -159,6 +56,8 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
     steps:
       - name: Maximize build space
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
@@ -195,13 +94,34 @@ jobs:
         run: go install ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+        if: ${{ inputs.raw }}
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-${{ inputs.target }}
+
+      - name: Pull the other raw repositories the extractor reads
+        if: ${{ inputs.reads != '' }}
+        env:
+          READS: ${{ inputs.reads }}
+        run: |
+          for name in ${READS}; do
+            vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-${name}
+          done
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
         run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}
 
       - name: Extract
-        run: vuls-data-update extract ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
+        env:
+          RAW: ${{ inputs.raw }}
+          READS: ${{ inputs.reads }}
+        run: |
+          raws=()
+          if [[ "${RAW}" == "true" ]]; then
+            raws+=(ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }})
+          fi
+          for name in ${READS}; do
+            raws+=(ghcr.io/${{ github.repository }}/vuls-data-raw-${name})
+          done
+          vuls-data-update extract ${{ inputs.target }} --dir ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} "${raws[@]}"
 
       - name: Set Git remote
         run: |
@@ -225,11 +145,19 @@ jobs:
           fi
 
       - name: Commit
+        id: commit
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} add .
             git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Loose objects are pushed as whole copies, and nothing else packs them
+      # until the tag crosses the archive or truncate threshold. Without -f
+      # this keeps the deltas already in the pack, so it takes minutes at most.
+      - name: Repack
+        run: git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} repack -a -d
 
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}
