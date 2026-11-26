@@ -131,8 +131,11 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.dbs) }}
     steps:
-      # Sources without detection data are not diffed (the DB-side guard did
-      # not check them either); only the ones named so in db-guard.json.
+      # Sources without detection data are not diffed; only the ones named so
+      # in db-guard.json. The DB-side guard did not check them either: `vuls
+      # diff db` compares only the <ecosystem>/detection and <ecosystem>/kb
+      # buckets, which these sources (KEV lists, exploits, CWE/CAPEC/ATT&CK,
+      # CVE records) add nothing to, and no fixture detects through them.
       - name: Approve without diff
         if: ${{ !matrix.diff }}
         env:
