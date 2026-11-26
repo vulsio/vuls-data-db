@@ -94,6 +94,12 @@ jobs:
             [ "$(jq -r '.branch' "${lock}")" = "${BRANCH}" ] || continue
             base=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .commit' "${lock}")
             [ -n "${base}" ] || continue
+            # A row without a commit reads as "null", which the CAS in the
+            # lock job would match and overwrite on the diff: false path.
+            if ! [[ "${base}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::${file}: ${NAME} has commit '${base}', not a 40-hex commit"
+              exit 1
+            fi
 
             if ! jq -e --arg db "${db}" '.dbs[$db]' db-guard.json > /dev/null; then
               echo "::error::${file} has no entry in db-guard.json .dbs"
