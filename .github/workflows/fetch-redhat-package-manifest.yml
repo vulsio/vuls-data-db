@@ -42,6 +42,14 @@ jobs:
           repository: MaineK00n/vuls-data-update
           ref: main
 
+      # docs.redhat.com refuses CI, so the pages are saved by hand, in this
+      # repository (redhat-package-manifest/README.md).
+      - name: Check out the pages
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          path: vuls-data-db
+          sparse-checkout: redhat-package-manifest
+
       - name: Set up Go 1.x
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
         with:
@@ -56,7 +64,7 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest
 
       - name: Fetch all
-        run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest 8 9 10
+        run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest vuls-data-db/redhat-package-manifest
 
       - name: Set Git remote
         run: |
