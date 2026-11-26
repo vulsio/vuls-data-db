@@ -55,8 +55,23 @@ jobs:
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest
 
+      # docs.redhat.com refuses CI, so the pages are saved by hand and kept in
+      # origin/ of the raw repository, which the fetch reads and keeps. The pull
+      # extracts .git only and leaves the worktree empty, so origin/ is put back
+      # on disk first. The fetch itself fails a run that wrote no table, so the
+      # check below, which the restored pages would satisfy, is not what guards
+      # this one.
+      - name: Restore origin/
+        run: |
+          set -euo pipefail
+
+          dir="ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest"
+          if [[ -n $(git -C "${dir}" ls-files -- origin/) ]]; then
+            git -C "${dir}" restore -- origin/
+          fi
+
       - name: Fetch all
-        run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest 8 9 10
+        run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest
 
       - name: Set Git remote
         run: |
@@ -69,7 +84,8 @@ jobs:
       # A run that writes nothing leaves the repository empty, and committing
       # that is a green run that quietly dropped the data. Stop before the
       # commit -- and before any restore, which would put the files back and
-      # hide it.
+      # hide it. (The restore of origin/ above precedes it anyway; see there
+      # for what guards this job instead.)
       - name: Ensure the repository was left populated
         run: |
           set -euo pipefail
@@ -79,15 +95,25 @@ jobs:
             exit 1
           fi
 
+      # The raw repository is also written by hand: new pages are stored in
+      # origin/ and pushed from a checkout (.github/redhat-package-manifest-issue.md).
+      # A push replaces the tag, so a run that pushed the tree it pulled would
+      # take back pages pushed since. A run that committed nothing -- every
+      # run but one after vuls-data-update reads the pages differently --
+      # pushes nothing.
       - name: Commit
+        id: commit
         run: |
           if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest status --porcelain) ]]; then
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest add .
             git -C ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create dotgit tarball
+        if: steps.commit.outputs.committed == 'true'
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest
 
       - name: Push ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest
+        if: steps.commit.outputs.committed == 'true'
         run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest vuls-data-raw-redhat-package-manifest.tar.zst
