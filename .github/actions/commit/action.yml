@@ -24,7 +24,9 @@ description: |
   trailer, so `git log --format='%(trailers:key=Vuls-Data-Update,valueonly)'`
   reads it back. A commit names the build that wrote what it changes, so the
   build of a file is the one in the last commit that changed it,
-  `git log -1 -- <path>`.
+  `git log -1 -- <path>`, as far back as the history goes: the oldest commit
+  a truncation leaves shows every file it holds as its own change, whichever
+  build wrote them.
 
   A binary that records no version, `(devel)`, or one built from a checkout
   with changes, `+dirty`, fails the step rather than commit a build no one can
@@ -72,6 +74,10 @@ runs:
           echo "::error::check-run-id must be the job's check run ID, not '${CHECK_RUN_ID}'"
           exit 1
         fi
+        if [[ -z "${MESSAGE}" ]]; then
+          echo "::error::message must not be empty, or the link to the job becomes the subject"
+          exit 1
+        fi
 
         # git -C "" stays where it is, and a directory without its own .git
         # belongs to whatever repository holds it -- the checkout of
@@ -80,7 +86,10 @@ runs:
           echo "::error::dir '${DIR}' is not a directory"
           exit 1
         fi
-        top="$(git -C "${DIR}" rev-parse --show-toplevel)"
+        if ! top="$(git -C "${DIR}" rev-parse --show-toplevel)"; then
+          echo "::error::${DIR} is not in a git repository"
+          exit 1
+        fi
         if [[ "${top}" != "$(realpath "${DIR}")" ]]; then
           echo "::error::${DIR} is not the top of a git repository but inside ${top}"
           exit 1

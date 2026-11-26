@@ -38,11 +38,21 @@ jobs:
         run: |
           set -euo pipefail
 
-          revision="$(git ls-remote --exit-code https://github.com/MaineK00n/vuls-data-update.git refs/heads/main | cut -f 1)"
-          if [[ ! "${revision}" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::main of MaineK00n/vuls-data-update resolved to '${revision}', not a commit"
-            exit 1
-          fi
+          # Each shard used to resolve main inside actions/checkout, which
+          # retries a fetch it fails, and a failure cost that shard alone. A
+          # failure here costs every shard and the commit, so it is retried the
+          # way go-install retries.
+          for ((i = 1; ; i++)); do
+            if revision="$(git ls-remote --exit-code https://github.com/MaineK00n/vuls-data-update.git refs/heads/main | cut -f 1)" && [[ "${revision}" =~ ^[0-9a-f]{40}$ ]]; then
+              break
+            fi
+            if ((i >= 5)); then
+              echo "::error::main of MaineK00n/vuls-data-update did not resolve to a commit in ${i} attempts, last '${revision}'"
+              exit 1
+            fi
+            echo "::warning::main of MaineK00n/vuls-data-update did not resolve to a commit (attempt ${i}/5). Retrying in $((i * 15))s"
+            sleep $((i * 15))
+          done
           echo "revision=${revision}" >> "${GITHUB_OUTPUT}"
 
   fetch:
