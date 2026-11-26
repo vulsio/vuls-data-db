@@ -40,6 +40,8 @@ jobs:
             fi
             if ((i >= attempts)); then
               echo "::error::gh run view ${RUN_ID} failed ${i} times"
+              # The summary page says so too, rather than staying empty.
+              echo "❌ Could not read run ${RUN_ID}: gh run view failed ${i} times. See this job's log." >> "$GITHUB_STEP_SUMMARY"
               exit 1
             fi
             echo "::warning::gh run view ${RUN_ID} failed (attempt ${i}/${attempts}). Retrying in $((i * 15))s"
