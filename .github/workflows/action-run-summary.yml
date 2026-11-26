@@ -29,7 +29,24 @@ jobs:
           RUN_ID="${INPUT_RUN_ID:-$GITHUB_RUN_ID}"
 
           # --- fetch run metadata -----------------------------------------------
-          run_json=$(gh run view "$RUN_ID" --json 'createdAt,url,jobs,name,status')
+          # The GitHub API now and then answers this with a 502, or drops the
+          # read with an HTTP/2 stream error, though another try a few seconds
+          # later goes through. All that follows needs the run's metadata, so
+          # try again before failing, as the go-install action does.
+          attempts=5
+          for ((i = 1; ; i++)); do
+            if run_json=$(gh run view "$RUN_ID" --json 'createdAt,url,jobs,name,status'); then
+              break
+            fi
+            if ((i >= attempts)); then
+              echo "::error::gh run view ${RUN_ID} failed ${i} times"
+              # The summary page says so too, rather than staying empty.
+              echo "❌ Could not read run ${RUN_ID}: gh run view failed ${i} times. See this job's log." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            echo "::warning::gh run view ${RUN_ID} failed (attempt ${i}/${attempts}). Retrying in $((i * 15))s"
+            sleep $((i * 15))
+          done
 
           wf_name=$(echo "$run_json" | jq -r '.name // "Unknown"')
           url=$(echo "$run_json" | jq -r '.url')
