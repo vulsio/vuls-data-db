@@ -22,24 +22,23 @@ Check this list against the documentation first.
 
 ### Checklist
 
-You need `vuls-data-update` from main (`go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main`), and a token that can write the packages of vulsio.
+You need `vuls-data-update` from main (`go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main`). You also need a GitHub token that can write the packages of vulsio, in `GITHUB_TOKEN` rather than on the command line. For example, run `gh auth refresh -s write:packages` once, then `export GITHUB_TOKEN="$(gh auth token)"`.
 
 - [ ] Save each page from a browser, with "Save Page As": "Web Page, HTML only" (Firefox) or "Webpage, HTML Only" (Chrome).
-- [ ] Pull the raw repository and put its pages back on disk:
+- [ ] Pull the raw repository, with its files on disk:
 
   ```sh
-  vuls-data-update dotgit pull --dir . --checkout main ghcr.io/vulsio/vuls-data-db:vuls-data-raw-redhat-package-manifest
-  git -C ghcr.io/vulsio/vuls-data-db/vuls-data-raw-redhat-package-manifest restore -- origin/
+  vuls-data-update dotgit pull --restore --dir . --checkout main ghcr.io/vulsio/vuls-data-db:vuls-data-raw-redhat-package-manifest
   ```
 
+- [ ] Delete from `origin/` any page that the list no longer has, before the next step. A page left behind by a manifest that moved holds the same tables as the new pages, and the next step refuses both.
 - [ ] Store the saved pages, and read the tables again:
 
   ```sh
   vuls-data-update fetch redhat-package-manifest --dir ghcr.io/vulsio/vuls-data-db/vuls-data-raw-redhat-package-manifest <saved page>...
   ```
 
-  It stores each page's `<article>` at the path of its URL. It refuses a page that is not one of the manifest, and then stores nothing.
-- [ ] Delete from `origin/` any page that the list no longer has.
+  It stores each page's `<article>` at the path of its URL. Every table is read before anything is written, so a page that is not one of the manifest, or a run that fails for any other reason, leaves the repository as it was.
 - [ ] See what changed with `git status` and `git diff --stat -- package module` in the repository.
   - The tables are what tell whether the manifest changed.
   - The pages of RHEL 8 and 9 carry ids that each build of the documentation generates anew, so a rebuilt page differs even where its tables do not.
@@ -49,9 +48,14 @@ You need `vuls-data-update` from main (`go install github.com/MaineK00n/vuls-dat
   git -C ghcr.io/vulsio/vuls-data-db/vuls-data-raw-redhat-package-manifest add -A
   git -C ghcr.io/vulsio/vuls-data-db/vuls-data-raw-redhat-package-manifest commit -m "save the RHEL package manifest pages"
   vuls-data-update dotgit compress ghcr.io/vulsio/vuls-data-db/vuls-data-raw-redhat-package-manifest
-  vuls-data-update dotgit registry push --force --token <token> ghcr.io/vulsio/vuls-data-db:vuls-data-raw-redhat-package-manifest vuls-data-raw-redhat-package-manifest.tar.zst
+  vuls-data-update dotgit registry push --force ghcr.io/vulsio/vuls-data-db:vuls-data-raw-redhat-package-manifest vuls-data-raw-redhat-package-manifest.tar.zst
   ```
 
-  Push when no Fetch All is running (`gh run list --repo vulsio/vuls-data-db --workflow fetch-all.yml --status in_progress`). A run that pulled before your push would push over it.
-- [ ] After the next Fetch All, check that its fetch of vuls-data-raw-redhat-package-manifest passed, and that the repository still holds your commit.
+  Push when none of the workflows that push this tag is running. A run that pulled before your push, and then pushes, takes your commit back. The fetch job pushes only when it commits, but the Git GC that Fetch All and gc-raw.yml run, and archive-raw.yml, always push.
+
+  ```sh
+  for w in fetch-all.yml fetch-redhat-package-manifest.yml gc-raw.yml archive-raw.yml; do gh run list --repo vulsio/vuls-data-db --workflow "$w" --status in_progress; done
+  ```
+
+- [ ] After the next Fetch All, check two things: its fetch of vuls-data-raw-redhat-package-manifest passed, and the repository still holds your commit.
 - [ ] Close this issue.
