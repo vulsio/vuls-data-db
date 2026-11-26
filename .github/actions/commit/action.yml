@@ -28,6 +28,11 @@ description: |
   a truncation leaves shows every file it holds as its own change, whichever
   build wrote them.
 
+  The trailer's key and value are a contract. vuls-data-update's extract
+  reads the Vuls-Data-Update trailers of the raw commit it extracts into
+  raw[].builds of datasource.json, which goes into the vuls2 DB
+  (MaineK00n/vuls-data-update#1089), so a change to either breaks that.
+
   A binary that records no version, `(devel)`, or one built from a checkout
   with changes, `+dirty`, fails the step rather than commit a build no one can
   rebuild. The binary is read before looking for changes, so a producer that
