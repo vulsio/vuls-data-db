@@ -1,0 +1,91 @@
+name: Red Hat package manifest reminder
+
+# Files a reminder issue to save the pages of the RHEL package manifest
+# again (redhat-package-manifest/README.md). docs.redhat.com refuses CI, so
+# the pages are saved by hand, and Red Hat revises the manifest at each
+# minor release, in May and November.
+#
+# Prerequisite: the `redhat-package-manifest` label must already exist in
+# the repo — it is created once, out of band, not by this workflow.
+#
+# The job fires MONTHLY and acts in June and December, or in July and
+# January when that month's run did not: GitHub's scheduled-workflow
+# scheduler is best-effort and can drop a run, and a twice-yearly cron that
+# misses a fire leaves a year's gap. A release's pages are not due once a
+# reminder has been filed, or the pages committed, since the 1st of the
+# month it ships in.
+
+on:
+  schedule:
+    - cron: "17 9 1 * *" # 09:17 UTC on the 1st of every month
+  workflow_dispatch:
+
+# Serialize runs so a manual dispatch overlapping the scheduled run
+# cannot both pass the "not filed yet" gate and file a duplicate issue.
+concurrency:
+  group: redhat-package-manifest-reminder
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  remind:
+    name: file reminder issue when due
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out (for the issue body template)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: File reminder issue when due
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # The 1st of the month the release whose pages are due shipped in.
+          year=$(date -u +%Y)
+          case "$(date -u +%m)" in
+            06 | 07) since="${year}-05-01" ;;
+            12) since="${year}-11-01" ;;
+            01) since="$((year - 1))-11-01" ;;
+            *)
+              echo "No release's pages are due this month; nothing to do."
+              exit 0
+              ;;
+          esac
+
+          # A reminder is already open — the pages are still pending, so
+          # don't pile another one on top of it.
+          open_issue=$(gh issue list --repo "$REPO" --label redhat-package-manifest \
+            --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open_issue" ]; then
+            echo "redhat-package-manifest issue #$open_issue is already open; nothing to do."
+            exit 0
+          fi
+
+          # `gh issue list` returns newest-first, so --limit 1 yields the
+          # latest issue. ISO 8601 timestamps compare as strings.
+          last=$(gh issue list --repo "$REPO" --label redhat-package-manifest \
+            --state all --limit 1 --json createdAt --jq '.[0].createdAt // empty')
+          if [[ -n "$last" && "$last" > "$since" ]]; then
+            echo "A reminder was filed at $last, since $since; nothing to do."
+            exit 0
+          fi
+
+          # The pages were already saved again for this release.
+          saved=$(gh api "repos/$REPO/commits?path=redhat-package-manifest&since=${since}T00:00:00Z&per_page=1" \
+            --jq '.[0].commit.committer.date // empty')
+          if [ -n "$saved" ]; then
+            echo "The pages were committed at $saved, since $since; nothing to do."
+            exit 0
+          fi
+
+          gh issue create --repo "$REPO" \
+            --label redhat-package-manifest \
+            --assignee MaineK00n \
+            --title "Save the RHEL package manifest pages ($(date -u +%Y-%m))" \
+            --body-file .github/redhat-package-manifest-issue.md
