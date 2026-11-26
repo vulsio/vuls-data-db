@@ -8,11 +8,12 @@ The <article> element is the text of the document, which Red Hat licenses
 under CC BY-SA 3.0, and holds every table; the rest of the page is the site
 around it. It is written byte for byte, to the path of the page's URL under
 https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/ with
-".html" added, beside this script: the page's canonical link names the URL.
+".html" added, under pages/ beside this script: the page's canonical link
+names the URL.
 
   .../red_hat_enterprise_linux/9/html-single/package_manifest/index
-      -> 9/html-single/package_manifest/index.html
-  .../red_hat_enterprise_linux/10/plan-baseos -> 10/plan-baseos.html
+      -> pages/9/html-single/package_manifest/index.html
+  .../red_hat_enterprise_linux/10/plan-baseos -> pages/10/plan-baseos.html
 
 A page is refused, and nothing is written for it, unless it has a canonical
 link under that URL, exactly one <article>, and a table in it.
@@ -36,7 +37,7 @@ TABLE = re.compile(rb"<table[\s>]")
 
 def trim(src):
     """Return the path to write the article of the page at src to, relative
-    to this directory, and the article."""
+    to pages/, and the article."""
     with open(src, "rb") as f:
         page = f.read()
 
@@ -66,7 +67,7 @@ def main(srcs):
     if not srcs:
         sys.exit(__doc__)
 
-    root = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pages")
     failed = False
     for src in srcs:
         try:
@@ -80,7 +81,7 @@ def main(srcs):
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         with open(dst, "wb") as f:
             f.write(article)
-        print(f"{src} -> {rel}")
+        print(f"{src} -> pages/{rel}")
 
     if failed:
         sys.exit(1)

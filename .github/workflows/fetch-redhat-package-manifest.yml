@@ -64,7 +64,7 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-package-manifest
 
       - name: Fetch all
-        run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest vuls-data-db/redhat-package-manifest
+        run: vuls-data-update fetch redhat-package-manifest --dir ghcr.io/${{ github.repository }}/vuls-data-raw-redhat-package-manifest vuls-data-db/redhat-package-manifest/pages
 
       - name: Set Git remote
         run: |

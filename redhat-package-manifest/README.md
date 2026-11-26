@@ -2,7 +2,7 @@
 
 The pages of the RHEL package manifest that [fetch-redhat-package-manifest.yml](../.github/workflows/fetch-redhat-package-manifest.yml) hands to `vuls-data-update fetch redhat-package-manifest`. They are saved from docs.redhat.com by hand: the site answers 403 to CI ([keycloak/keycloak#54762](https://github.com/keycloak/keycloak/issues/54762)) and to any client it does not take for a browser, and its robots.txt disallows the single-page manifests.
 
-Each page is kept at the path of its URL under `https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/`, with `.html` added, and cut down to its `<article>` element: the text of the document, which holds every table. The site around it is left out.
+Each page is kept in [pages/](pages) at the path of its URL under `https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/`, with `.html` added, and cut down to its `<article>` element: the text of the document, which holds every table. The site around it is left out. `vuls-data-update` fails on anything else in pages/, as a page it would not read.
 
 | Release | Page |
 |---|---|
@@ -30,11 +30,11 @@ Red Hat revises the manifest at each minor release, in May and November. [redhat
    python3 redhat-package-manifest/trim.py <saved page>...
    ```
 
-   It writes the `<article>` of each page to the path of the page's canonical link here. It refuses a page with no table in it, and writes nothing for that page.
+   It writes the `<article>` of each page to the path of the page's canonical link in pages/. It refuses a page with no table in it, and writes nothing for that page.
 4. Optionally, read them as CI will, with `vuls-data-update` built from main:
 
    ```sh
-   vuls-data-update fetch redhat-package-manifest --dir "$(mktemp -d)" redhat-package-manifest
+   vuls-data-update fetch redhat-package-manifest --dir "$(mktemp -d)" redhat-package-manifest/pages
    ```
 
 5. Open a PR with the pages, and update the list above if it changed. Once the PR is merged, the next Fetch All commits the new tables to vuls-data-raw-redhat-package-manifest. To commit them sooner, run fetch-redhat-package-manifest.yml by hand.
