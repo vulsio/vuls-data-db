@@ -69,6 +69,14 @@ jobs:
           go-version: "stable"
           cache: false
 
+      # The filter writes what this job commits, so the commit names its build,
+      # read from the installed binary. Installed before the pulls below, which
+      # write into this checkout and would leave the build marked +dirty.
+      - name: Install filter-vuls-data-extracted-redhat
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: .
+
       - name: Install vuls-data-update
         uses: vulsio/vuls-data-db/.github/actions/go-install@main
         with:
@@ -81,7 +89,7 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout ${{ inputs.branch }} ghcr.io/${{ github.repository }}:vuls-data-extracted-${{ inputs.target }}-rhel
 
       - name: Filter
-        run: go run main.go ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} affected_repository_list.json ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel
+        run: filter-vuls-data-extracted-redhat ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }} affected_repository_list.json ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel
 
       - name: Set Git remote
         run: |
@@ -105,11 +113,11 @@ jobs:
           fi
 
       - name: Commit
-        run: |
-          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel status --porcelain) ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
-          fi
+        uses: vulsio/vuls-data-db/.github/actions/commit@main
+        with:
+          dir: ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel
+          check-run-id: ${{ job.check_run_id }}
+          producer: filter-vuls-data-extracted-redhat
 
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-extracted-${{ inputs.target }}-rhel

@@ -1,0 +1,133 @@
+name: commit
+description: |
+  Commit what a job left in a vuls-data-* repository, naming in the commit the
+  job that wrote it and the build of the program that did:
+
+    update
+
+    GitHub Actions: https://github.com/vulsio/vuls-data-db/actions/runs/<run_id>/job/<check_run_id>
+
+    Vuls-Data-Update: v0.0.0-20261126020019-9f06544f77cb
+    Go-Version: go1.27.3
+
+  The job alone does not say what code wrote the commit. Its log is gone after
+  90 days, and every job builds its program from its own checkout of a branch,
+  so two jobs of one run are on different commits when a promotion lands
+  between them. Nor does anything else: an extracted repository loses its
+  oldest commits when it is truncated, and rebuilding one takes the raw commit
+  its datasource.json names and the build that extracted it.
+
+  The build is read from the binary with `go version -m`: the version of its
+  main module, a pseudo-version naming the commit for
+  `go install <package>@<revision>` and for a build in a checkout alike, and
+  the Go it was built with. The last element of the module path names the
+  trailer, so `git log --format='%(trailers:key=Vuls-Data-Update,valueonly)'`
+  reads it back. A commit names the build that wrote what it changes, so the
+  build of a file is the one in the last commit that changed it,
+  `git log -1 -- <path>`.
+
+  A binary that records no version, `(devel)`, or one built from a checkout
+  with changes, `+dirty`, fails the step rather than commit a build no one can
+  rebuild. The binary is read before looking for changes, so a producer that
+  cannot be read fails the first run, not the first run with something to
+  commit.
+
+  Workflows, most of which do not check out this repository, call it as
+  `vulsio/vuls-data-db/.github/actions/commit@main`.
+
+inputs:
+  dir:
+    description: The repository to commit.
+    required: true
+  check-run-id:
+    description: |
+      `job.check_run_id` of the calling job, for the link to it. The `job`
+      context is not documented for composite actions, so the caller passes it.
+    required: true
+  message:
+    description: The subject of the commit.
+    required: false
+    default: update
+  producer:
+    description: |
+      The Go program that wrote what is committed: a command on PATH, or the
+      path to its binary.
+    required: false
+    default: vuls-data-update
+
+runs:
+  using: composite
+  steps:
+    - name: Commit ${{ inputs.dir }}
+      shell: bash
+      env:
+        DIR: ${{ inputs.dir }}
+        CHECK_RUN_ID: ${{ inputs.check-run-id }}
+        MESSAGE: ${{ inputs.message }}
+        PRODUCER: ${{ inputs.producer }}
+      run: |
+        set -euo pipefail
+
+        if [[ ! "${CHECK_RUN_ID}" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::check-run-id must be the job's check run ID, not '${CHECK_RUN_ID}'"
+          exit 1
+        fi
+
+        # git -C "" stays where it is, and a directory without its own .git
+        # belongs to whatever repository holds it -- the checkout of
+        # vuls-data-update in most jobs -- so either would commit the data there.
+        if [[ -z "${DIR}" || ! -d "${DIR}" ]]; then
+          echo "::error::dir '${DIR}' is not a directory"
+          exit 1
+        fi
+        top="$(git -C "${DIR}" rev-parse --show-toplevel)"
+        if [[ "${top}" != "$(realpath "${DIR}")" ]]; then
+          echo "::error::${DIR} is not the top of a git repository but inside ${top}"
+          exit 1
+        fi
+
+        if ! binary="$(command -v "${PRODUCER}")"; then
+          echo "::error::producer '${PRODUCER}' is neither a command on PATH nor a binary"
+          exit 1
+        fi
+        if ! info="$(go version -m "${binary}")"; then
+          echo "::error::${binary} is not a Go binary that records its build"
+          exit 1
+        fi
+        go_version="$(head -n 1 <<< "${info}")"
+        go_version="${go_version#"${binary}: "}"
+        module="$(awk -F '\t' '$2 == "mod" { print $3; exit }' <<< "${info}")"
+        version="$(awk -F '\t' '$2 == "mod" { print $4; exit }' <<< "${info}")"
+        case "${version}" in
+          "" | "(devel)")
+            echo "::error::${binary} records no version of ${module:-its main module}, so the commit cannot name what wrote it. Install it with go install <package>@<revision>, or build it in a checkout"
+            exit 1
+            ;;
+          *+dirty)
+            echo "::error::${binary} was built from a checkout with changes (${version}), a build no one can rebuild"
+            exit 1
+            ;;
+        esac
+
+        # vuls-data-update -> Vuls-Data-Update. A major version suffix (/v2)
+        # gives way to the element before it.
+        name="${module##*/}"
+        if [[ "${name}" =~ ^v[0-9]+$ && "${module}" == */* ]]; then
+          name="${module%/*}"
+          name="${name##*/}"
+        fi
+        key="$(sed -E 's/[^A-Za-z0-9]+/-/g; s/(^|-)([a-z])/\1\u\2/g' <<< "${name}")"
+
+        status="$(git -C "${DIR}" status --porcelain)"
+        if [[ -z "${status}" ]]; then
+          echo "nothing to commit in ${DIR} (${key}: ${version}, ${go_version})"
+          exit 0
+        fi
+
+        git -C "${DIR}" add .
+        git -C "${DIR}" commit \
+          -m "${MESSAGE}" \
+          -m "GitHub Actions: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/job/${CHECK_RUN_ID}" \
+          --trailer "${key}: ${version}" \
+          --trailer "Go-Version: ${go_version}"
+        git -C "${DIR}" log -1
