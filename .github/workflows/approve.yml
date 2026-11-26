@@ -100,7 +100,9 @@ jobs:
           cache: false
 
       - name: Install vuls-data-update
-        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
 
       # The same checks `vuls db build` makes, done before the push: a typo
       # written to the lock would otherwise stop the next build as a whole.
