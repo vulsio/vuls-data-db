@@ -59,7 +59,9 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Install vuls-data-update
-        run: go install ./cmd/vuls-data-update
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-oval-v1
         run: vuls-data-update dotgit pull --dir . --checkout main --restore ghcr.io/${{ github.repository }}:vuls-data-raw-redhat-oval-v1

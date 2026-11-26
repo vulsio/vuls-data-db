@@ -66,7 +66,9 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Install vuls-data-update
-        run: go install ./cmd/vuls-data-update
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: ./cmd/vuls-data-update
 
       # `--wait` is the pause each worker takes after its own request, so a leg
       # asks at concurrency/(latency + wait) per second: 2s takes a leg from
@@ -119,7 +121,9 @@ jobs:
           cache: false
 
       - name: Install vuls-data-update
-        run: go install github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-microsoft-msuc

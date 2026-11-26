@@ -1,0 +1,65 @@
+name: go-install
+description: |
+  Run `go install` on a package, and run it again when it fails.
+
+  `go install` reads every module it builds from proxy.golang.org and checks
+  it against sum.golang.org. Either of them now and then drops a read halfway
+  with an HTTP/2 stream error, which fails the install and the job with it,
+  though another try a few seconds later goes through. What a failed try did
+  download stays in the module cache, so the next one picks up from there.
+
+  Workflows, most of which do not check out this repository, call it as
+  `vulsio/vuls-data-db/.github/actions/go-install@main`. An action of this
+  repository calls it as `./.github/actions/go-install`, so that it runs the
+  revision it was checked out with.
+
+inputs:
+  package:
+    description: |
+      What to install, as `go install` takes it: a package with a version
+      (`github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@main`), or
+      a package of the module in the working directory
+      (`./cmd/vuls-data-update`).
+    required: true
+  gobin:
+    description: |
+      The directory to install into, as GOBIN: an absolute path, created if
+      missing. Empty installs where `go install` does by default.
+    required: false
+    default: ""
+  attempts:
+    description: How many times to try before failing.
+    required: false
+    default: "5"
+
+runs:
+  using: composite
+  steps:
+    - name: go install ${{ inputs.package }}
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+        INSTALL_DIR: ${{ inputs.gobin }}
+        ATTEMPTS: ${{ inputs.attempts }}
+      run: |
+        if [[ ! "${ATTEMPTS}" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::attempts must be a positive integer, not '${ATTEMPTS}'"
+          exit 1
+        fi
+
+        if [[ -n "${INSTALL_DIR}" ]]; then
+          mkdir -p "${INSTALL_DIR}"
+          export GOBIN="${INSTALL_DIR}"
+        fi
+
+        for ((i = 1; ; i++)); do
+          if go install "${PACKAGE}"; then
+            exit 0
+          fi
+          if ((i >= ATTEMPTS)); then
+            echo "::error::go install ${PACKAGE} failed ${i} times"
+            exit 1
+          fi
+          echo "::warning::go install ${PACKAGE} failed (attempt ${i}/${ATTEMPTS}). Retrying in $((i * 15))s"
+          sleep $((i * 15))
+        done

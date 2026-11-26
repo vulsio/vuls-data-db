@@ -188,10 +188,14 @@ runs:
       run: vuls db fetch --dbpath ./baseline.db --repository "${{ inputs.baseline_repository }}" --no-progress
 
     - name: Install vuls0 (future-architect/vuls master)
+      uses: ./.github/actions/go-install
+      with:
+        package: github.com/future-architect/vuls/cmd/vuls@master
+        gobin: /tmp/vuls0-bin
+
+    - name: Record vuls0 (future-architect/vuls master)
       shell: bash
       run: |
-        mkdir -p /tmp/vuls0-bin
-        GOBIN=/tmp/vuls0-bin go install github.com/future-architect/vuls/cmd/vuls@master
         mv /tmp/vuls0-bin/vuls /tmp/vuls0-bin/vuls0
         echo "VULS0=/tmp/vuls0-bin/vuls0" >> "$GITHUB_ENV"
 
@@ -323,12 +327,16 @@ runs:
     # Additional check with a slightly older vuls0 binary (pinned commit) to
     # catch regressions that only surface against past vuls0 versions.
     - name: Install vuls0 for older-binary check (pinned commit)
+      uses: ./.github/actions/go-install
+      with:
+        package: github.com/future-architect/vuls/cmd/vuls@${{ inputs.vuls0_old_ref }}
+        gobin: /tmp/vuls0-old-bin
+
+    - name: Record vuls0 for older-binary check (pinned commit)
       shell: bash
       env:
         VULS0_OLD_REF: ${{ inputs.vuls0_old_ref }}
       run: |
-        mkdir -p /tmp/vuls0-old-bin
-        GOBIN=/tmp/vuls0-old-bin go install "github.com/future-architect/vuls/cmd/vuls@${VULS0_OLD_REF}"
         mv /tmp/vuls0-old-bin/vuls /tmp/vuls0-old-bin/vuls0-old
         echo "VULS0_OLD=/tmp/vuls0-old-bin/vuls0-old" >> "$GITHUB_ENV"
 

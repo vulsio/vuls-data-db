@@ -53,7 +53,9 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Install vuls-data-update
-        run: go install ./cmd/vuls-data-update
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: ./cmd/vuls-data-update
 
       - name: Pull ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-cisco-json
