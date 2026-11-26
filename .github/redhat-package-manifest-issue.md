@@ -51,10 +51,10 @@ You need `vuls-data-update` from main (`go install github.com/MaineK00n/vuls-dat
   vuls-data-update dotgit registry push --force ghcr.io/vulsio/vuls-data-db:vuls-data-raw-redhat-package-manifest vuls-data-raw-redhat-package-manifest.tar.zst
   ```
 
-  Push when none of the workflows that push this tag is running. A run that pulled before your push, and then pushes, takes your commit back. The fetch job pushes only when it commits, but the Git GC that Fetch All and gc-raw.yml run, and archive-raw.yml, always push.
+  Push when none of the workflows that push this tag is running. A run that pulled before your push, and then pushes, takes your commit back. The fetch job pushes only when it commits, but the Git GC that Fetch All and gc-raw.yml run always pushes. So do archive-raw.yml, truncate.yml run on this tag, and restore-all.yml.
 
   ```sh
-  for w in fetch-all.yml fetch-redhat-package-manifest.yml gc-raw.yml archive-raw.yml; do gh run list --repo vulsio/vuls-data-db --workflow "$w" --status in_progress; done
+  for w in fetch-all.yml fetch-redhat-package-manifest.yml gc-raw.yml archive-raw.yml truncate.yml restore-all.yml; do gh run list --repo vulsio/vuls-data-db --workflow "$w" --status in_progress; done
   ```
 
 - [ ] After the next Fetch All, check two things: its fetch of vuls-data-raw-redhat-package-manifest passed, and the repository still holds your commit.
