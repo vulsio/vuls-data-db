@@ -106,7 +106,8 @@ jobs:
               exit 1
             fi
             # Fail closed: a source in a lock must say either that it has no
-            # detection data (diff: false) or which fixtures exercise it.
+            # detection data (diff: false) or which fixtures exercise it
+            # ("fixtures": [] for none: the DB diff runs, detection does not).
             diff=$(jq -r --arg n "${NAME}" '.sources[$n] | if . == null then "missing" elif .diff == false then "false" elif has("fixtures") then "true" else "missing" end' db-guard.json)
             if [ "${diff}" = "missing" ]; then
               echo "::error::${NAME} is in ${file} but db-guard.json .sources.${NAME} has neither \"diff\": false nor \"fixtures\""
