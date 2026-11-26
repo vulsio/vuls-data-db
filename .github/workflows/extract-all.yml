@@ -155,8 +155,6 @@ jobs:
     with:
       target: ${{ matrix.target }}
       branch: main
-    secrets:
-      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
 
   extract-main-nightly:
     name: Extract vuls-data-extracted-${{ matrix.target }}
@@ -393,8 +391,6 @@ jobs:
     with:
       target: ${{ matrix.target }}
       branch: main
-    secrets:
-      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
 
   extract-redhat-csaf-or-vex-rhel-nightly:
     name: Extract vuls-data-extracted-${{ matrix.target }}-rhel
@@ -432,8 +428,6 @@ jobs:
     with:
       target: ${{ matrix.target }}
       branch: main
-    secrets:
-      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
 
   extract-nvd-cve-nightly:
     name: Extract vuls-data-extracted-${{ matrix.target }}
