@@ -70,14 +70,24 @@ jobs:
       # the start has no tag to pull, which fails the commit. The merged
       # repository is still checked as a whole there.
       - name: Fetch
+        env:
+          # Read from the environment, rather than interpolated into the
+          # script: the expression is substituted before bash parses it, and
+          # the release names come from Bodhi, so a name holding a quote, a ;
+          # or a $( would run as commands in a job that can push packages. It
+          # goes after --, so a name starting with - is not read as a flag.
+          RELEASE: ${{ matrix.release }}
         run: |
           mkdir vuls-data-raw-fedora-api
-          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api --allow-empty ${{ matrix.release }} --retry 10
+          vuls-data-update fetch fedora-api --dir vuls-data-raw-fedora-api --allow-empty --retry 10 -- "${RELEASE}"
 
       - name: Create tarball
         run: tar --remove-files -acf vuls-data-raw-fedora-api.tar.zst vuls-data-raw-fedora-api || [[ $? == 1 ]]
       - name: Push ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }}
-        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} ghcr.io/vulsio/vuls-data-db:fedora-data-${{ matrix.release }} vuls-data-raw-fedora-api.tar.zst
+        env:
+          # From the environment, as in Fetch.
+          RELEASE: ${{ matrix.release }}
+        run: vuls-data-update dotgit registry push --force --token ${{ secrets.GITHUB_TOKEN }} "ghcr.io/vulsio/vuls-data-db:fedora-data-${RELEASE}" vuls-data-raw-fedora-api.tar.zst
 
   commit:
     name: Commit vuls-data-raw-fedora-api
@@ -123,14 +133,26 @@ jobs:
         run: vuls-data-update dotgit pull --dir . --checkout main ghcr.io/${{ github.repository }}:vuls-data-raw-fedora-api
 
       - name: Aggregate fedora-data-*
+        env:
+          # From the environment, as in the fetch job: the names come from
+          # Bodhi, and inside '...' an apostrophe in one would end the string.
+          RELEASES: ${{ needs.fedora-release.outputs.release }}
         run: |
-          for release in $(echo '${{ needs.fedora-release.outputs.release }}' | jq -r '.[]'); do
-            vuls-data-update dotgit pull --dir . --checkout "" ghcr.io/${{ github.repository }}:fedora-data-${release}
-            if ls ghcr.io/${{ github.repository }}/fedora-data-${release}/* >/dev/null 2>&1; then
-              mv ghcr.io/${{ github.repository }}/fedora-data-${release}/* ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api/ 
+          # Read as fetch-msuc.yml reads its shard names: one per line, so a
+          # name is neither split nor globbed, and only from a non-empty array,
+          # so a missing list fails here rather than aggregating nothing.
+          releases="$(jq -er 'if type == "array" and length > 0 then .[] else error("not a non-empty array") end' <<< "${RELEASES}" || true)"
+          if [[ -z "${releases}" ]]; then
+            echo "::error::no release names in the fedora-release output"
+            exit 1
+          fi
+          while read -r release; do
+            vuls-data-update dotgit pull --dir . --checkout "" "ghcr.io/${{ github.repository }}:fedora-data-${release}"
+            if ls "ghcr.io/${{ github.repository }}/fedora-data-${release}/"* >/dev/null 2>&1; then
+              mv "ghcr.io/${{ github.repository }}/fedora-data-${release}/"* "ghcr.io/${{ github.repository }}/vuls-data-raw-fedora-api/"
             fi
-            rmdir ghcr.io/${{ github.repository }}/fedora-data-${release}
-          done
+            rmdir "ghcr.io/${{ github.repository }}/fedora-data-${release}"
+          done <<< "${releases}"
 
       - name: Set Git remote
         run: |
