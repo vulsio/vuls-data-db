@@ -1,0 +1,465 @@
+name: Guard Extracted
+
+# Per-source guard, called by the extract workflows right after an extracted
+# dotgit has been pushed. For every lock in the lock repository that lists
+# this source on this branch (each row of a lock names its branch), it
+# compares the source at the lock's commit (B, the baseline) with the commit
+# the extract just pushed (H):
+# two one-source dbs are built from the lock with `vuls db build` and run
+# through the diff-guard action. On a pass the lock's row is moved to H, so
+# the next DB build picks it up; on a fail the lock stays at B and this job
+# fails, which marks the source's leg of `Extract All` failed. The row only
+# moves forward (H must descend from B), and a source without detection data
+# is built at H but not diffed. A row an operator holds ("hold": true, set by
+# approve.yml) is not judged and stays where it is. Every row has a commit:
+# a row without one, which `vuls db build` would build at the head of its
+# branch, is an error here and in the DB build.
+#
+# The extract workflows call this for the nightly branch only, for now. A
+# row that names another branch (say, a source the nightly DB takes from
+# main for a while) is therefore not judged by any guard and moves only by
+# approve.yml.
+#
+# Configuration (lock repository, vuls2 ref per DB, thresholds, fixtures,
+# groups, sources without detection data) is in db-guard.json at the root of
+# this repository.
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: Source name as it appears in the lock (the extracted repository name without "vuls-data-extracted-").
+        required: true
+        type: string
+      branch:
+        description: Extracted branch the extract pushed to.
+        required: true
+        type: string
+      commit:
+        description: Head of the branch after the extract (H).
+        required: true
+        type: string
+    secrets:
+      LOCK_DEPLOY_KEY:
+        description: Deploy key with write access to the lock repository.
+        required: false
+
+permissions: {}
+
+jobs:
+  plan:
+    name: plan
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      dbs: ${{ steps.plan.outputs.dbs }}
+      lock_repository: ${{ steps.plan.outputs.lock_repository }}
+    steps:
+      - name: Check out db-guard.json
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          sparse-checkout: db-guard.json
+          sparse-checkout-cone-mode: false
+
+      - name: Read lock repository
+        id: config
+        run: echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ steps.config.outputs.lock_repository }}
+          path: lock
+
+      # Every lock with a row for this source on this branch is a DB that
+      # takes the source from this extract. A row on another branch is fed
+      # by that branch's extract and is not this run's to judge. A lock
+      # already at H needs nothing (the extract made no commit, or the
+      # previous guard passed); this is most runs, and it ends here before
+      # any heavy setup.
+      - name: Plan
+        id: plan
+        env:
+          NAME: ${{ inputs.name }}
+          BRANCH: ${{ inputs.branch }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+          LOCK_REPOSITORY: ${{ steps.config.outputs.lock_repository }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${HEAD_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::commit '${HEAD_COMMIT}' is not a 40-hex commit"
+            exit 1
+          fi
+
+          dbs='[]'
+          shopt -s nullglob
+          for lock in lock/db-*.lock.json; do
+            file=$(basename "${lock}")
+            db=${file#db-}
+            db=${db%.lock.json}
+            # set -e does not reach a jq inside [ ], so a broken lock would
+            # otherwise be skipped here as a lock without this source.
+            if ! jq -e '.sources | type == "array"' "${lock}" > /dev/null; then
+              echo "::error::${file} is not a valid lock"
+              exit 1
+            fi
+            row=$(jq -c --arg n "${NAME}" '.sources[] | select(.name == $n)' "${lock}")
+            [ -n "${row}" ] || continue
+            # Every row names its branch. A row without one (a lock still in
+            # the shape with one branch for the whole lock) is an error, not
+            # a row of another branch.
+            branch=$(jq -r '.branch // ""' <<< "${row}")
+            if [ -z "${branch}" ]; then
+              echo "::error::${file}: ${NAME} has no branch"
+              exit 1
+            fi
+            [ "${branch}" = "${BRANCH}" ] || continue
+            # Every row is pinned. `vuls db build` may take a row without a
+            # commit and build the head of its branch, but a lock the guard
+            # maintains has none: such a row would go into the DB unjudged,
+            # and there is no B to judge from. (A missing commit would also
+            # read as "null" in the lock job's compare-and-swap.)
+            base=$(jq -r '.commit // ""' <<< "${row}")
+            if ! [[ "${base}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::${file}: ${NAME} has commit '${base}', not a 40-hex commit; every row of this lock needs one (a pull request to the lock repository sets it)"
+              exit 1
+            fi
+
+            if ! jq -e --arg db "${db}" '.dbs[$db]' db-guard.json > /dev/null; then
+              echo "::error::${file} has no entry in db-guard.json .dbs"
+              exit 1
+            fi
+            # Fail closed: a source in a lock must say either that it has no
+            # detection data (diff: false) or which fixtures exercise it
+            # ("fixtures": [] for none: the DB diff runs, detection does not).
+            diff=$(jq -r --arg n "${NAME}" '.sources[$n] | if . == null then "missing" elif .diff == false then "false" elif has("fixtures") then "true" else "missing" end' db-guard.json)
+            if [ "${diff}" = "missing" ]; then
+              echo "::error::${NAME} is in ${file} but db-guard.json .sources.${NAME} has neither \"diff\": false nor \"fixtures\""
+              exit 1
+            fi
+
+            # A held row (approve.yml with `hold`) stays where the operator
+            # put it, until an approve without hold releases it.
+            if [ "$(jq -r '.hold == true' <<< "${row}")" = "true" ]; then
+              echo "::warning::${file}: ${NAME} is held at ${base} (approve.yml); not judged"
+              echo "${file}: ${NAME} is held at ${base}; not judged" >> "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+
+            if [ "${base}" = "${HEAD_COMMIT}" ]; then
+              echo "${file}: ${NAME} is already at ${HEAD_COMMIT}" | tee -a "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+            echo "${file}: ${NAME} ${base} -> ${HEAD_COMMIT} (diff: ${diff})" | tee -a "$GITHUB_STEP_SUMMARY"
+            # The repository goes with the plan (the branch is this run's):
+            # the guard and the lock job stop if the row names another by
+            # then.
+            repository=$(jq -r '.repository // ""' <<< "${row}")
+            dbs=$(jq -c --arg db "${db}" --arg lock "${file}" --arg base "${base}" --arg repository "${repository}" --argjson diff "${diff}" '. + [{db: $db, lock: $lock, base: $base, repository: $repository, diff: $diff}]' <<< "${dbs}")
+          done
+
+          echo "dbs=${dbs}" >> "$GITHUB_OUTPUT"
+          echo "lock_repository=${LOCK_REPOSITORY}" >> "$GITHUB_OUTPUT"
+
+  guard:
+    name: guard ${{ matrix.db }}
+    needs: plan
+    if: ${{ needs.plan.outputs.dbs != '[]' }}
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.dbs) }}
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
+        with:
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+          remove-large-packages: "false"
+          remove-cached-tools: "true"
+          remove-swapfile: "true"
+
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ needs.plan.outputs.lock_repository }}
+          path: lock
+
+      - name: Read guard config
+        id: config
+        env:
+          NAME: ${{ inputs.name }}
+          DB: ${{ matrix.db }}
+        run: |
+          set -euo pipefail
+          {
+            echo "vuls2=$(jq -r --arg db "${DB}" '.dbs[$db].vuls2' db-guard.json)"
+            echo "vuls0_old_ref=$(jq -r --arg db "${DB}" '.dbs[$db].vuls0_old_ref' db-guard.json)"
+            echo "fixtures<<EOF"
+            jq -r --arg n "${NAME}" '.sources[$n].fixtures // [] | .[]' db-guard.json
+            echo "EOF"
+            for kind in db detection; do
+              for list in defaults overrides; do
+                echo "${kind}_${list}<<EOF"
+                jq -r --arg k "${kind}" --arg l "${list}" '.thresholds[$k][$l][]' db-guard.json
+                echo "EOF"
+              done
+            done
+          } >> "$GITHUB_OUTPUT"
+
+      # The two locks hold only this source, or every member of its group
+      # (a detection ecosystem fed by several sources). The baseline is the
+      # lock as planned (this source at B); the target differs only in this
+      # source being at H. A source with "diff": false uses the target only.
+      #
+      # The lock is read afresh here, so the row has to be the one planned:
+      # the same repository, and still on the branch of this extract. A pull
+      # request to the lock repository can change either in between.
+      - name: Make mini-locks
+        env:
+          NAME: ${{ inputs.name }}
+          REPOSITORY: ${{ matrix.repository }}
+          BRANCH: ${{ inputs.branch }}
+          BASE_COMMIT: ${{ matrix.base }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+          LOCK: lock/${{ matrix.lock }}
+        run: |
+          set -euo pipefail
+          row=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | "\(.repository) \(.branch)"' "${LOCK}")
+          if [ "${row}" != "${REPOSITORY} ${BRANCH}" ]; then
+            echo "::error::${NAME} is now '${row}' in the lock, not '${REPOSITORY} ${BRANCH}' as planned; left for the next extract"
+            exit 1
+          fi
+          members=$(jq -c --arg n "${NAME}" '.sources as $s | ($s[$n].group // null) as $g | [$s | to_entries[] | select(.key == $n or ($g != null and .value.group == $g)) | .key]' db-guard.json)
+          echo "members: ${members}"
+          jq --argjson m "${members}" --arg n "${NAME}" --arg c "${BASE_COMMIT}" '.sources |= [.[] | select(.name as $x | $m | index($x)) | if .name == $n then .commit = $c else . end]' "${LOCK}" > base.lock.json
+          jq --arg n "${NAME}" --arg c "${HEAD_COMMIT}" '.sources |= map(if .name == $n then .commit = $c else . end)' base.lock.json > target.lock.json
+          cat base.lock.json target.lock.json
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
+        with:
+          go-version: "stable"
+          cache: false
+
+      - name: Install vuls-data-update
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
+
+      # The row only moves forward: H must descend from B. `plan` reads the
+      # lock afresh on every attempt, but a re-run of the guard alone (the
+      # extract job is not re-run and keeps its output) still carries the H
+      # of its own run. Once a newer run has moved the row past that H, the
+      # re-run would judge the change backwards, and pass: the reverse of one
+      # extract usually stays under the thresholds, and both commits are on
+      # the branch, which is all `vuls db build` asks. A branch that was
+      # rewound, or a B lost to truncate / restore, stops here as well, and
+      # the row is then set by hand (approve.yml).
+      - name: Check that the head descends from the lock commit
+        env:
+          NAME: ${{ inputs.name }}
+          REPOSITORY: ${{ matrix.repository }}
+          BRANCH: ${{ inputs.branch }}
+          BASE_COMMIT: ${{ matrix.base }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+        run: |
+          set -euo pipefail
+          # The pull lays the dotgit out as <host>/<repository path>/<tag>
+          # (the lock names a tag, never a digest). No worktree is restored.
+          vuls-data-update dotgit pull --dir ./ancestry --checkout "${BRANCH}" "${REPOSITORY}"
+          dir="./ancestry/${REPOSITORY%:*}/${REPOSITORY##*:}"
+          for commit in "${BASE_COMMIT}" "${HEAD_COMMIT}"; do
+            if ! git -C "${dir}" rev-parse --verify --quiet "${commit}^{commit}" > /dev/null; then
+              echo "::error::${commit} is not a commit of ${REPOSITORY} (history truncated or restored?); set the row by hand (approve.yml)"
+              exit 1
+            fi
+          done
+          if ! git -C "${dir}" merge-base --is-ancestor "${BASE_COMMIT}" "${HEAD_COMMIT}"; then
+            echo "::error::${NAME}: ${HEAD_COMMIT} does not descend from the lock commit ${BASE_COMMIT} (a re-run of an older run after a newer guard moved the row, or ${BRANCH} was rewound); the row is left as it is"
+            exit 1
+          fi
+          rm -rf ./ancestry
+
+      - name: Install vuls
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: "github.com/MaineK00n/vuls2/cmd/vuls@${{ steps.config.outputs.vuls2 }}"
+
+      # The target is built on both paths, so an H that `vuls db build`
+      # cannot add (an extracted format this vuls does not read yet) fails
+      # in this source's leg instead of going into the lock and failing the
+      # DB build for every source.
+      - name: Build baseline and target dbs
+        env:
+          DIFF: ${{ matrix.diff }}
+        run: |
+          set -euo pipefail
+          if [ "${DIFF}" = "true" ]; then
+            vuls db build base.lock.json --dbpath ./baseline.db --dir ./work
+          fi
+          vuls db build target.lock.json --dbpath ./vuls.db --dir ./work
+
+      # Sources without detection data are built but not diffed; only the
+      # ones named so in db-guard.json. The DB-side guard did not check them
+      # either: `vuls diff db` compares only the <ecosystem>/detection and
+      # <ecosystem>/kb buckets, which these sources (KEV lists, exploits,
+      # CWE/CAPEC/ATT&CK, CVE records) add nothing to, and no fixture detects
+      # through them.
+      - name: Approve without diff
+        if: ${{ !matrix.diff }}
+        env:
+          NAME: ${{ inputs.name }}
+        run: |
+          echo "${NAME} has \"diff\": false in db-guard.json; built at the extracted head and approved without a diff" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Run diff guard
+        id: diff_guard
+        if: ${{ matrix.diff }}
+        uses: ./.github/actions/diff-guard
+        with:
+          target_db: ./vuls.db
+          baseline_db: ./baseline.db
+          fixtures: ${{ steps.config.outputs.fixtures }}
+          vuls0_old_ref: ${{ steps.config.outputs.vuls0_old_ref }}
+          db_rate_thresholds: ${{ steps.config.outputs.db_defaults }}
+          db_rate_threshold_overrides: ${{ steps.config.outputs.db_overrides }}
+          detection_rate_thresholds: ${{ steps.config.outputs.detection_defaults }}
+          detection_rate_threshold_overrides: ${{ steps.config.outputs.detection_overrides }}
+
+      # The judgment a failed guard asks for is about this change, B..H, so
+      # the command to approve it names both ends (approve.yml writes only
+      # while the row is still at B, and sets exactly H). Printed only when
+      # the diff checks ran and failed (`completed`: the diff guard action
+      # also installs vuls0 and checks out fixtures, and a failure there
+      # judged nothing). A failure before the diff guard is not a change to
+      # approve either: an H that does not descend from B, an H that
+      # `vuls db build` cannot add (approving it would fail the DB build for
+      # every source), or an install that failed.
+      - name: Print the approve command
+        if: ${{ failure() && steps.diff_guard.outcome == 'failure' && steps.diff_guard.outputs.completed == 'true' }}
+        env:
+          NAME: ${{ inputs.name }}
+          DB: ${{ matrix.db }}
+          BASE_COMMIT: ${{ matrix.base }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+        run: |
+          {
+            echo "## Approve by hand"
+            echo "If ${NAME} ${BASE_COMMIT:0:12}..${HEAD_COMMIT:0:12} is judged correct:"
+            echo '```sh'
+            echo "gh workflow run approve.yml -R ${GITHUB_REPOSITORY} -f db=${DB} -f target=${NAME} -f from=${BASE_COMMIT} -f to=${HEAD_COMMIT} -f reason='<why>'"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # A separate job, so that the deploy key never shares a job with code
+  # downloaded at run time (the tools the guard job fetches with
+  # `go install`, the diff tools, the fixtures). A compromised download can
+  # make a guard pass or fail, and so move this one row to the H this
+  # workflow was called with, but it cannot push anything else to the lock
+  # repository: this job runs only the checkout action, git and jq, and
+  # takes nothing from the guard job but its result.
+  lock:
+    name: lock ${{ matrix.db }}
+    needs: [plan, guard]
+    if: ${{ needs.plan.outputs.dbs != '[]' }}
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.dbs) }}
+    steps:
+      - name: Check the deploy key
+        env:
+          LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
+        run: |
+          if [ -z "${LOCK_DEPLOY_KEY}" ]; then
+            echo "::error::LOCK_DEPLOY_KEY was not passed to this workflow; the caller must pass it by name"
+            exit 1
+          fi
+
+      - name: Check out lock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          repository: ${{ needs.plan.outputs.lock_repository }}
+          ssh-key: ${{ secrets.LOCK_DEPLOY_KEY }}
+          path: lock
+
+      # Compare-and-swap on the row: move it to H only while it is still at
+      # the B the guard judged, in the repository and on the branch it was
+      # judged in. A row moved by someone else meanwhile (an approve.yml
+      # run), or given another repository or branch (a pull request to the
+      # lock repository), is left alone and this job fails; the next extract
+      # judges again. A push rejected because another source's guard pushed
+      # first is retried from a fresh fetch, never rebased.
+      - name: Move the lock row to the extracted head
+        working-directory: lock
+        env:
+          NAME: ${{ inputs.name }}
+          DB: ${{ matrix.db }}
+          LOCK: ${{ matrix.lock }}
+          REPOSITORY: ${{ matrix.repository }}
+          BRANCH: ${{ inputs.branch }}
+          BASE_COMMIT: ${{ matrix.base }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch=$(git rev-parse --abbrev-ref HEAD)
+
+          for attempt in 1 2 3 4 5; do
+            git fetch --quiet origin "${branch}"
+            git reset --quiet --hard "origin/${branch}"
+
+            # A hold set while the guard ran (approve.yml) wins, even over a
+            # row that is still at B.
+            if [ "$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .hold == true' "${LOCK}")" = "true" ]; then
+              echo "::warning::${LOCK}: ${NAME} was held while the guard ran; the row is left alone"
+              exit 0
+            fi
+
+            current=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .commit' "${LOCK}")
+            if [ "${current}" = "${HEAD_COMMIT}" ]; then
+              echo "${LOCK}: ${NAME} is already at ${HEAD_COMMIT}"
+              exit 0
+            fi
+            if [ "${current}" != "${BASE_COMMIT}" ]; then
+              echo "::error::${LOCK}: ${NAME} moved from ${BASE_COMMIT} to '${current}' while the guard ran; left for the next extract"
+              exit 1
+            fi
+            row=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | "\(.repository) \(.branch)"' "${LOCK}")
+            if [ "${row}" != "${REPOSITORY} ${BRANCH}" ]; then
+              echo "::error::${LOCK}: ${NAME} is now '${row}', not '${REPOSITORY} ${BRANCH}' as judged; left for the next extract"
+              exit 1
+            fi
+
+            jq --arg n "${NAME}" --arg c "${HEAD_COMMIT}" '.sources |= map(if .name == $n then .commit = $c else . end)' "${LOCK}" > "${LOCK}.tmp"
+            mv "${LOCK}.tmp" "${LOCK}"
+            git add "${LOCK}"
+            git commit --quiet -m "guard: ${NAME} ${BASE_COMMIT:0:12}..${HEAD_COMMIT:0:12} (${DB})" -m "Approved by the per-source guard: ${RUN_URL}"
+            if git push --quiet origin "HEAD:${branch}"; then
+              echo "${LOCK}: ${NAME} ${BASE_COMMIT} -> ${HEAD_COMMIT}" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}); refetching"
+            # Many sources pass in the same Extract All; the jitter keeps
+            # their retries from colliding again.
+            sleep $((RANDOM % 10 + attempt * 5))
+          done
+          echo "::error::could not push ${LOCK} after 5 attempts"
+          exit 1

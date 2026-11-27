@@ -296,6 +296,8 @@ jobs:
     with:
       target: ${{ matrix.target }}
       branch: nightly
+    secrets:
+      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
 
   extract-redhat:
     name: Extract vuls-data-extracted-${{ matrix.target }}
@@ -408,6 +410,8 @@ jobs:
     with:
       target: ${{ matrix.target }}
       branch: nightly
+    secrets:
+      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
 
   extract-nvd-cve:
     name: Extract vuls-data-extracted-${{ matrix.target }}
@@ -442,6 +446,8 @@ jobs:
     with:
       target: ${{ matrix.target }}
       branch: nightly
+    secrets:
+      LOCK_DEPLOY_KEY: ${{ secrets.LOCK_DEPLOY_KEY }}
 
   extract-eol:
     name: Extract vuls-data-extracted-eol
