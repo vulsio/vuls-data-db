@@ -11,7 +11,9 @@ name: Guard Extracted
 # fails, which marks the source's leg of `Extract All` failed. The row only
 # moves forward (H must descend from B), and a source without detection data
 # is built at H but not diffed. A row an operator holds ("hold": true, set by
-# approve.yml) is not judged and stays where it is.
+# approve.yml) is not judged and stays where it is. Every row has a commit:
+# a row without one, which `vuls db build` would build at the head of its
+# branch, is an error here and in the DB build.
 #
 # The extract workflows call this for the nightly branch only, for now. A
 # row that names another branch (say, a source the nightly DB takes from
@@ -102,21 +104,25 @@ jobs:
               echo "::error::${file} is not a valid lock"
               exit 1
             fi
-            base=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .commit' "${lock}")
-            [ -n "${base}" ] || continue
+            row=$(jq -c --arg n "${NAME}" '.sources[] | select(.name == $n)' "${lock}")
+            [ -n "${row}" ] || continue
             # Every row names its branch. A row without one (a lock still in
             # the shape with one branch for the whole lock) is an error, not
             # a row of another branch.
-            branch=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .branch // ""' "${lock}")
+            branch=$(jq -r '.branch // ""' <<< "${row}")
             if [ -z "${branch}" ]; then
               echo "::error::${file}: ${NAME} has no branch"
               exit 1
             fi
             [ "${branch}" = "${BRANCH}" ] || continue
-            # A row without a commit reads as "null", which the CAS in the
-            # lock job would match and overwrite on the diff: false path.
+            # Every row is pinned. `vuls db build` may take a row without a
+            # commit and build the head of its branch, but a lock the guard
+            # maintains has none: such a row would go into the DB unjudged,
+            # and there is no B to judge from. (A missing commit would also
+            # read as "null" in the lock job's compare-and-swap.)
+            base=$(jq -r '.commit // ""' <<< "${row}")
             if ! [[ "${base}" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "::error::${file}: ${NAME} has commit '${base}', not a 40-hex commit"
+              echo "::error::${file}: ${NAME} has commit '${base}', not a 40-hex commit; every row of this lock needs one (a pull request to the lock repository sets it)"
               exit 1
             fi
 
@@ -135,7 +141,7 @@ jobs:
 
             # A held row (approve.yml with `hold`) stays where the operator
             # put it, until an approve without hold releases it.
-            if [ "$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .hold == true' "${lock}")" = "true" ]; then
+            if [ "$(jq -r '.hold == true' <<< "${row}")" = "true" ]; then
               echo "::warning::${file}: ${NAME} is held at ${base} (approve.yml); not judged"
               echo "${file}: ${NAME} is held at ${base}; not judged" >> "$GITHUB_STEP_SUMMARY"
               continue

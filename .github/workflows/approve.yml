@@ -27,7 +27,9 @@ run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }}${{ 
 #
 # Adding or removing a source, or changing a row's repository or branch, is
 # a pull request to the lock repository: this workflow writes only a row's
-# commit and hold, and checks `to` against the branch the row names.
+# commit and hold, and checks `to` against the branch the row names. So is
+# giving a commit to a row that has none: every row of the lock is pinned,
+# and this workflow moves a row only from the commit it is at.
 
 on:
   workflow_dispatch:

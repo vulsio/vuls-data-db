@@ -5,7 +5,7 @@ name: DB(Nightly)
 # approved (guard-extracted.yml, run after each extract) or an operator set
 # (approve.yml). There is no DB-side diff guard: each source was judged on
 # its own before it entered the lock, so a DB built from the lock is
-# published as is.
+# published as is. For that to hold, every row has to be pinned to a commit.
 
 on:
   schedule:
@@ -67,6 +67,20 @@ jobs:
         with:
           repository: ${{ steps.config.outputs.lock_repository }}
           path: lock
+
+      # `vuls db build` may take a row without a commit and build the head
+      # of its branch. That head was judged by no guard, and one that cannot
+      # be built would fail the build for every source, so this lock has no
+      # such row. With every row pinned, the lock commit in the summary is
+      # also all it takes to build the same DB again.
+      - name: Check that every source is pinned
+        run: |
+          set -euo pipefail
+          unpinned=$(jq -r '[.sources[] | select((.commit | type) != "string" or (.commit | test("^[0-9a-f]{40}$") | not)) | .name] | join(" ")' "lock/db-${DB}.lock.json")
+          if [ -n "${unpinned}" ]; then
+            echo "::error::db-${DB}.lock.json: no 40-hex commit on: ${unpinned}; every row of this lock needs one (a pull request to the lock repository sets it)"
+            exit 1
+          fi
 
       - name: Set up Go 1.x
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
