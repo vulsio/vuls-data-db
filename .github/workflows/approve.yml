@@ -67,7 +67,8 @@ permissions: {}
 jobs:
   # Keyless: this job runs the downloaded vuls-data-update, so the deploy key
   # is not in it. It only checks `to`; the writer takes the row to write from
-  # the inputs, never from this job.
+  # the inputs, never from this job. What it hands over, the repository and
+  # branch `to` was checked against, can only stop the write.
   check:
     name: check the commit
     permissions:
@@ -76,6 +77,8 @@ jobs:
     outputs:
       lock_repository: ${{ steps.config.outputs.lock_repository }}
       workflow: ${{ steps.config.outputs.workflow }}
+      repository: ${{ steps.commit.outputs.repository }}
+      branch: ${{ steps.commit.outputs.branch }}
     env:
       DB: ${{ inputs.db }}
       TARGET: ${{ inputs.target }}
@@ -124,6 +127,7 @@ jobs:
       # The same checks `vuls db build` makes, done before the push: a typo
       # written to the lock would otherwise stop the next build as a whole.
       - name: Check the commit
+        id: commit
         run: |
           set -euo pipefail
           lock="lock/db-${DB}.lock.json"
@@ -149,9 +153,16 @@ jobs:
             echo "::error::${TO} is not on ${branch} of ${repository}"
             exit 1
           fi
+          {
+            echo "repository=${repository}"
+            echo "branch=${branch}"
+          } >> "$GITHUB_OUTPUT"
 
   # Holds the deploy key and runs nothing but git, jq and gh from the runner
-  # image. The row it writes comes from the inputs alone.
+  # image. The row it writes comes from the inputs alone. It writes only
+  # while the row still names the repository and branch that `to` was checked
+  # against: a pull request to the lock repository can change either between
+  # the two jobs.
   write:
     name: write lock
     needs: check
@@ -166,6 +177,8 @@ jobs:
       TO: ${{ inputs.to }}
       REASON: ${{ inputs.reason }}
       HOLD: ${{ inputs.hold }}
+      CHECKED_REPOSITORY: ${{ needs.check.outputs.repository }}
+      CHECKED_BRANCH: ${{ needs.check.outputs.branch }}
     steps:
       - name: Check the deploy key
         env:
@@ -209,6 +222,11 @@ jobs:
             # FROM, so a row that moved since is not ours to write.
             if [ "${current}" != "${FROM}" ] && [ "${current}" != "${TO}" ]; then
               echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
+              exit 1
+            fi
+            row=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | "\(.repository) \(.branch)"' "${lock}")
+            if [ "${row}" != "${CHECKED_REPOSITORY} ${CHECKED_BRANCH}" ]; then
+              echo "::error::${lock}: ${TARGET} is now '${row}', not '${CHECKED_REPOSITORY} ${CHECKED_BRANCH}' that ${TO} was checked against; run this again"
               exit 1
             fi
 

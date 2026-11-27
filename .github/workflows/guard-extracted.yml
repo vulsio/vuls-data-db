@@ -152,7 +152,11 @@ jobs:
               continue
             fi
             echo "${file}: ${NAME} ${base} -> ${HEAD_COMMIT} (diff: ${diff})" | tee -a "$GITHUB_STEP_SUMMARY"
-            dbs=$(jq -c --arg db "${db}" --arg lock "${file}" --arg base "${base}" --argjson diff "${diff}" '. + [{db: $db, lock: $lock, base: $base, diff: $diff}]' <<< "${dbs}")
+            # The repository goes with the plan (the branch is this run's):
+            # the guard and the lock job stop if the row names another by
+            # then.
+            repository=$(jq -r '.repository // ""' <<< "${row}")
+            dbs=$(jq -c --arg db "${db}" --arg lock "${file}" --arg base "${base}" --arg repository "${repository}" --argjson diff "${diff}" '. + [{db: $db, lock: $lock, base: $base, repository: $repository, diff: $diff}]' <<< "${dbs}")
           done
 
           echo "dbs=${dbs}" >> "$GITHUB_OUTPUT"
@@ -218,14 +222,25 @@ jobs:
       # (a detection ecosystem fed by several sources). The baseline is the
       # lock as planned (this source at B); the target differs only in this
       # source being at H. A source with "diff": false uses the target only.
+      #
+      # The lock is read afresh here, so the row has to be the one planned:
+      # the same repository, and still on the branch of this extract. A pull
+      # request to the lock repository can change either in between.
       - name: Make mini-locks
         env:
           NAME: ${{ inputs.name }}
+          REPOSITORY: ${{ matrix.repository }}
+          BRANCH: ${{ inputs.branch }}
           BASE_COMMIT: ${{ matrix.base }}
           HEAD_COMMIT: ${{ inputs.commit }}
           LOCK: lock/${{ matrix.lock }}
         run: |
           set -euo pipefail
+          row=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | "\(.repository) \(.branch)"' "${LOCK}")
+          if [ "${row}" != "${REPOSITORY} ${BRANCH}" ]; then
+            echo "::error::${NAME} is now '${row}' in the lock, not '${REPOSITORY} ${BRANCH}' as planned; left for the next extract"
+            exit 1
+          fi
           members=$(jq -c --arg n "${NAME}" '.sources as $s | ($s[$n].group // null) as $g | [$s | to_entries[] | select(.key == $n or ($g != null and .value.group == $g)) | .key]' db-guard.json)
           echo "members: ${members}"
           jq --argjson m "${members}" --arg n "${NAME}" --arg c "${BASE_COMMIT}" '.sources |= [.[] | select(.name as $x | $m | index($x)) | if .name == $n then .commit = $c else . end]' "${LOCK}" > base.lock.json
@@ -255,21 +270,19 @@ jobs:
       - name: Check that the head descends from the lock commit
         env:
           NAME: ${{ inputs.name }}
+          REPOSITORY: ${{ matrix.repository }}
           BRANCH: ${{ inputs.branch }}
           BASE_COMMIT: ${{ matrix.base }}
           HEAD_COMMIT: ${{ inputs.commit }}
-          LOCK: lock/${{ matrix.lock }}
         run: |
           set -euo pipefail
-          repository=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .repository' "${LOCK}")
-
           # The pull lays the dotgit out as <host>/<repository path>/<tag>
           # (the lock names a tag, never a digest). No worktree is restored.
-          vuls-data-update dotgit pull --dir ./ancestry --checkout "${BRANCH}" "${repository}"
-          dir="./ancestry/${repository%:*}/${repository##*:}"
+          vuls-data-update dotgit pull --dir ./ancestry --checkout "${BRANCH}" "${REPOSITORY}"
+          dir="./ancestry/${REPOSITORY%:*}/${REPOSITORY##*:}"
           for commit in "${BASE_COMMIT}" "${HEAD_COMMIT}"; do
             if ! git -C "${dir}" rev-parse --verify --quiet "${commit}^{commit}" > /dev/null; then
-              echo "::error::${commit} is not a commit of ${repository} (history truncated or restored?); set the row by hand (approve.yml)"
+              echo "::error::${commit} is not a commit of ${REPOSITORY} (history truncated or restored?); set the row by hand (approve.yml)"
               exit 1
             fi
           done
@@ -381,8 +394,10 @@ jobs:
           path: lock
 
       # Compare-and-swap on the row: move it to H only while it is still at
-      # the B the guard judged. A row moved by someone else meanwhile (an
-      # approve.yml run) is left alone and this job fails; the next extract
+      # the B the guard judged, in the repository and on the branch it was
+      # judged in. A row moved by someone else meanwhile (an approve.yml
+      # run), or given another repository or branch (a pull request to the
+      # lock repository), is left alone and this job fails; the next extract
       # judges again. A push rejected because another source's guard pushed
       # first is retried from a fresh fetch, never rebased.
       - name: Move the lock row to the extracted head
@@ -391,6 +406,8 @@ jobs:
           NAME: ${{ inputs.name }}
           DB: ${{ matrix.db }}
           LOCK: ${{ matrix.lock }}
+          REPOSITORY: ${{ matrix.repository }}
+          BRANCH: ${{ inputs.branch }}
           BASE_COMMIT: ${{ matrix.base }}
           HEAD_COMMIT: ${{ inputs.commit }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -418,6 +435,11 @@ jobs:
             fi
             if [ "${current}" != "${BASE_COMMIT}" ]; then
               echo "::error::${LOCK}: ${NAME} moved from ${BASE_COMMIT} to '${current}' while the guard ran; left for the next extract"
+              exit 1
+            fi
+            row=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | "\(.repository) \(.branch)"' "${LOCK}")
+            if [ "${row}" != "${REPOSITORY} ${BRANCH}" ]; then
+              echo "::error::${LOCK}: ${NAME} is now '${row}', not '${REPOSITORY} ${BRANCH}' as judged; left for the next extract"
               exit 1
             fi
 
