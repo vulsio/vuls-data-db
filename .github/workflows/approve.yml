@@ -140,12 +140,12 @@ jobs:
           # (the lock names a tag, never a digest).
           vuls-data-update dotgit pull --dir ./work --checkout "${branch}" "${repository}"
           dir="./work/${repository%:*}/${repository##*:}"
-          if ! git -C "${dir}" rev-parse --verify --quiet "${TO}^{commit}" > /dev/null; then
-            echo "::error::${TO} is not a commit of ${repository}"
-            exit 1
-          fi
-          if ! git -C "${dir}" merge-base --is-ancestor "${TO}" "refs/heads/${branch}"; then
-            echo "::error::${TO} is not on ${branch} of ${repository}"
+          # The check the build itself makes: `to` is a commit's own full
+          # hash (an annotated tag's hash would pass a plain git check here
+          # and then fail every build) and is the tip of the branch or an
+          # ancestor of it.
+          if ! vuls-data-update dotgit contains --branch "${branch}" "${dir}" "${TO}"; then
+            echo "::error::${TO} is not a commit on ${branch} of ${repository}"
             exit 1
           fi
           {
@@ -233,9 +233,15 @@ jobs:
               exit 0
             fi
             # Compare-and-swap on the row: the judgment was made against
-            # FROM, so a row that moved since is not ours to write.
-            if [ "${current}" != "${FROM}" ] && [ "${current}" != "${TO}" ]; then
-              echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
+            # FROM, so a row that moved since is not ours to write. That
+            # holds for a row someone else already moved to TO as well:
+            # writing there would set or release a hold the other run chose.
+            if [ "${current}" != "${FROM}" ]; then
+              if [ "${current}" = "${TO}" ]; then
+                echo "::error::${lock}: ${TARGET} is already at ${TO} (hold: ${held}), not at ${FROM} as judged; to change the hold there, run this with from=${TO} to=${TO}"
+              else
+                echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
+              fi
               exit 1
             fi
             row=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | "\(.repository) \(.branch)"' "${lock}")
