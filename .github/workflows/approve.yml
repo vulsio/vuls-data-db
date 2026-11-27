@@ -6,7 +6,12 @@ run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }} int
 # repository, see db-guard.json) by hand, then starts that DB's build. For:
 #   - a guard that failed on a change judged correct: from B to H, as the
 #     failed guard run prints them in its summary;
-#   - a source that went in but was wrong upstream: to an older commit;
+#   - a source that went in but was wrong upstream: to an older commit. This
+#     lasts only until the source's next extract: the extract outputs its
+#     head even when it made no commit, so the guard judges <older>..<head>
+#     again, and a change it passed once (or a "diff": false source) passes
+#     again. To keep the row back for longer, also take the source out of
+#     the nightly matrix in extract-all.yml until upstream is fixed;
 #   - a lock commit lost to truncate / restore: to one that still exists.
 # A judgment is about a change, so both ends are required: `from` is the row
 # as the operator saw it and `to` the commit they looked at. The row is
