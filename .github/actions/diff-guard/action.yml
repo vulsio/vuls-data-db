@@ -182,6 +182,16 @@ inputs:
     required: false
     default: 031f637cadf5f0c26b3387578172d9c8aa4afcd6 # v0.42.1-0.20261028023522-031f637cadf5
 
+outputs:
+  completed:
+    description: |
+      "true" when every diff check ran and recorded its exit code, so a
+      failure of this action is the checks' result. Empty when the action
+      stopped before that (a setup step failed: install, fixtures) or a
+      check was killed before it recorded an exit code. Set on a failed
+      run as well.
+    value: ${{ steps.aggregate.outputs.completed }}
+
 runs:
   using: composite
   steps:
@@ -506,6 +516,7 @@ runs:
     # This step turns the three rc values into a summary table and a
     # single exit code (first non-zero in step order).
     - name: Aggregate diff results
+      id: aggregate
       shell: bash
       env:
         RC_DETECTION_MASTER: ${{ steps.diff_detection_master.outputs.rc }}
@@ -523,6 +534,12 @@ runs:
         label_master=$(status "${RC_DETECTION_MASTER}")
         label_old=$(status "${RC_DETECTION_OLD}")
         label_db=$(status "${RC_DB}")
+
+        # For the caller: a failure below is then the checks' result, not
+        # a check that never reported (see the `completed` output).
+        if [ -n "${RC_DETECTION_MASTER}" ] && [ -n "${RC_DETECTION_OLD}" ] && [ -n "${RC_DB}" ]; then
+          echo "completed=true" >> "$GITHUB_OUTPUT"
+        fi
 
         rc_master_disp="${RC_DETECTION_MASTER:-?}"
         rc_old_disp="${RC_DETECTION_OLD:-?}"

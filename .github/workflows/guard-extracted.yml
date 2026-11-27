@@ -306,12 +306,14 @@ jobs:
       # The judgment a failed guard asks for is about this change, B..H, so
       # the command to approve it names both ends (approve.yml writes only
       # while the row is still at B, and sets exactly H). Printed only when
-      # the diff guard step is the one that failed. A failure before it is
-      # not a change to approve: an H that does not descend from B, an H that
+      # the diff checks ran and failed (`completed`: the diff guard action
+      # also installs vuls0 and checks out fixtures, and a failure there
+      # judged nothing). A failure before the diff guard is not a change to
+      # approve either: an H that does not descend from B, an H that
       # `vuls db build` cannot add (approving it would fail the DB build for
-      # every source), or an install that failed before anything was judged.
+      # every source), or an install that failed.
       - name: Print the approve command
-        if: ${{ failure() && steps.diff_guard.outcome == 'failure' }}
+        if: ${{ failure() && steps.diff_guard.outcome == 'failure' && steps.diff_guard.outputs.completed == 'true' }}
         env:
           NAME: ${{ inputs.name }}
           DB: ${{ matrix.db }}
