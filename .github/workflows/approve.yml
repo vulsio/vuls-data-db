@@ -1,23 +1,30 @@
 name: DB(Approve)
 
-run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }} into ${{ inputs.db }} by @${{ github.actor }}"
+run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }}${{ inputs.hold && ' (hold)' || '' }} into ${{ inputs.db }} by @${{ github.actor }}"
 
 # Moves one source's row in a DB's lock (db-<db>.lock.json in the lock
 # repository, see db-guard.json) by hand, then starts that DB's build. For:
 #   - a guard that failed on a change judged correct: from B to H, as the
 #     failed guard run prints them in its summary;
-#   - a source that went in but was wrong upstream: to an older commit. This
-#     lasts only until the source's next extract: the extract outputs its
-#     head even when it made no commit, so the guard judges <older>..<head>
-#     again, and a change it passed once (or a "diff": false source) passes
-#     again. To keep the row back for longer, also take the source out of
-#     the nightly matrix in extract-all.yml until upstream is fixed;
+#   - a source that went in but was wrong upstream: to an older commit, with
+#     `hold`. Without it the rollback lasts only until the source's next
+#     extract: the extract outputs its head even when it made no commit, so
+#     the guard judges <older>..<head> again, and a change it passed once
+#     (or a "diff": false source) passes again;
 #   - a lock commit lost to truncate / restore: to one that still exists.
 # A judgment is about a change, so both ends are required: `from` is the row
 # as the operator saw it and `to` the commit they looked at. The row is
 # written only while it is still at `from` (a guard or another approve that
 # moved it meanwhile fails this run), and exactly `to` is set. One source per
 # run: each change is judged on its own, as the guard does.
+#
+# `hold` keeps the row where this run puts it: the row gets "hold": true, in
+# the same write as its commit, and the guard leaves a held row alone
+# (guard-extracted.yml). `vuls db build` accepts the member and does not read
+# it. Every run sets the hold as its input says, so approving a held source
+# without `hold` releases it. `from` and `to` may be the same commit: to hold
+# a row where it is, or to release it there and let the next guard judge.
+#
 # Adding or removing a source is a pull request to the lock repository.
 
 on:
@@ -45,6 +52,11 @@ on:
         description: Why (goes into the lock commit message)
         required: true
         type: string
+      hold:
+        description: Hold the row at `to` (the guard leaves it alone until an approve without hold)
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -75,10 +87,6 @@ jobs:
               exit 1
             fi
           done
-          if [ "${FROM}" = "${TO}" ]; then
-            echo "::error::from and to are the same commit"
-            exit 1
-          fi
 
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -149,6 +157,7 @@ jobs:
       FROM: ${{ inputs.from }}
       TO: ${{ inputs.to }}
       REASON: ${{ inputs.reason }}
+      HOLD: ${{ inputs.hold }}
     steps:
       - name: Check the deploy key
         env:
@@ -182,24 +191,31 @@ jobs:
             git fetch --quiet origin "${branch}"
             git reset --quiet --hard "origin/${branch}"
 
-            # Compare-and-swap on the row: the judgment was made against
-            # FROM, so a row that moved since is not ours to write.
             current=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | .commit' "${lock}")
-            if [ "${current}" = "${TO}" ]; then
-              echo "${lock}: ${TARGET} is already at ${TO}" | tee -a "$GITHUB_STEP_SUMMARY"
+            held=$(jq -r --arg n "${TARGET}" '.sources[] | select(.name == $n) | .hold == true' "${lock}")
+            if [ "${current}" = "${TO}" ] && [ "${held}" = "${HOLD}" ]; then
+              echo "${lock}: ${TARGET} is already at ${TO} (hold: ${held})" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
-            if [ "${current}" != "${FROM}" ]; then
+            # Compare-and-swap on the row: the judgment was made against
+            # FROM, so a row that moved since is not ours to write.
+            if [ "${current}" != "${FROM}" ] && [ "${current}" != "${TO}" ]; then
               echo "::error::${lock}: ${TARGET} is at '${current}', not at ${FROM} as judged; look at the change from '${current}' again"
               exit 1
             fi
 
-            jq --arg n "${TARGET}" --arg c "${TO}" '.sources |= map(if .name == $n then .commit = $c else . end)' "${lock}" > "${lock}.tmp"
+            # The commit and the hold are one write, so no guard can read
+            # the one without the other.
+            jq --arg n "${TARGET}" --arg c "${TO}" --argjson h "${HOLD}" '.sources |= map(if .name == $n then .commit = $c | if $h then .hold = true else del(.hold) end else . end)' "${lock}" > "${lock}.tmp"
             mv "${lock}.tmp" "${lock}"
             git add "${lock}"
-            git commit --quiet -m "approve: ${TARGET} ${FROM:0:12}..${TO:0:12} (${DB})" -m "By @${ACTOR}: ${REASON}" -m "${RUN_URL}"
+            note=""
+            if [ "${held}" != "${HOLD}" ]; then
+              if [ "${HOLD}" = "true" ]; then note=", hold"; else note=", release"; fi
+            fi
+            git commit --quiet -m "approve: ${TARGET} ${FROM:0:12}..${TO:0:12} (${DB})${note}" -m "By @${ACTOR}: ${REASON}" -m "${RUN_URL}"
             if git push --quiet origin "HEAD:${branch}"; then
-              echo "${lock}: ${TARGET} ${FROM} -> ${TO}" | tee -a "$GITHUB_STEP_SUMMARY"
+              echo "${lock}: ${TARGET} ${FROM} -> ${TO}${note}" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "push rejected (attempt ${attempt}); refetching"

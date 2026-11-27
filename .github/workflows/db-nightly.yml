@@ -110,7 +110,8 @@ jobs:
             vuls-data-update dotgit registry tag --token "${{ secrets.GITHUB_TOKEN }}" "${REPOSITORY}@${DIGEST}" "${tag}"
           done
 
-      # Which lock the DB was built from.
+      # Which lock the DB was built from, and which rows an operator holds
+      # (approve.yml), so a hold nobody released stays in sight.
       - name: Write summary
         if: ${{ success() || failure() }}
         env:
@@ -120,10 +121,14 @@ jobs:
         run: |
           set -euo pipefail
           lock_commit=$(git -C lock rev-parse HEAD 2>/dev/null || echo unknown)
+          held=$(jq -r '[.sources[] | select(.hold == true) | .name] | join(" ")' "lock/db-${DB}.lock.json" 2>/dev/null || true)
           {
             echo "## DB(${DB})"
             echo '```text'
             echo "lock       : https://github.com/${LOCK_REPOSITORY}/blob/${lock_commit}/db-${DB}.lock.json"
+            if [ -n "${held}" ]; then
+              echo "held       : ${held}"
+            fi
             if [ -n "${DIGEST}" ]; then
               echo "digest ref : ${REPOSITORY}@${DIGEST}"
               echo "tags       : ${TAGS}"

@@ -9,7 +9,8 @@ name: Guard Extracted
 # the next DB build picks it up; on a fail the lock stays at B and this job
 # fails, which marks the source's leg of `Extract All` failed. The row only
 # moves forward (H must descend from B), and a source without detection data
-# is built at H but not diffed.
+# is built at H but not diffed. A row an operator holds ("hold": true, set by
+# approve.yml) is not judged and stays where it is.
 #
 # Configuration (lock repository, vuls2 ref per DB, thresholds, fixtures,
 # groups, sources without detection data) is in db-guard.json at the root of
@@ -114,6 +115,14 @@ jobs:
             if [ "${diff}" = "missing" ]; then
               echo "::error::${NAME} is in ${file} but db-guard.json .sources.${NAME} has neither \"diff\": false nor \"fixtures\""
               exit 1
+            fi
+
+            # A held row (approve.yml with `hold`) stays where the operator
+            # put it, until an approve without hold releases it.
+            if [ "$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .hold == true' "${lock}")" = "true" ]; then
+              echo "::warning::${file}: ${NAME} is held at ${base} (approve.yml); not judged"
+              echo "${file}: ${NAME} is held at ${base}; not judged" >> "$GITHUB_STEP_SUMMARY"
+              continue
             fi
 
             if [ "${base}" = "${HEAD_COMMIT}" ]; then
@@ -367,6 +376,13 @@ jobs:
           for attempt in 1 2 3 4 5; do
             git fetch --quiet origin "${branch}"
             git reset --quiet --hard "origin/${branch}"
+
+            # A hold set while the guard ran (approve.yml) wins, even over a
+            # row that is still at B.
+            if [ "$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .hold == true' "${LOCK}")" = "true" ]; then
+              echo "::warning::${LOCK}: ${NAME} was held while the guard ran; the row is left alone"
+              exit 0
+            fi
 
             current=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .commit' "${LOCK}")
             if [ "${current}" = "${HEAD_COMMIT}" ]; then
