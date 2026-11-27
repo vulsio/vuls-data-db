@@ -387,7 +387,9 @@ jobs:
               exit 0
             fi
             echo "push rejected (attempt ${attempt}); refetching"
-            sleep $((attempt * 5))
+            # Many sources pass in the same Extract All; the jitter keeps
+            # their retries from colliding again.
+            sleep $((RANDOM % 10 + attempt * 5))
           done
           echo "::error::could not push ${LOCK} after 5 attempts"
           exit 1

@@ -203,7 +203,7 @@ jobs:
               exit 0
             fi
             echo "push rejected (attempt ${attempt}); refetching"
-            sleep $((attempt * 5))
+            sleep $((RANDOM % 10 + attempt * 5))
           done
           echo "::error::could not push ${lock} after 5 attempts"
           exit 1
