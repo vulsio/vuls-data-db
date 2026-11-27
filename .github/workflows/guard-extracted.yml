@@ -231,7 +231,6 @@ jobs:
       # rewound, or a B lost to truncate / restore, stops here as well, and
       # the row is then set by hand (approve.yml).
       - name: Check that the head descends from the lock commit
-        id: ancestry
         env:
           NAME: ${{ inputs.name }}
           BASE_COMMIT: ${{ matrix.base }}
@@ -291,6 +290,7 @@ jobs:
           echo "${NAME} has \"diff\": false in db-guard.json; built at the extracted head and approved without a diff" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Run diff guard
+        id: diff_guard
         if: ${{ matrix.diff }}
         uses: ./.github/actions/diff-guard
         with:
@@ -305,10 +305,13 @@ jobs:
 
       # The judgment a failed guard asks for is about this change, B..H, so
       # the command to approve it names both ends (approve.yml writes only
-      # while the row is still at B, and sets exactly H). Not printed when H
-      # does not descend from B: that is not a change to approve.
+      # while the row is still at B, and sets exactly H). Printed only when
+      # the diff guard step is the one that failed. A failure before it is
+      # not a change to approve: an H that does not descend from B, an H that
+      # `vuls db build` cannot add (approving it would fail the DB build for
+      # every source), or an install that failed before anything was judged.
       - name: Print the approve command
-        if: ${{ failure() && matrix.diff && steps.ancestry.outcome == 'success' }}
+        if: ${{ failure() && steps.diff_guard.outcome == 'failure' }}
         env:
           NAME: ${{ inputs.name }}
           DB: ${{ matrix.db }}
