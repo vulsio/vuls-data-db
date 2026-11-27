@@ -105,7 +105,7 @@ runs:
           exit 1
         fi
         if ! info="$(go version -m "${binary}")"; then
-          echo "::error::${binary} is not a Go binary that records its build"
+          echo "::error::go version -m could not read the build of ${binary}"
           exit 1
         fi
         go_version="$(head -n 1 <<< "${info}")"

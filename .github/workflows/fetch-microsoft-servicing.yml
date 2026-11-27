@@ -31,10 +31,13 @@ jobs:
       revision: ${{ steps.resolve.outputs.revision }}
     steps:
       # Every shard and the commit build this one commit of vuls-data-update,
-      # so the commit can name the build that fetched what it changes. A shard
-      # that checked out main for itself would pick up a promotion that landed
-      # while the matrix ran -- its legs do not all start at once -- and the
-      # shards would no longer agree on what fetched them.
+      # so the build the commit names is the one that fetched this run's
+      # shards. A shard that checked out main for itself would pick up a
+      # promotion that landed while the matrix ran -- its legs do not all start
+      # at once -- and the shards would no longer agree on what fetched them.
+      # A shard that fails leaves the data it last pushed, which an earlier run
+      # fetched and committed, unless that run's commit failed too: then it is
+      # first committed here, under this run's build.
       - name: Resolve main
         id: resolve
         run: |
@@ -43,9 +46,11 @@ jobs:
           # Each shard used to resolve main inside actions/checkout, which
           # retries a fetch it fails, and a failure cost that shard alone. A
           # failure here costs every shard and the commit, so it is retried the
-          # way go-install retries.
+          # way go-install retries, and an attempt that hangs is cut off after a
+          # minute and retried rather than holding them all for the six hours a
+          # job may run.
           for ((i = 1; ; i++)); do
-            if revision="$(git ls-remote --exit-code https://github.com/MaineK00n/vuls-data-update.git refs/heads/main | cut -f 1)" && [[ "${revision}" =~ ^[0-9a-f]{40}$ ]]; then
+            if revision="$(timeout 60 git ls-remote --exit-code https://github.com/MaineK00n/vuls-data-update.git refs/heads/main | cut -f 1)" && [[ "${revision}" =~ ^[0-9a-f]{40}$ ]]; then
               break
             fi
             if ((i >= 5)); then
@@ -167,7 +172,7 @@ jobs:
           git config --global user.name "GitHub Action"
 
       # Built from the commit the shards built, the way they built it, so the
-      # build the commit names is the one that fetched what it changes.
+      # build the commit names is the one that fetched this run's shards.
       - name: Check out code into the Go module directory
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
