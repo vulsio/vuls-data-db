@@ -109,7 +109,8 @@ The enabled data sources are listed in `db-main.mk` (and, for nightly, in
 `db-nightly.lock.json` in `vulsio/vuls-nightly-db`). For each enabled source,
 pull the extracted dotgit once and read its full commit log. Match the dotgit
 branch to the workflow you are grooming — db-main runs `make ... BRANCH=main`,
-nightly reads the `nightly` branch, and the two branches can have independent
+nightly reads the branch each row of the lock names in `branch` (`nightly`
+unless a row says otherwise), and the two branches can have independent
 commit histories:
 
 ```text

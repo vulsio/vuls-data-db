@@ -1,9 +1,10 @@
 name: Guard Extracted
 
 # Per-source guard, called by the extract workflows right after an extracted
-# dotgit has been pushed. For every lock in the lock repository that reads
-# this branch and lists this source, it compares the source at the lock's
-# commit (B, the baseline) with the commit the extract just pushed (H):
+# dotgit has been pushed. For every lock in the lock repository that lists
+# this source on this branch (each row of a lock names its branch), it
+# compares the source at the lock's commit (B, the baseline) with the commit
+# the extract just pushed (H):
 # two one-source dbs are built from the lock with `vuls db build` and run
 # through the diff-guard action. On a pass the lock's row is moved to H, so
 # the next DB build picks it up; on a fail the lock stays at B and this job
@@ -11,6 +12,11 @@ name: Guard Extracted
 # moves forward (H must descend from B), and a source without detection data
 # is built at H but not diffed. A row an operator holds ("hold": true, set by
 # approve.yml) is not judged and stays where it is.
+#
+# The extract workflows call this for the nightly branch only, for now. A
+# row that names another branch (say, a source the nightly DB takes from
+# main for a while) is therefore not judged by any guard and moves only by
+# approve.yml.
 #
 # Configuration (lock repository, vuls2 ref per DB, thresholds, fixtures,
 # groups, sources without detection data) is in db-guard.json at the root of
@@ -64,10 +70,12 @@ jobs:
           repository: ${{ steps.config.outputs.lock_repository }}
           path: lock
 
-      # Every lock that reads this branch and lists this source is a DB the
-      # source is in. A lock already at H needs nothing (the extract made no
-      # commit, or the previous guard passed); this is most runs, and it
-      # ends here before any heavy setup.
+      # Every lock with a row for this source on this branch is a DB that
+      # takes the source from this extract. A row on another branch is fed
+      # by that branch's extract and is not this run's to judge. A lock
+      # already at H needs nothing (the extract made no commit, or the
+      # previous guard passed); this is most runs, and it ends here before
+      # any heavy setup.
       - name: Plan
         id: plan
         env:
@@ -89,14 +97,22 @@ jobs:
             db=${file#db-}
             db=${db%.lock.json}
             # set -e does not reach a jq inside [ ], so a broken lock would
-            # otherwise be skipped here as a lock of another branch.
-            if ! jq -e '.branch and .sources' "${lock}" > /dev/null; then
+            # otherwise be skipped here as a lock without this source.
+            if ! jq -e '.sources | type == "array"' "${lock}" > /dev/null; then
               echo "::error::${file} is not a valid lock"
               exit 1
             fi
-            [ "$(jq -r '.branch' "${lock}")" = "${BRANCH}" ] || continue
             base=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .commit' "${lock}")
             [ -n "${base}" ] || continue
+            # Every row names its branch. A row without one (a lock still in
+            # the shape with one branch for the whole lock) is an error, not
+            # a row of another branch.
+            branch=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .branch // ""' "${lock}")
+            if [ -z "${branch}" ]; then
+              echo "::error::${file}: ${NAME} has no branch"
+              exit 1
+            fi
+            [ "${branch}" = "${BRANCH}" ] || continue
             # A row without a commit reads as "null", which the CAS in the
             # lock job would match and overwrite on the diff: false path.
             if ! [[ "${base}" =~ ^[0-9a-f]{40}$ ]]; then
@@ -233,17 +249,17 @@ jobs:
       - name: Check that the head descends from the lock commit
         env:
           NAME: ${{ inputs.name }}
+          BRANCH: ${{ inputs.branch }}
           BASE_COMMIT: ${{ matrix.base }}
           HEAD_COMMIT: ${{ inputs.commit }}
           LOCK: lock/${{ matrix.lock }}
         run: |
           set -euo pipefail
-          branch=$(jq -r '.branch' "${LOCK}")
           repository=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .repository' "${LOCK}")
 
           # The pull lays the dotgit out as <host>/<repository path>/<tag>
           # (the lock names a tag, never a digest). No worktree is restored.
-          vuls-data-update dotgit pull --dir ./ancestry --checkout "${branch}" "${repository}"
+          vuls-data-update dotgit pull --dir ./ancestry --checkout "${BRANCH}" "${repository}"
           dir="./ancestry/${repository%:*}/${repository##*:}"
           for commit in "${BASE_COMMIT}" "${HEAD_COMMIT}"; do
             if ! git -C "${dir}" rev-parse --verify --quiet "${commit}^{commit}" > /dev/null; then
@@ -252,7 +268,7 @@ jobs:
             fi
           done
           if ! git -C "${dir}" merge-base --is-ancestor "${BASE_COMMIT}" "${HEAD_COMMIT}"; then
-            echo "::error::${NAME}: ${HEAD_COMMIT} does not descend from the lock commit ${BASE_COMMIT} (a re-run of an older run after a newer guard moved the row, or ${branch} was rewound); the row is left as it is"
+            echo "::error::${NAME}: ${HEAD_COMMIT} does not descend from the lock commit ${BASE_COMMIT} (a re-run of an older run after a newer guard moved the row, or ${BRANCH} was rewound); the row is left as it is"
             exit 1
           fi
           rm -rf ./ancestry

@@ -122,7 +122,7 @@ git -C "$EX" log --format='%h %ci' <baseline_ext>..<target_ext>
 git -C "$EX" diff --shortstat <baseline_ext>..<target_ext>
 ```
 
-`--checkout` must match the triaged workflow's branch — `main` for **DB**, `nightly` for a nightly per-source guard (the nightly lock reads the `nightly` branch). The default is `main`, and the anchor commits from step 3 may only exist on the matching branch. The same applies to the raw dotgit pull below.
+`--checkout` must match the triaged workflow's branch — `main` for **DB**, `nightly` for a nightly per-source guard (each row of the nightly lock names its branch in `branch`; the guard runs for rows on `nightly`). The default is `main`, and the anchor commits from step 3 may only exist on the matching branch. The same applies to the raw dotgit pull below.
 
 The range may span multiple commits. If it does, examine **each step**, not just the cumulative diff — different commits often represent different upstream activities (schema expansion vs. bulk triage, etc.).
 

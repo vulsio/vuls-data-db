@@ -25,7 +25,9 @@ run-name: "Approve ${{ inputs.target }} ${{ inputs.from }}..${{ inputs.to }}${{ 
 # without `hold` releases it. `from` and `to` may be the same commit: to hold
 # a row where it is, or to release it there and let the next guard judge.
 #
-# Adding or removing a source is a pull request to the lock repository.
+# Adding or removing a source, or changing a row's repository or branch, is
+# a pull request to the lock repository: this workflow writes only a row's
+# commit and hold, and checks `to` against the branch the row names.
 
 on:
   workflow_dispatch:
@@ -123,9 +125,13 @@ jobs:
         run: |
           set -euo pipefail
           lock="lock/db-${DB}.lock.json"
-          branch=$(jq -r '.branch' "${lock}")
           if ! repository=$(jq -er --arg n "${TARGET}" '.sources[] | select(.name == $n) | .repository' "${lock}"); then
             echo "::error::${TARGET} is not in db-${DB}.lock.json; adding a source is a pull request to the lock repository"
+            exit 1
+          fi
+          # Each row names the branch its commit is on.
+          if ! branch=$(jq -er --arg n "${TARGET}" '.sources[] | select(.name == $n) | .branch' "${lock}"); then
+            echo "::error::${TARGET} has no branch in db-${DB}.lock.json"
             exit 1
           fi
 
