@@ -7,7 +7,9 @@ name: Guard Extracted
 # two one-source dbs are built from the lock with `vuls db build` and run
 # through the diff-guard action. On a pass the lock's row is moved to H, so
 # the next DB build picks it up; on a fail the lock stays at B and this job
-# fails, which marks the source's leg of `Extract All` failed.
+# fails, which marks the source's leg of `Extract All` failed. The row only
+# moves forward (H must descend from B), and a source without detection data
+# is built at H but not diffed.
 #
 # Configuration (lock repository, vuls2 ref per DB, thresholds, fixtures,
 # groups, sources without detection data) is in db-guard.json at the root of
@@ -138,20 +140,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.dbs) }}
     steps:
-      # Sources without detection data are not diffed; only the ones named so
-      # in db-guard.json. The DB-side guard did not check them either: `vuls
-      # diff db` compares only the <ecosystem>/detection and <ecosystem>/kb
-      # buckets, which these sources (KEV lists, exploits, CWE/CAPEC/ATT&CK,
-      # CVE records) add nothing to, and no fixture detects through them.
-      - name: Approve without diff
-        if: ${{ !matrix.diff }}
-        env:
-          NAME: ${{ inputs.name }}
-        run: |
-          echo "${NAME} has \"diff\": false in db-guard.json; approved without a diff" | tee -a "$GITHUB_STEP_SUMMARY"
-
       - name: Maximize build space
-        if: ${{ matrix.diff }}
         uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793 # v5
         with:
           remove-dotnet: "true"
@@ -164,18 +153,15 @@ jobs:
           remove-swapfile: "true"
 
       - name: Check out code
-        if: ${{ matrix.diff }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
       - name: Check out lock repository
-        if: ${{ matrix.diff }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           repository: ${{ needs.plan.outputs.lock_repository }}
           path: lock
 
       - name: Read guard config
-        if: ${{ matrix.diff }}
         id: config
         env:
           NAME: ${{ inputs.name }}
@@ -186,7 +172,7 @@ jobs:
             echo "vuls2=$(jq -r --arg db "${DB}" '.dbs[$db].vuls2' db-guard.json)"
             echo "vuls0_old_ref=$(jq -r --arg db "${DB}" '.dbs[$db].vuls0_old_ref' db-guard.json)"
             echo "fixtures<<EOF"
-            jq -r --arg n "${NAME}" '.sources[$n].fixtures[]' db-guard.json
+            jq -r --arg n "${NAME}" '.sources[$n].fixtures // [] | .[]' db-guard.json
             echo "EOF"
             for kind in db detection; do
               for list in defaults overrides; do
@@ -200,9 +186,8 @@ jobs:
       # The two locks hold only this source, or every member of its group
       # (a detection ecosystem fed by several sources). The baseline is the
       # lock as planned (this source at B); the target differs only in this
-      # source being at H.
+      # source being at H. A source with "diff": false uses the target only.
       - name: Make mini-locks
-        if: ${{ matrix.diff }}
         env:
           NAME: ${{ inputs.name }}
           BASE_COMMIT: ${{ matrix.base }}
@@ -217,27 +202,84 @@ jobs:
           cat base.lock.json target.lock.json
 
       - name: Set up Go 1.x
-        if: ${{ matrix.diff }}
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
         with:
           go-version: "stable"
           cache: false
 
+      - name: Install vuls-data-update
+        uses: vulsio/vuls-data-db/.github/actions/go-install@main
+        with:
+          package: github.com/MaineK00n/vuls-data-update/cmd/vuls-data-update@nightly
+
+      # The row only moves forward: H must descend from B. `plan` reads the
+      # lock afresh on every attempt, but a re-run of the guard alone (the
+      # extract job is not re-run and keeps its output) still carries the H
+      # of its own run. Once a newer run has moved the row past that H, the
+      # re-run would judge the change backwards, and pass: the reverse of one
+      # extract usually stays under the thresholds, and both commits are on
+      # the branch, which is all `vuls db build` asks. A branch that was
+      # rewound, or a B lost to truncate / restore, stops here as well, and
+      # the row is then set by hand (approve.yml).
+      - name: Check that the head descends from the lock commit
+        id: ancestry
+        env:
+          NAME: ${{ inputs.name }}
+          BASE_COMMIT: ${{ matrix.base }}
+          HEAD_COMMIT: ${{ inputs.commit }}
+          LOCK: lock/${{ matrix.lock }}
+        run: |
+          set -euo pipefail
+          branch=$(jq -r '.branch' "${LOCK}")
+          repository=$(jq -r --arg n "${NAME}" '.sources[] | select(.name == $n) | .repository' "${LOCK}")
+
+          # The pull lays the dotgit out as <host>/<repository path>/<tag>
+          # (the lock names a tag, never a digest). No worktree is restored.
+          vuls-data-update dotgit pull --dir ./ancestry --checkout "${branch}" "${repository}"
+          dir="./ancestry/${repository%:*}/${repository##*:}"
+          for commit in "${BASE_COMMIT}" "${HEAD_COMMIT}"; do
+            if ! git -C "${dir}" rev-parse --verify --quiet "${commit}^{commit}" > /dev/null; then
+              echo "::error::${commit} is not a commit of ${repository} (history truncated or restored?); set the row by hand (approve.yml)"
+              exit 1
+            fi
+          done
+          if ! git -C "${dir}" merge-base --is-ancestor "${BASE_COMMIT}" "${HEAD_COMMIT}"; then
+            echo "::error::${NAME}: ${HEAD_COMMIT} does not descend from the lock commit ${BASE_COMMIT} (a re-run of an older run after a newer guard moved the row, or ${branch} was rewound); the row is left as it is"
+            exit 1
+          fi
+          rm -rf ./ancestry
+
       - name: Install vuls
-        if: ${{ matrix.diff }}
         uses: vulsio/vuls-data-db/.github/actions/go-install@main
         with:
           package: "github.com/MaineK00n/vuls2/cmd/vuls@${{ steps.config.outputs.vuls2 }}"
 
-      # `vuls db build` also refuses a lock commit that is gone (history
-      # truncated) or not on the branch (branch rewound): the guard then
-      # fails without a verdict and the lock is set by hand (approve.yml).
+      # The target is built on both paths, so an H that `vuls db build`
+      # cannot add (an extracted format this vuls does not read yet) fails
+      # in this source's leg instead of going into the lock and failing the
+      # DB build for every source.
       - name: Build baseline and target dbs
-        if: ${{ matrix.diff }}
+        env:
+          DIFF: ${{ matrix.diff }}
         run: |
           set -euo pipefail
-          vuls db build base.lock.json --dbpath ./baseline.db --dir ./work
+          if [ "${DIFF}" = "true" ]; then
+            vuls db build base.lock.json --dbpath ./baseline.db --dir ./work
+          fi
           vuls db build target.lock.json --dbpath ./vuls.db --dir ./work
+
+      # Sources without detection data are built but not diffed; only the
+      # ones named so in db-guard.json. The DB-side guard did not check them
+      # either: `vuls diff db` compares only the <ecosystem>/detection and
+      # <ecosystem>/kb buckets, which these sources (KEV lists, exploits,
+      # CWE/CAPEC/ATT&CK, CVE records) add nothing to, and no fixture detects
+      # through them.
+      - name: Approve without diff
+        if: ${{ !matrix.diff }}
+        env:
+          NAME: ${{ inputs.name }}
+        run: |
+          echo "${NAME} has \"diff\": false in db-guard.json; built at the extracted head and approved without a diff" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Run diff guard
         if: ${{ matrix.diff }}
@@ -254,9 +296,10 @@ jobs:
 
       # The judgment a failed guard asks for is about this change, B..H, so
       # the command to approve it names both ends (approve.yml writes only
-      # while the row is still at B, and sets exactly H).
+      # while the row is still at B, and sets exactly H). Not printed when H
+      # does not descend from B: that is not a change to approve.
       - name: Print the approve command
-        if: ${{ failure() && matrix.diff }}
+        if: ${{ failure() && matrix.diff && steps.ancestry.outcome == 'success' }}
         env:
           NAME: ${{ inputs.name }}
           DB: ${{ matrix.db }}
