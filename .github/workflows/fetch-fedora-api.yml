@@ -34,8 +34,8 @@ jobs:
       # promotion that landed while the matrix ran -- its legs do not all start
       # at once -- and the shards would no longer agree on what fetched them.
       # A shard that fails leaves the data it last pushed, which an earlier run
-      # fetched and committed, unless that run's commit failed too: then it is
-      # first committed here, under this run's build.
+      # fetched and committed, unless that run's commit did not land: then it
+      # is first committed here, under this run's build.
       - name: Resolve main
         id: resolve
         run: |
