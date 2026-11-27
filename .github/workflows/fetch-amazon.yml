@@ -128,11 +128,10 @@ jobs:
           echo "restored $(git -C "${dir}" ls-files -- "${RESTORE_PATH}" | wc -l) file(s) under ${RESTORE_PATH}/ from ${RESTORE_SNAPSHOT}"
 
       - name: Commit
-        run: |
-          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon status --porcelain) ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-amazon commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
-          fi
+        uses: vulsio/vuls-data-db/.github/actions/commit@main
+        with:
+          dir: ghcr.io/${{ github.repository }}/vuls-data-raw-amazon
+          check-run-id: ${{ job.check_run_id }}
 
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-amazon

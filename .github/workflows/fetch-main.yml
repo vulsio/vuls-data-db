@@ -275,11 +275,10 @@ jobs:
           fi
 
       - name: Commit
-        run: |
-          if [[ -n $(git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} status --porcelain) ]]; then
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} add .
-            git -C ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }} commit -m "update" -m "GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}"
-          fi
+        uses: vulsio/vuls-data-db/.github/actions/commit@main
+        with:
+          dir: ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
+          check-run-id: ${{ job.check_run_id }}
 
       - name: Create dotgit tarball
         run: vuls-data-update dotgit compress ghcr.io/${{ github.repository }}/vuls-data-raw-${{ inputs.target }}
