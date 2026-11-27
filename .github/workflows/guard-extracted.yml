@@ -363,8 +363,13 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # A separate job so the deploy key never shares a job with go install and
-  # the diff tools.
+  # A separate job, so that the deploy key never shares a job with code
+  # downloaded at run time (the tools the guard job fetches with
+  # `go install`, the diff tools, the fixtures). A compromised download can
+  # make a guard pass or fail, and so move this one row to the H this
+  # workflow was called with, but it cannot push anything else to the lock
+  # repository: this job runs only the checkout action, git and jq, and
+  # takes nothing from the guard job but its result.
   lock:
     name: lock ${{ matrix.db }}
     needs: [plan, guard]

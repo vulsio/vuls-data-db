@@ -65,18 +65,18 @@ on:
 permissions: {}
 
 jobs:
-  # Keyless: this job runs the downloaded vuls-data-update, so the deploy key
-  # is not in it. It only checks `to`; the writer takes the row to write from
-  # the inputs, never from this job. What it hands over, the repository and
-  # branch `to` was checked against, can only stop the write.
+  # Keyless. This job runs code downloaded at run time (vuls-data-update,
+  # fetched by `go install`), and a compromised download must not be able to
+  # push to the lock repository. So the deploy key is not in this job, and
+  # nothing this job outputs decides what is written: the writer builds the
+  # row from the workflow inputs. What this job hands over, the repository
+  # and branch `to` was checked against, can only stop the write.
   check:
     name: check the commit
     permissions:
       contents: read
     runs-on: ubuntu-latest
     outputs:
-      lock_repository: ${{ steps.config.outputs.lock_repository }}
-      workflow: ${{ steps.config.outputs.workflow }}
       repository: ${{ steps.commit.outputs.repository }}
       branch: ${{ steps.commit.outputs.branch }}
     env:
@@ -98,14 +98,9 @@ jobs:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
-      - name: Read DB config
+      - name: Read lock repository
         id: config
-        run: |
-          set -euo pipefail
-          {
-            echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)"
-            echo "workflow=$(jq -r --arg db "${DB}" '.dbs[$db].workflow' db-guard.json)"
-          } >> "$GITHUB_OUTPUT"
+        run: echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)" >> "$GITHUB_OUTPUT"
 
       - name: Check out lock repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -158,8 +153,9 @@ jobs:
             echo "branch=${branch}"
           } >> "$GITHUB_OUTPUT"
 
-  # Holds the deploy key and runs nothing but git, jq and gh from the runner
-  # image. The row it writes comes from the inputs alone. It writes only
+  # Holds the deploy key, and for that reason runs no downloaded code:
+  # nothing but git, jq and gh from the runner image, and the checkout
+  # action. The row it writes comes from the inputs alone. It writes only
   # while the row still names the repository and branch that `to` was checked
   # against: a pull request to the lock repository can change either between
   # the two jobs.
@@ -189,10 +185,28 @@ jobs:
             exit 1
           fi
 
+      # Read here, not taken from the check job: which repository this job
+      # pushes to and which workflow it starts are not for a job that ran
+      # downloaded code to say.
+      - name: Check out db-guard.json
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          sparse-checkout: db-guard.json
+          sparse-checkout-cone-mode: false
+
+      - name: Read DB config
+        id: config
+        run: |
+          set -euo pipefail
+          {
+            echo "lock_repository=$(jq -r '.lock_repository' db-guard.json)"
+            echo "workflow=$(jq -r --arg db "${DB}" '.dbs[$db].workflow' db-guard.json)"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Check out lock repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
-          repository: ${{ needs.check.outputs.lock_repository }}
+          repository: ${{ steps.config.outputs.lock_repository }}
           ssh-key: ${{ secrets.LOCK_DEPLOY_KEY }}
           path: lock
 
@@ -253,7 +267,7 @@ jobs:
       - name: Start the DB build
         env:
           GH_TOKEN: ${{ github.token }}
-          WORKFLOW: ${{ needs.check.outputs.workflow }}
+          WORKFLOW: ${{ steps.config.outputs.workflow }}
         run: |
           set -euo pipefail
           gh workflow run "${WORKFLOW}" -R "${GITHUB_REPOSITORY}" --ref "${GITHUB_REF_NAME}"
